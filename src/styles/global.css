@@ -1,0 +1,102 @@
+/* ── Design Tokens ─────────────────────────────────────── */
+:root {
+  --color-bg:        #0d0d0d;
+  --color-surface:   #141414;
+  --color-border:    #222222;
+  --color-text:      #e8e8e8;
+  --color-muted:     #666666;
+  --color-accent:    #c8f135;   /* sharp lime – main accent */
+  --color-accent-dim:#8aaa20;
+
+  --font-display: 'DM Mono', 'Fira Mono', monospace;
+  --font-body:    'DM Sans', 'Segoe UI', sans-serif;
+
+  --space-xs:  0.25rem;
+  --space-sm:  0.5rem;
+  --space-md:  1rem;
+  --space-lg:  2rem;
+  --space-xl:  4rem;
+
+  --radius: 2px;
+  --max-w:  720px;
+}
+
+/* ── Reset ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+img { max-width: 100%; display: block; }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+p + p { margin-top: var(--space-md); }
+
+code {
+  font-family: var(--font-display);
+  font-size: 0.875em;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius);
+}
+
+pre {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--space-md);
+  overflow-x: auto;
+  border-radius: var(--radius);
+}
+pre code { background: none; border: none; padding: 0; }
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-lg) 0;
+}
+
+/* ── Utility ───────────────────────────────────────────── */
+.container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.tag {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-dim);
+  padding: 0.15em 0.5em;
+  border-radius: var(--radius);
+}
+
+.muted { color: var(--color-muted); font-size: 0.875rem; }
