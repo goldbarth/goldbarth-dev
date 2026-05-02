@@ -1,0 +1,131 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PostCard from '../components/PostCard.astro';
+
+const [projects, decisions, thoughts] = await Promise.all([
+  getCollection('projects', ({ data }) => !data.draft),
+  getCollection('decisions', ({ data }) => !data.draft),
+  getCollection('thoughts', ({ data }) => !data.draft),
+]);
+
+const recentPosts = [...projects, ...decisions, ...thoughts]
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 5);
+---
+
+<Base title="Home">
+  <div class="container">
+
+    <section class="intro">
+      <p class="label">Felix Wahl</p>
+      <h1>
+        Backend Developer.<br />
+        <span class="accent">.NET, Architecture,<br />Decisions.</span>
+      </h1>
+      <p class="bio">
+        I write about things I build, decisions I make –
+        and why I make them the way I do.
+      </p>
+      <div class="cta">
+        <a href="/projects">Projects</a>
+        <a href="/decisions">Decisions</a>
+        <a href="/thoughts">Thoughts</a>
+      </div>
+    </section>
+
+    <hr />
+
+    <section class="recent">
+      <h2 class="section-title">Recent</h2>
+      {recentPosts.length === 0 ? (
+        <p class="muted">No posts yet. Coming soon.</p>
+      ) : (
+        <div class="post-list">
+          {recentPosts.map(post => (
+            <PostCard
+              title={post.data.title}
+              description={post.data.description ?? ''}
+              date={post.data.date.toISOString()}
+              category={post.collection as 'projects' | 'decisions' | 'thoughts'}
+              slug={post.slug}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+
+  </div>
+</Base>
+
+<style>
+  .intro {
+    padding: var(--space-xl) 0;
+  }
+
+  .label {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: var(--space-md);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    line-height: 1.1;
+    margin-bottom: var(--space-lg);
+  }
+
+  .accent { color: var(--color-accent); }
+
+  .bio {
+    max-width: 50ch;
+    color: var(--color-muted);
+    font-size: 1.05rem;
+    margin-bottom: var(--space-lg);
+  }
+
+  .cta {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .cta a {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    padding: 0.4em 1em;
+    border-radius: var(--radius);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .cta a:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent-dim);
+    text-decoration: none;
+  }
+
+  .recent {
+    padding: var(--space-lg) 0;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: var(--space-lg);
+  }
+
+  .post-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+</style>
