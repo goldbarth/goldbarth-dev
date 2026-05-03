@@ -370,7 +370,7 @@ img { max-width: 100%; display: block; }
 
 /* ── Prose: schmal für Text, breit für Code/Bilder ─── */
 .prose {
-  --prose-w: 680px;
+  --prose-w: 720px;
   font-size: 1rem;
   line-height: 1.75;
   color: var(--color-text);
@@ -381,8 +381,6 @@ img { max-width: 100%; display: block; }
     1fr [full-end];
 }
 .prose > * { grid-column: main; }
-.prose > pre,
-.prose > .codeblock,
 .prose > figure,
 .prose > .full {
   grid-column: full;
