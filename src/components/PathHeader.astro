@@ -1,0 +1,24 @@
+---
+interface Props {
+  /** active segment, e.g. "decisions" — omit for landing */
+  active?: string;
+  /** override the trailing command; defaults to ls (with active) or whoami */
+  cmd?: string;
+}
+const { active, cmd } = Astro.props;
+const command = cmd ?? (active ? 'ls' : 'whoami');
+---
+
+<div class="path">
+  <div class="path__inner">
+    <a href="/"><span class="path__seg path__seg--root">~/goldbarth</span></a>
+    {active && (
+      <>
+        <span class="path__sep">/</span>
+        <a href={`/${active}`}><span class="path__seg path__seg--active">{active}</span></a>
+      </>
+    )}
+    <span class="path__prompt">$</span>
+    <span class="path__cmd">{command}</span>
+  </div>
+</div>
