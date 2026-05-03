@@ -4,6 +4,8 @@ const postSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   date: z.coerce.date(),
+  updated: z.coerce.date().optional(),
+  readMin: z.number().int().positive().optional(),
   draft: z.boolean().default(false),
 });
 

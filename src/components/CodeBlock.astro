@@ -1,0 +1,28 @@
+---
+/**
+ * Wrapper around a code block that adds an optional filename + lang header.
+ * For markdown: use the `Code` component from Astro and pass it as a slot,
+ * or wrap a fenced code block on render. For .astro pages, place a
+ * Shiki-rendered <pre> as the default slot.
+ *
+ * Usage:
+ *   <CodeBlock file="Dispatch.g.cs" lang="csharp">
+ *     <Code code={src} lang="csharp" theme="vitesse-dark" />
+ *   </CodeBlock>
+ */
+interface Props {
+  file?: string;
+  lang?: string;
+}
+const { file, lang } = Astro.props;
+---
+
+<div class="codeblock">
+  {(file || lang) && (
+    <div class="codeblock__head">
+      <span class="codeblock__file">{file ?? ''}</span>
+      <span class="codeblock__lang">{lang ?? ''}</span>
+    </div>
+  )}
+  <slot />
+</div>
