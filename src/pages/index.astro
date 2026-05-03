@@ -9,6 +9,7 @@ import ProjectRow from '../components/ProjectRow.astro';
 const featuredProjects = [
   {
     title: 'Ingestor',
+    slug: 'ingestor',
     status: 'live' as const,
     description: 'A .NET 10 import pipeline built around reliability: outbox pattern, strict domain state machine, idempotent processing, and a config-switchable dispatch strategy — every design decision focused on correctness and auditability.',
     stack: ['.NET 10', 'C#', 'OpenTelemetry', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
@@ -62,6 +63,7 @@ const writings = (
             status={p.status}
             stack={p.stack}
             links={p.links}
+            href={p.slug ? `/projects/${p.slug}` : undefined}
           />
         ))}
       </div>
