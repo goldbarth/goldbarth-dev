@@ -1,55 +1,38 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import PostCard from '../../components/PostCard.astro';
+import EntryRow from '../../components/EntryRow.astro';
 
 const posts = (await getCollection('decisions', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
-<Base title="Decisions" description="Architecture decisions, trade-offs, ADRs – worked out and explained.">
+<Base title="Decisions" active="decisions">
   <div class="container">
-    <header class="page-header">
-      <span class="tag">Decisions</span>
-      <h1>Why this way and not that.</h1>
-      <p class="muted">
-        Architecture decisions, trade-offs, ADRs – worked out and explained.
-        Not as dogma, but as a thought process.
+    <section class="cat-intro">
+      <h1>decisions</h1>
+      <p>
+        Reasoning behind technical decisions — mainly so I don't have to
+        relitigate them later. What worked, what didn't, and under what
+        assumptions.
       </p>
-    </header>
+    </section>
 
-    {posts.length === 0 ? (
-      <p class="muted">No posts yet.</p>
-    ) : (
-      <div class="post-list">
-        {posts.map(post => (
-          <PostCard
+    <div class="list">
+      {posts.length === 0 ? (
+        <p class="muted">No posts yet.</p>
+      ) : (
+        posts.map((post) => (
+          <EntryRow
             title={post.data.title}
             description={post.data.description ?? ''}
             date={post.data.date.toISOString()}
+            readMin={post.data.readMin ?? 3}
             category="decisions"
             slug={post.slug}
           />
-        ))}
-      </div>
-    )}
+        ))
+      )}
+    </div>
   </div>
 </Base>
-
-<style>
-  .page-header {
-    padding-bottom: var(--space-xl);
-    border-bottom: 1px solid var(--color-border);
-    margin-bottom: var(--space-xl);
-  }
-  .page-header .tag { margin-bottom: var(--space-md); }
-  h1 {
-    font-size: clamp(1.5rem, 4vw, 2.25rem);
-    margin: var(--space-sm) 0;
-  }
-  .post-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-  }
-</style>
