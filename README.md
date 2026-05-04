@@ -9,7 +9,7 @@ Built with [Astro](https://astro.build) and deployed at [goldbarth.dev](https://
 | What                                | License                        |
 |-------------------------------------|--------------------------------|
 | Code (components, config, scripts)  | [MIT](./LICENSE)               |
-| Content (`src/content/`, `public/`) | [CC BY 4.0](./LICENSE-CONTENT) |
+| Content (`src/content/`, `public/`) | [CC BY 4.0](./LICENSE-CC-BY-4.0) |
 
 ## Content
 
