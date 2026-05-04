@@ -1,7 +1,7 @@
 ---
 title: "Working with it"
 description: "Fear is a bad compass. How I'm approaching AI as a developer without reacting to the noise."
-date: "2026-05-04"
+date: "2026-05-04T20:00:00"
 readMin: 3
 draft: false
 ---
