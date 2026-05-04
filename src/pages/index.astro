@@ -12,9 +12,19 @@ const featuredProjects = [
     slug: 'ingestor',
     status: 'live' as const,
     description: 'A .NET 10 import pipeline built around reliability: outbox pattern, strict domain state machine, idempotent processing, and a config-switchable dispatch strategy — every design decision focused on correctness and auditability.',
-    stack: ['.NET 10', 'C#', 'OpenTelemetry', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
+    stack: ['.NET 10', 'OpenTelemetry', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
     links: [
       { label: 'github.com/goldbarth/ingestor', href: 'https://github.com/goldbarth/Ingestor' },
+    ],
+  },
+  {
+    title: 'ServiceDeskLite',
+    slug: 'service-desk-lite',
+    status: 'archived' as const,
+    description: 'A .NET 10 backend reference built around strict layering: compiler-enforced boundaries, two interchangeable persistence adapters, and result-based error handling — every architectural decision documented and justified.',
+    stack: ['.NET 10', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
+    links: [
+      { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
     ],
   },
 ];
