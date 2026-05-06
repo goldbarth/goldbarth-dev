@@ -1,23 +1,23 @@
 ---
-title: "What's missing"
-description: "Thinking about what to build next — and why it's not another clean architecture project."
+title: "Was fehlt"
+description: "Gedanken darüber, was als nächstes gebaut wird — und warum es kein weiteres Clean Architecture Projekt ist."
 date: "2026-05-03"
 readMin: 2
 draft: false
 ---
 
-Two backend projects in. Both lean heavily on Clean Architecture, both lean heavily on reliability patterns. A third one in the same shape wouldn't teach me much.
+Zwei Backend-Projekte hinter mir. Beide stark auf Clean Architecture ausgerichtet, beide stark auf Reliability-Patterns ausgerichtet. Ein drittes in derselben Form würde mich nicht viel lehren.
 
-So I'm thinking about what's actually missing. Three things stand out:
+Also denke ich darüber nach, was tatsächlich fehlt. Drei Dinge stechen heraus:
 
-Real auth. Not OIDC for a CI/CD pipeline — auth flows inside an application. JWT with refresh, cookie auth for a frontend, OAuth2/OIDC against a real provider, policy-based authorization. The kind of thing where "logged in yes/no" isn't enough and resource-based checks start to matter.
+Echtes Auth. Nicht OIDC für eine CI/CD-Pipeline — Auth-Flows innerhalb einer Applikation. JWT mit Refresh, Cookie-Auth für ein Frontend, OAuth2/OIDC gegen einen echten Provider, policy-based Authorization. Das, wo „eingeloggt ja/nein" nicht reicht und resource-based Checks anfangen, relevant zu werden.
 
-Caching that earns its place. Redis as more than a checkbox — output caching, cache-aside, and the part nobody likes talking about: invalidation. When a tenant config changes, when a permission flips, when a rate limit gets adjusted mid-flight.
+Caching, das seinen Platz verdient. Redis als mehr als eine Checkbox — Output-Caching, Cache-Aside, und der Teil, über den niemand gerne redet: Invalidierung. Wenn sich eine Tenant-Config ändert, wenn eine Permission kippt, wenn ein Rate-Limit mitten im Betrieb angepasst wird.
 
-A different architecture on purpose. Modular monolith with vertical slices inside the modules. Not because it's trendy, but because doing Clean Architecture a third time would be muscle memory, not learning.
+Eine andere Architecture, mit Absicht. Modularer Monolith mit Vertical Slices innerhalb der Module. Nicht weil es trendy ist, sondern weil Clean Architecture ein drittes Mal Muskelgedächtnis wäre, kein Lernen.
 
-What I'm not going to do: MassTransit (I want to understand the layer below before reaching for the abstraction), event sourcing (interesting, but overkill for what I want to demonstrate), or chase every item on last year's roadmap. Three deep projects beat seven shallow ones.
+Was ich nicht machen werde: MassTransit (ich will die Layer darunter verstehen, bevor ich zur Abstraktion greife), Event Sourcing (interessant, aber overkill für das, was ich demonstrieren will), oder jedem Punkt auf dem Roadmap des letzten Jahres nachlaufen. Drei tiefe Projekte schlagen sieben oberflächliche.
 
-Domain still open. Probably something where multi-tenancy and caching aren't decoration — a feature flag service, or a notes API with sharing and full-text search. The tech is the same either way; what differs is the story I can tell about it later.
+Domain noch offen. Wahrscheinlich etwas, wo Multi-Tenancy und Caching keine Dekoration sind — ein Feature-Flag-Service, oder eine Notes-API mit Sharing und Full-Text-Search. Die Technik ist in beiden Fällen dieselbe; was sich unterscheidet, ist die Geschichte, die ich später darüber erzählen kann.
 
-Letting it sit for a few days before committing.
+Ein paar Tage sacken lassen, bevor ich committe.

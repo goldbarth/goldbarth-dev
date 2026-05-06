@@ -1,18 +1,18 @@
 ---
-title: "State Machine with Explicit Transitions"
-description: "How an explicit domain state machine with nine states and an enumerated transition table prevents silent state corruption in a long-running pipeline."
+title: "State Machine mit expliziten Transitions"
+description: "Wie eine explizite Domain State Machine mit neun States und einer aufgezählten Transition-Tabelle stille State-Korruption in einer lang laufenden Pipeline verhindert."
 date: "2026-05-02"
 readMin: 4
 draft: false
 ---
 
-An import job lives for a while. It's created, picked up by a worker, parsed, validated, processed chunk by chunk, and eventually lands in one of several terminal states. Along the way, things can go wrong in different ways — validation can fail, processing can fail, the worker can crash and leave the job stranded.
+Ein Import-Job lebt eine Weile. Er wird erstellt, von einem Worker aufgenommen, geparst, validiert, Chunk für Chunk verarbeitet und landet schließlich in einem von mehreren Terminal States. Unterwegs können Dinge auf unterschiedliche Weise schiefgehen — Validation kann fehlschlagen, Processing kann fehlschlagen, der Worker kann abstürzen und den Job gestrandet hinterlassen.
 
-The naive approach is a `Status` enum and scattered `if` checks. It works until someone adds a new status, or a bug sets `Succeeded` from `Received` without going through processing, or a requeue path accidentally skips `Validating`. The state becomes implicit, spread across handlers.
+Der naive Ansatz ist ein `Status`-Enum und verstreute `if`-Checks. Das funktioniert, bis jemand einen neuen Status hinzufügt, oder ein Bug `Succeeded` von `Received` setzt, ohne Processing zu durchlaufen, oder ein Requeue-Pfad `Validating` versehentlich überspringt. Der State wird implizit, über Handler verteilt.
 
-## Nine States, Enumerated Transitions
+## Neun States, aufgezählte Transitions
 
-Ingestor models job lifecycle with nine explicit states:
+Ingestor modelliert den Job-Lifecycle mit neun expliziten States:
 
 ```
 Received → Parsing → Validating → Processing → Succeeded
@@ -22,7 +22,7 @@ Received → Parsing → Validating → Processing → Succeeded
                                     → DeadLettered (terminal)
 ```
 
-The domain layer encodes all allowed transitions in a `HashSet<(JobStatus From, JobStatus To)>`. Any attempt to move to an unlisted transition throws a `DomainException` immediately — no silent corruption, no implicit fallback.
+Der Domain Layer codiert alle erlaubten Transitions in einem `HashSet<(JobStatus From, JobStatus To)>`. Jeder Versuch, zu einer nicht aufgelisteten Transition zu wechseln, wirft sofort eine `DomainException` — keine stille Korruption, kein implizites Fallback.
 
 ```csharp
 private static readonly HashSet<(JobStatus, JobStatus)> AllowedTransitions = new()
@@ -42,7 +42,7 @@ private static readonly HashSet<(JobStatus, JobStatus)> AllowedTransitions = new
 };
 ```
 
-The transition method validates, then sets the status and appends an `AuditEvent`:
+Die Transition-Methode validiert, setzt dann den Status und hängt ein `AuditEvent` an:
 
 ```csharp
 public void TransitionTo(JobStatus next, AuditEventTrigger trigger, string? context = null)
@@ -55,38 +55,38 @@ public void TransitionTo(JobStatus next, AuditEventTrigger trigger, string? cont
 }
 ```
 
-Every status change is recorded. The full history of a job is always reconstructible from `AuditEvents`.
+Jede Statusänderung wird aufgezeichnet. Die vollständige History eines Jobs ist immer aus `AuditEvents` rekonstruierbar.
 
-## Why Terminal States Matter
+## Warum Terminal States entscheidend sind
 
-Three terminal states, not one. `ValidationFailed`, `ProcessingFailed`, and `DeadLettered` are all permanent, but they mean different things operationally:
+Drei Terminal States, nicht einer. `ValidationFailed`, `ProcessingFailed` und `DeadLettered` sind alle permanent, aber sie bedeuten operativ unterschiedliche Dinge:
 
-- `ValidationFailed` — bad input, retry won't help. Human intervention required.
-- `ProcessingFailed` — infrastructure problem, eligible for automatic retry.
-- `DeadLettered` — exhausted retries. Moved to `dead_letter_entries` with a JSON snapshot of job state at the time of death. Requires manual requeue.
+- `ValidationFailed` — schlechter Input, ein Retry hilft nicht. Menschliche Intervention erforderlich.
+- `ProcessingFailed` — Infrastructure-Problem, für automatischen Retry berechtigt.
+- `DeadLettered` — Retries erschöpft. Verschoben zu `dead_letter_entries` mit einem JSON-Snapshot des Job-States zum Zeitpunkt des Scheiterns. Erfordert manuellen Requeue.
 
-Having distinct states makes the dead-letter management UI straightforward. The dashboard filters by state rather than by retry count or error message. A dead-lettered job is unambiguously dead; a processing-failed job is unambiguously retryable.
+Unterschiedliche States machen die Dead-Letter-Management-UI unkompliziert. Das Dashboard filtert nach State, nicht nach Retry-Anzahl oder Fehlermeldung. Ein Job im `DeadLettered`-State ist eindeutig tot; ein Job im `ProcessingFailed`-State ist eindeutig retryable.
 
-## The PartiallySucceeded Problem
+## Das PartiallySucceeded-Problem
 
-The `PartiallySucceeded` state was added late and caused the most friction. Batch jobs process in 500-line chunks; a chunk failure mid-way doesn't roll back the chunks already committed. The job can't be `Succeeded` (some lines failed) and can't be `ProcessingFailed` (most lines succeeded).
+Der `PartiallySucceeded`-State wurde spät hinzugefügt und verursachte die meiste Friction. Batch-Jobs verarbeiten in 500-Zeilen-Chunks; ein Chunk-Fehler auf halbem Weg rollt die bereits committed Chunks nicht zurück. Der Job kann nicht `Succeeded` sein (einige Zeilen sind fehlgeschlagen) und kann nicht `ProcessingFailed` sein (die meisten Zeilen waren erfolgreich).
 
-This required new transitions:
+Das erforderte neue Transitions:
 
 ```
 Processing → PartiallySucceeded
 ```
 
-And new questions: is a partially succeeded job retryable? If requeued, do we re-process only the failed chunks? (No — the current design re-processes everything and relies on `DeliveryItem` idempotency.) Can a partially succeeded job be dead-lettered? (Yes, if it fails enough times.)
+Und neue Fragen: Ist ein partially succeeded Job retryable? Wenn er requeued wird, verarbeiten wir nur die fehlgeschlagenen Chunks neu? (Nein — das aktuelle Design verarbeitet alles neu und verlässt sich auf `DeliveryItem`-Idempotency.) Kann ein partially succeeded Job dead-lettered werden? (Ja, wenn er oft genug fehlschlägt.)
 
-The lesson: model your terminal and near-terminal states explicitly from the start. Adding them later forces you to revisit the transition table, the dead-letter schema, the requeue logic, and the UI filters simultaneously.
+Die Lektion: Terminal- und Near-Terminal-States von Anfang an explizit modellieren. Sie später hinzuzufügen zwingt dazu, die Transition-Tabelle, das Dead-Letter-Schema, die Requeue-Logik und die UI-Filter gleichzeitig zu überarbeiten.
 
-## What This Buys
+## Was das bringt
 
-The explicit state machine made two things dramatically easier:
+Die explizite State Machine hat zwei Dinge dramatisch einfacher gemacht:
 
-**Recovery logic is obvious.** When I wrote the stale-lock recovery — reclaiming outbox entries from crashed workers — the state machine told me exactly which job states were eligible for reclaim. I didn't have to reason about it.
+**Recovery-Logik ist offensichtlich.** Als ich die Stale-Lock-Recovery schrieb — Outbox-Einträge von abgestürzten Workers zurückfordern — hat mir die State Machine genau gesagt, welche Job-States für Reclaim berechtigt sind. Ich musste nicht darüber nachdenken.
 
-**Testing is mechanical.** Each transition is a single assertion. The happy path, the sad path, and the invalid transitions are all just table lookups. The domain tests read like a specification.
+**Testing ist mechanisch.** Jede Transition ist eine einzelne Assertion. Der Happy Path, der Sad Path und die ungültigen Transitions sind allesamt nur Tabellen-Lookups. Die Domain-Tests lesen sich wie eine Spezifikation.
 
-The cost is verbosity. Nine states and ~23 transitions is a lot to enumerate. For a simpler pipeline with three states, this would be overkill. For a system where correctness and auditability matter more than brevity, it's worth every line.
+Der Preis ist Ausführlichkeit. Neun States und ~23 Transitions sind viel zum Aufzählen. Für eine einfachere Pipeline mit drei States wäre das Overkill. Für ein System, in dem Korrektheit und Nachvollziehbarkeit mehr zählen als Kürze, ist es jede Zeile wert.

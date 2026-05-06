@@ -11,7 +11,7 @@ const featuredProjects = [
     title: 'Ingestor',
     slug: 'ingestor',
     status: 'live' as const,
-    description: 'Eine .NET 10 Import-Pipeline, gebaut um Reliability: Outbox Pattern, strikte Domain State Machine, idempotente Verarbeitung und eine config-switchable Dispatch-Strategie — jede Design-Entscheidung auf Korrektheit und Nachvollziehbarkeit ausgerichtet.',
+    description: 'A .NET 10 import pipeline built around reliability: outbox pattern, strict domain state machine, idempotent processing, and a config-switchable dispatch strategy — every design decision focused on correctness and auditability.',
     stack: ['.NET 10', 'OpenTelemetry', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
     links: [
       { label: 'github.com/goldbarth/ingestor', href: 'https://github.com/goldbarth/Ingestor' },
@@ -21,7 +21,7 @@ const featuredProjects = [
     title: 'ServiceDeskLite',
     slug: 'service-desk-lite',
     status: 'archived' as const,
-    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling — jede architektonische Entscheidung dokumentiert und begründet.',
+    description: 'A .NET 10 backend reference built around strict layering: compiler-enforced boundaries, two interchangeable persistence adapters, and result-based error handling — every architectural decision documented and justified.',
     stack: ['.NET 10', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
     links: [
       { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
@@ -46,23 +46,23 @@ const writings = (
 
     <section class="intro">
       <p>
-        Felix Wahl — .NET Backend Engineer mit Fokus auf distributed
-        systems — Reliability, Consistency, und das Zeug, über das niemand redet, bis es kaputt ist.
+        Felix Wahl — .NET Backend Engineer focused on distributed
+        systems — reliability, consistency, and the stuff nobody talks about until it breaks.
       </p>
       <p>
-        Notizen aus der Arbeit: Überlegungen hinter technischen Entscheidungen,
-        halbgare Gedanken und was ich gerade baue.
-        Unfertig, hauptsächlich für mein zukünftiges Ich — öffentlich, falls es jemandem hilft.
+        Notes from the work: reasoning behind technical decisions,
+        half-baked thoughts, and what I'm currently building.
+        Unpolished, mostly for my future self — public in case it helps someone.
       </p>
       <div class="intro__now">
-        <span>baue metricgate — auth, caching, microservices in .net · lese project hail mary — andy weir</span>
+        <span>building metricgate — auth, caching, microservices in .net · reading project hail mary — andy weir</span>
       </div>
     </section>
 
     <section class="section">
       <header class="section__head">
-        <h2 class="section__title">Projekte</h2>
-        <a class="section__more" href="/projects">alle Projekte →</a>
+        <h2 class="section__title">Projects</h2>
+        <a class="section__more" href="/projects">all projects →</a>
       </header>
       <div>
         {featuredProjects.map((p) => (
@@ -80,12 +80,12 @@ const writings = (
 
     <section class="section">
       <header class="section__head">
-        <h2 class="section__title">Artikel</h2>
-        <a class="section__more" href="/writings">alle Artikel →</a>
+        <h2 class="section__title">Writing</h2>
+        <a class="section__more" href="/writings">all writing →</a>
       </header>
       <div class="list">
         {writings.length === 0 ? (
-          <p class="muted">Noch keine Artikel.</p>
+          <p class="muted">No posts yet.</p>
         ) : (
           writings.map((post) => (
             <EntryRow

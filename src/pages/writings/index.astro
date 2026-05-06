@@ -13,19 +13,19 @@ const posts = (
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
-<Base title="Writings" active="writings">
+<Base title="Artikel" active="writings">
   <div class="container">
     <section class="cat-intro">
-      <h1>writings</h1>
+      <h1>artikel</h1>
       <p>
-        All notes, decisions, and half-baked thoughts — sorted by date.
-        Unpolished, mostly for my future self.
+        Alle Notizen, Decisions und halbgaren Gedanken — nach Datum sortiert.
+        Unfertig, meistens für mein zukünftiges Ich.
       </p>
     </section>
 
     <div class="list">
       {posts.length === 0 ? (
-        <p class="muted">No posts yet.</p>
+        <p class="muted">Noch keine Einträge.</p>
       ) : (
         posts.map((post) => (
           <EntryRow

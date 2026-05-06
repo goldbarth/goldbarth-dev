@@ -1,24 +1,24 @@
 ---
 title: "Outbox vs. Message Broker"
-description: "Why Ingestor starts with a database-backed outbox instead of RabbitMQ — and what the switchable dispatcher pattern makes possible later."
+description: "Warum Ingestor mit einem database-backed Outbox statt RabbitMQ startet — und was das umschaltbare Dispatcher-Pattern später ermöglicht."
 date: "2026-05-02"
 readMin: 4
 draft: false
 ---
 
-The question that shapes the entire dispatch layer: when a job is created, how does the worker find out?
+Die Frage, die den gesamten Dispatch Layer prägt: Wenn ein Job erstellt wird, wie erfährt der Worker davon?
 
-The obvious answer is a message broker. Publish a message, worker subscribes, done. But that answer comes with a hidden assumption: the database write and the broker publish happen in two separate operations. If the database commits and the broker publish fails — or worse, the process crashes between the two — you've lost the signal. The job exists in the database in `Received` status, but nothing will ever pick it up.
+Die offensichtliche Antwort ist ein Message Broker. Message publizieren, Worker subscribt, fertig. Aber diese Antwort kommt mit einer versteckten Annahme: Der Database-Write und das Broker-Publish passieren in zwei getrennten Operationen. Wenn die Database committed und das Broker-Publish fehlschlägt — oder schlimmer, der Prozess zwischen den beiden abstürzt — ist das Signal verloren. Der Job existiert in der Datenbank im `Received`-Status, aber nichts wird ihn je aufnehmen.
 
-## The Problem with "Publish Then Commit"
+## Das Problem mit "Publish Then Commit"
 
-There's a pattern that sounds reasonable: publish to the broker optimistically, and if the broker fails, roll back the database transaction. The problem is that rollback is not guaranteed either. If the broker publish succeeds but the database commit fails, the worker receives a message for a job that doesn't exist. You've now published phantom work.
+Es gibt ein Pattern, das vernünftig klingt: optimistisch an den Broker publizieren, und wenn der Broker fehlschlägt, die Database-Transaction zurückrollen. Das Problem ist, dass auch Rollback nicht garantiert ist. Wenn das Broker-Publish erfolgreich ist, aber der Database-Commit fehlschlägt, empfängt der Worker eine Message für einen Job, der nicht existiert. Man hat jetzt Phantom-Arbeit publiziert.
 
-The dual-write problem has no clean solution without either accepting eventual inconsistency or adding a coordination mechanism. For a pipeline where every job must be processed exactly once, neither is acceptable.
+Das Dual-Write-Problem hat keine saubere Lösung, ohne entweder Eventual Consistency zu akzeptieren oder einen Koordinationsmechanismus hinzuzufügen. Für eine Pipeline, in der jeder Job genau einmal verarbeitet werden muss, ist beides nicht akzeptabel.
 
-## Why the Outbox
+## Warum der Outbox
 
-The outbox pattern sidesteps dual-write by making the dispatch signal part of the database transaction itself. When a job is created, an `OutboxEntry` is inserted in the same transaction. If the transaction commits, both the job and its dispatch signal exist atomically. If it rolls back, neither does.
+Das Outbox Pattern umgeht Dual-Write, indem es das Dispatch-Signal zum Teil der Database-Transaction selbst macht. Wenn ein Job erstellt wird, wird ein `OutboxEntry` in derselben Transaction eingefügt. Wenn die Transaction committed, existieren sowohl der Job als auch sein Dispatch-Signal atomar. Wenn sie zurückrollt, keines von beiden.
 
 ```
 BEGIN;
@@ -27,7 +27,7 @@ BEGIN;
 COMMIT;
 ```
 
-The worker then polls `outbox_entries` with `FOR UPDATE SKIP LOCKED`:
+Der Worker pollt dann `outbox_entries` mit `FOR UPDATE SKIP LOCKED`:
 
 ```sql
 SELECT * FROM outbox_entries
@@ -36,17 +36,17 @@ FOR UPDATE SKIP LOCKED
 LIMIT 1;
 ```
 
-`SKIP LOCKED` is the key detail. If another worker has already claimed an entry, this query skips it rather than blocking. Multiple worker instances can poll simultaneously without thundering herd, and without a distributed lock.
+`SKIP LOCKED` ist das entscheidende Detail. Wenn ein anderer Worker einen Eintrag bereits beansprucht hat, überspringt diese Query ihn statt zu blockieren. Mehrere Worker-Instanzen können gleichzeitig pollen, ohne Thundering-Herd-Problem und ohne Distributed Lock.
 
-## The Tradeoffs
+## Die Trade-offs
 
-The outbox costs something. Polling adds database load — every worker instance runs a query on a schedule, even when there's nothing to process. For Ingestor's workload (delivery advice imports, not sub-millisecond event streams), this is fine. For a system processing thousands of events per second, it would not be.
+Der Outbox kostet etwas. Polling fügt Database-Last hinzu — jede Worker-Instanz führt einen Query nach Plan aus, auch wenn nichts zu verarbeiten ist. Für Ingestors Workload (Delivery-Advice-Imports, keine sub-millisekunden Event-Streams) ist das in Ordnung. Für ein System, das tausende Events pro Sekunde verarbeitet, nicht.
 
-The latency profile is also different. A broker delivers near-immediately. An outbox poll interval introduces a delay — Ingestor polls every two seconds. For an import pipeline, a two-second pickup delay is invisible. For a user-facing notification system, it would be noticeable.
+Das Latency-Profil ist auch anders. Ein Broker liefert nahezu sofort. Ein Outbox-Poll-Intervall führt eine Verzögerung ein — Ingestor pollt alle zwei Sekunden. Für eine Import-Pipeline ist eine zwei-sekündige Pickup-Verzögerung unsichtbar. Für ein nutzerseitiges Benachrichtigungssystem wäre sie spürbar.
 
-## Making It Switchable
+## Umschaltbar machen
 
-Rather than hard-coding the outbox strategy, Ingestor introduces an `IJobDispatcher` abstraction:
+Statt die Outbox-Strategie fest zu kodieren, führt Ingestor eine `IJobDispatcher`-Abstraktion ein:
 
 ```csharp
 public interface IJobDispatcher
@@ -55,18 +55,18 @@ public interface IJobDispatcher
 }
 ```
 
-Two implementations: `OutboxJobDispatcher` (writes to the outbox table) and `RabbitMqJobDispatcher` (publishes to an exchange). The active strategy is selected via configuration:
+Zwei Implementierungen: `OutboxJobDispatcher` (schreibt in die Outbox-Tabelle) und `RabbitMqJobDispatcher` (publiziert an einen Exchange). Die aktive Strategie wird über Konfiguration ausgewählt:
 
 ```json
 "Dispatch": { "Strategy": "Database" }
 ```
 
-Swapping to `RabbitMQ` requires no code changes, just a config value and the broker running.
+Zu `RabbitMQ` zu wechseln erfordert keine Code-Änderungen, nur einen Config-Wert und den laufenden Broker.
 
-The RabbitMQ dispatcher adds one extra wrinkle: publishing *before* the database commit creates the same race condition we were trying to avoid. The solution is a post-commit callback — the dispatcher registers a publish action that fires after `SaveChangesAsync()` completes, not before. The message cannot be consumed before the job is visible in the database.
+Der RabbitMQ Dispatcher fügt eine zusätzliche Komplikation hinzu: *vor* dem Database-Commit zu publizieren erzeugt dieselbe Race Condition, die wir vermeiden wollten. Die Lösung ist ein Post-Commit-Callback — der Dispatcher registriert eine Publish-Aktion, die nach dem Abschluss von `SaveChangesAsync()` feuert, nicht davor. Die Message kann nicht konsumiert werden, bevor der Job in der Datenbank sichtbar ist.
 
-## What I'd Change
+## Was ich ändern würde
 
-The outbox works well as a starting point. If I were building for higher throughput, I'd likely add a dedicated outbox relay process — something that tails the database and forwards entries to a broker, rather than having workers poll directly. But for a portfolio project demonstrating the pattern, direct polling is simpler and more transparent.
+Der Outbox funktioniert gut als Ausgangspunkt. Würde ich für höheren Throughput bauen, würde ich wahrscheinlich einen dedizierten Outbox-Relay-Prozess hinzufügen — etwas, das die Datenbank tailed und Einträge an einen Broker weiterleitet, statt Workers direkt pollen zu lassen. Aber für ein Portfolio-Projekt, das das Pattern demonstriert, ist direktes Polling einfacher und transparenter.
 
-The `IJobDispatcher` abstraction was worth the effort. Being able to explain "the system works without a broker, add one when you need scale" is a better story than "requires RabbitMQ to run at all."
+Die `IJobDispatcher`-Abstraktion war den Aufwand wert. „Das System funktioniert ohne einen Broker — füge einen hinzu, wenn du Skalierung brauchst" erklären zu können ist eine bessere Geschichte als „benötigt RabbitMQ, um überhaupt zu laufen."

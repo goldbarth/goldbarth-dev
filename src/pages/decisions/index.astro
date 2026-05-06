@@ -12,15 +12,15 @@ const posts = (await getCollection('decisions', ({ data }) => !data.draft))
     <section class="cat-intro">
       <h1>decisions</h1>
       <p>
-        Reasoning behind technical decisions — mainly so I don't have to
-        relitigate them later. What worked, what didn't, and under what
-        assumptions.
+        Begründungen hinter technischen Entscheidungen — hauptsächlich damit
+        ich sie später nicht neu aufrollen muss. Was funktioniert hat, was
+        nicht, und unter welchen Annahmen.
       </p>
     </section>
 
     <div class="list">
       {posts.length === 0 ? (
-        <p class="muted">No posts yet.</p>
+        <p class="muted">Noch keine Einträge.</p>
       ) : (
         posts.map((post) => (
           <EntryRow

@@ -1,30 +1,30 @@
 ---
 title: "ServiceDeskLite"
-description: "A .NET 10 Clean Architecture reference — strict layer boundaries enforced by the compiler, two interchangeable persistence adapters, and every decision documented as an ADR."
+description: "Eine .NET 10 Clean Architecture Referenz — strikte Layer-Boundaries, compiler-enforced, zwei austauschbare Persistence-Adapter und jede Entscheidung als ADR dokumentiert."
 date: "2026-05-04"
 readMin: 6
 draft: false
 ---
 
-## What it is
+## Was es ist
 
-ServiceDeskLite is a ticket workflow backend built on .NET 10. Tickets move through a Kanban-style state machine — open, in progress, resolved, closed — with explicit transition rules enforced at the domain level. Three independently testable layers: a domain that knows nothing about HTTP or databases, an application layer that orchestrates use cases, and two interchangeable persistence adapters behind the same repository interfaces. A Blazor Server frontend consumes the API over HTTP.
+ServiceDeskLite ist ein Ticket-Workflow-Backend, gebaut auf .NET 10. Tickets durchlaufen eine Kanban-ähnliche State Machine — open, in progress, resolved, closed — mit expliziten Transition-Regeln, die auf Domain-Ebene durchgesetzt werden. Drei unabhängig testbare Layer: eine Domain, die nichts über HTTP oder Datenbanken weiß, ein Application Layer, der Use Cases orchestriert, und zwei austauschbare Persistence-Adapter hinter denselben Repository-Interfaces. Ein Blazor Server Frontend konsumiert die API über HTTP.
 
-The goal isn't feature breadth. The goal is structural clarity — every layer boundary visible and compiler-enforced, every decision documented, every tradeoff argued.
+Das Ziel ist keine Feature-Breite. Das Ziel ist strukturelle Klarheit — jede Layer-Boundary sichtbar und compiler-enforced, jede Entscheidung dokumentiert, jeder Trade-off begründet.
 
-Full documentation and all 22 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
+Vollständige Dokumentation und alle 22 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
 
 ## Problem / Motivation
 
-I've seen codebases where Clean Architecture was the stated approach but the dependency rules existed only in diagrams and code reviews. Something always leaked. Infrastructure types appearing in domain methods. HTTP concerns creeping into use cases. Not through carelessness — through the fact that naming conventions and reviewer attention are weak enforcement mechanisms. The compiler enforces nothing.
+Ich habe Codebases gesehen, wo Clean Architecture der erklärte Ansatz war, die Dependency-Regeln aber nur in Diagrammen und Code Reviews existierten. Irgendetwas ist immer durchgesickert. Infrastructure-Typen, die in Domain-Methoden auftauchen. HTTP-Belange, die sich in Use Cases einschleichen. Nicht durch Unachtsamkeit — sondern weil Naming Conventions und Reviewer-Aufmerksamkeit schwache Enforcement-Mechanismen sind. Der Compiler erzwingt nichts.
 
-I wanted to build something where the dependency direction is enforced by project references, not by trust. Where the answer to "can the domain layer see the database?" is "it doesn't have a reference to that project" — not "it shouldn't, and we check in code review."
+Ich wollte etwas bauen, wo die Dependency-Richtung durch Project-References erzwungen wird, nicht durch Vertrauen. Wo die Antwort auf „Kann der Domain Layer die Datenbank sehen?" lautet: „Er hat keine Reference auf das Projekt" — nicht: „Er sollte es nicht, und wir prüfen das im Code Review."
 
-ServiceDeskLite is that experiment. Small enough to hold entirely in your head, structured strictly enough that the architecture is legible in the `.csproj` files.
+ServiceDeskLite ist dieses Experiment. Klein genug, um es vollständig im Kopf zu behalten, strikt genug strukturiert, dass die Architecture in den `.csproj`-Dateien lesbar ist.
 
-## Architecture / Key Decisions
+## Architecture / Wichtige Entscheidungen
 
-Six projects. Strict inward dependency flow.
+Sechs Projekte. Strikter Dependency-Flow nach innen.
 
 ```
 ┌─────────────────────────────────────┐
@@ -40,33 +40,33 @@ Six projects. Strict inward dependency flow.
 └─────────────────────────────────────┘
 ```
 
-The domain knows nothing outside itself. The application knows the domain and defines port interfaces for persistence. Infrastructure implements those ports. The API wires everything together via Minimal API endpoints that inject handlers directly from DI — no mediator, no dispatch layer.
+Die Domain kennt nichts außer sich selbst. Der Application Layer kennt die Domain und definiert Port-Interfaces für Persistence. Infrastructure implementiert diese Ports. Die API verdrahtet alles über Minimal API Endpoints, die Handler direkt aus DI injizieren — kein Mediator, kein Dispatch Layer.
 
-Two persistence implementations live behind the same `ITicketRepository` and `IUnitOfWork` ports: one EF Core backed by PostgreSQL, one hand-rolled `ConcurrentDictionary` store. Both honour the same unit-of-work commit boundary. Switching is one config value. The swap proves the port boundaries hold — not in prose, in running tests.
+Zwei Persistence-Implementierungen leben hinter denselben `ITicketRepository`- und `IUnitOfWork`-Ports: eine EF Core-gestützte PostgreSQL-Implementierung, ein selbst geschriebener `ConcurrentDictionary` Store. Beide halten dieselbe Unit-of-Work Commit-Boundary ein. Wechseln ist ein Config-Wert. Der Swap beweist, dass die Port-Boundaries halten — nicht in Prosa, in laufenden Tests.
 
-Every handler returns `Result<T>` — never throws for expected failures. The API layer maps error types to HTTP status codes in one place. RFC 9457 `ProblemDetails` is the error contract across the entire surface.
+Jeder Handler gibt `Result<T>` zurück — wirft nie für erwartete Fehler. Der API Layer mappt Error-Typen an einer Stelle auf HTTP-Statuscodes. RFC 9457 `ProblemDetails` ist der Error-Contract über die gesamte API-Oberfläche.
 
-→ [Architecture Enforced by the Compiler](/decisions/clean-architecture-enforced-by-compiler)
-→ [Result Pattern at the Application Boundary](/decisions/result-pattern-application-boundary)
-→ [RFC 9457 as the Unified Error Contract](/decisions/rfc9457-problem-details)
-→ [Minimal API Without MediatR](/decisions/minimal-api-without-mediatr)
-→ [Swappable Persistence as Port Proof](/decisions/swappable-persistence-port-proof)
-→ [Strongly-Typed Domain Identifiers](/decisions/strongly-typed-domain-ids)
+→ [Architecture, vom Compiler durchgesetzt](/decisions/clean-architecture-enforced-by-compiler)
+→ [Result Pattern an der Application Boundary](/decisions/result-pattern-application-boundary)
+→ [RFC 9457 als einheitlicher Error-Contract](/decisions/rfc9457-problem-details)
+→ [Minimal API ohne MediatR](/decisions/minimal-api-without-mediatr)
+→ [Swappable Persistence als Port-Beweis](/decisions/swappable-persistence-port-proof)
+→ [Stark typisierte Domain-IDs](/decisions/strongly-typed-domain-ids)
 
-## Challenges
+## Herausforderungen
 
-The InMemory persistence adapter was the sharpest test of the architecture.
+Der InMemory Persistence Adapter war der härteste Test der Architecture.
 
-EF Core ships its own `InMemory` provider. It's the obvious choice for tests and development — no files, no migration step. I ruled it out early: it doesn't honour transaction semantics. Writes are immediately visible without calling `SaveChanges`. If I'd used it, the InMemory and PostgreSQL paths would behave differently under the same application code, and the architecture's central claim — that adapters are interchangeable above the port boundary — would be untestable.
+EF Core liefert einen eigenen `InMemory` Provider mit. Die offensichtliche Wahl für Tests und Development — keine Dateien, kein Migration-Schritt. Ich habe ihn früh ausgeschlossen: Er hält keine Transaction-Semantik ein. Writes sind sofort sichtbar, ohne `SaveChanges` aufzurufen. Hätte ich ihn verwendet, würden die InMemory- und PostgreSQL-Pfade unter demselben Application-Code unterschiedlich funktionieren, und die zentrale Aussage der Architecture — dass Adapter über der Port-Boundary austauschbar sind — wäre nicht testbar.
 
-The alternative was writing a hand-rolled implementation: a singleton `ConcurrentDictionary` store with a scoped `IUnitOfWork` that buffers adds in a `PendingAdds` list and applies them to the store only on `SaveChangesAsync`. More code, but the commit boundary is real. Unit-of-work isolation tests that pass against InMemory are meaningful, because the InMemory provider deliberately withholds uncommitted writes from concurrent reads.
+Die Alternative war eine selbst geschriebene Implementierung: ein Singleton `ConcurrentDictionary` Store mit einem scoped `IUnitOfWork`, der Adds in einer `PendingAdds`-Liste puffert und sie erst beim `SaveChangesAsync` auf den Store anwendet. Mehr Code, aber die Commit-Boundary ist real. Unit-of-Work Isolation-Tests, die gegen InMemory bestehen, sind aussagekräftig — weil der InMemory Provider uncommitted Writes absichtlich vor concurrent Reads verbirgt.
 
-The other persistent friction point was the `Contracts` project. Versioned request and response DTOs live there, shared between the API and the Blazor Web client. That boundary keeps the Web clean — it never references `Application`, `Domain`, or `Infrastructure` directly. But it means every field addition touches one more project, and the mapping layer between domain and contract types adds ongoing overhead. For a reference project, the tradeoff is worth it. For a team moving fast on features, it needs a harder justification.
+Der andere anhaltende Reibungspunkt war das `Contracts`-Projekt. Versionierte Request- und Response-DTOs leben dort, geteilt zwischen der API und dem Blazor Web-Client. Diese Boundary hält das Web-Projekt sauber — es referenziert `Application`, `Domain` oder `Infrastructure` nie direkt. Aber es bedeutet, dass jede Feld-Ergänzung ein weiteres Projekt berührt, und der Mapping Layer zwischen Domain- und Contract-Typen fügt laufenden Overhead hinzu. Für ein Referenz-Projekt ist der Trade-off es wert. Für ein Team, das schnell Features entwickelt, braucht es eine härtere Rechtfertigung.
 
 ## Takeaways
 
-The architecture earns its cost immediately in testing. Handlers run under `xUnit` with no web host, no middleware, no database. Inject the handler, call `HandleAsync`, assert the result. The result type makes assertions clean — no try/catch blocks, no exception inspection. The integration suite runs both persistence providers through the same test cases via a `[ProviderMatrix]` attribute.
+Die Architecture rechtfertigt ihren Aufwand sofort im Testing. Handler laufen unter `xUnit` — kein Web-Host, kein Middleware, keine Datenbank. Handler injizieren, `HandleAsync` aufrufen, Ergebnis prüfen. Der Result-Typ macht Assertions sauber — keine try/catch-Blöcke, keine Exception-Inspektion. Die Integration-Suite führt beide Persistence-Provider durch dieselben Test-Cases, per `[ProviderMatrix]` Attribute.
 
-The persistence swap was the clearest validation. `PERSISTENCE__PROVIDER=InMemory` in development, `Postgres` in CI. Same handler code, same test cases, both green. That's the architecture working. Not described as working — demonstrated.
+Der Persistence-Swap war die klarste Validierung. `PERSISTENCE__PROVIDER=InMemory` in Development, `Postgres` in CI. Derselbe Handler-Code, dieselben Test-Cases, beide grün. Das ist Architecture, die funktioniert. Nicht beschrieben als funktionierend — demonstriert.
 
-If I built it again, I'd introduce the `Contracts` project earlier and think harder about what version stability means for a reference project. The versioning ceremony (`V1` namespace, explicit mapping) is correct practice, but it adds noise when the API surface isn't actually evolving. For a second milestone that introduces breaking API changes, it will justify itself completely.
+Würde ich es nochmal bauen, würde ich das `Contracts`-Projekt früher einführen und härter darüber nachdenken, was Version-Stabilität für ein Referenz-Projekt bedeutet. Das Versioning-Zeremoniell (`V1` Namespace, explizites Mapping) ist korrekte Praxis, aber es erzeugt Rauschen, wenn die API-Oberfläche sich nicht tatsächlich weiterentwickelt. Für einen zweiten Milestone, der Breaking API Changes einführt, wird es sich vollständig rechtfertigen.

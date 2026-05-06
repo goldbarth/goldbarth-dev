@@ -1,60 +1,60 @@
 ---
 title: "Idempotency Key Strategy"
-description: "Designing deterministic idempotency keys for an import pipeline — why SHA256 over file content, what the unique index enforces, and how HTTP clients benefit."
+description: "Deterministische Idempotency Keys für eine Import-Pipeline entwerfen — warum SHA256 über File-Content, was der Unique Index durchsetzt und wie HTTP-Clients davon profitieren."
 date: "2026-05-02"
 readMin: 3
 draft: false
 ---
 
-Import pipelines and retries are inseparable. Networks fail. Clients timeout and retry. Ops teams resubmit files. Without idempotency, each retry creates a duplicate job. With it, retries are safe by default.
+Import-Pipelines und Retries sind untrennbar. Netzwerke fallen aus. Clients haben Timeouts und retrien. Ops-Teams reichen Dateien erneut ein. Ohne Idempotency erstellt jeder Retry einen doppelten Job. Mit ihr sind Retries standardmäßig sicher.
 
-## The Key Format
+## Das Key-Format
 
-Ingestor computes idempotency keys as:
+Ingestor berechnet Idempotency Keys als:
 
 ```
 "{supplierCode}:{SHA256(fileBytes)}"
 ```
 
-Example: `"ACME:a3f8c2...d91b"`
+Beispiel: `"ACME:a3f8c2...d91b"`
 
-Two components, each doing something specific:
+Zwei Komponenten, jede mit einer spezifischen Aufgabe:
 
-**`SHA256(fileBytes)`** identifies the file content. Same bytes, same hash. If a client uploads the same file twice — different connection, different timestamp, different filename — the hash is identical. The database unique index rejects the second insert and returns the existing job.
+**`SHA256(fileBytes)`** identifiziert den File-Content. Gleiche Bytes, gleicher Hash. Wenn ein Client dieselbe Datei zweimal hochlädt — andere Verbindung, anderer Timestamp, anderer Dateiname — ist der Hash identisch. Der Datenbank-Unique-Index lehnt das zweite Insert ab und gibt den bestehenden Job zurück.
 
-**`supplierCode`** scopes the hash to a supplier. Two suppliers can legitimately upload identical content (a shared template file, for instance). Without the supplier scope, their jobs would collide. With it, `ACME:a3f8...` and `GLOBEX:a3f8...` are distinct.
+**`supplierCode`** begrenzt den Hash auf einen Supplier. Zwei Supplier können legitimerweise identischen Content hochladen (eine gemeinsame Template-Datei, zum Beispiel). Ohne den Supplier-Scope würden ihre Jobs kollidieren. Mit ihm sind `ACME:a3f8...` und `GLOBEX:a3f8...` unterschiedlich.
 
-## Why Not a Client-Provided Key
+## Warum kein Client-provided Key
 
-The alternative is letting the client provide the idempotency key as a request header. Some APIs do this — Stripe, for example. The advantage is explicit client control: the client decides what counts as "the same request."
+Die Alternative ist, den Client den Idempotency Key als Request-Header bereitstellen zu lassen. Manche APIs tun das — Stripe zum Beispiel. Der Vorteil ist explizite Client-Kontrolle: Der Client entscheidet, was als „derselbe Request" gilt.
 
-For an import pipeline, I wanted the key to be derived from the content, not asserted by the client. A client-provided key can be wrong — same key, different file content. Content-derived keys are always correct: same content means same job, regardless of what the client says.
+Für eine Import-Pipeline wollte ich, dass der Key aus dem Content abgeleitet wird, nicht vom Client behauptet. Ein client-seitig bereitgestellter Key kann falsch sein — gleicher Key, anderer File-Content. Content-abgeleitete Keys sind immer korrekt: gleicher Content bedeutet gleicher Job, unabhängig davon, was der Client sagt.
 
-The tradeoff: clients can't force a re-import of the same file with a new key. If a file's content needs reprocessing (data correction, bug fix), the file itself must change. That's an intentional constraint.
+Der Trade-off: Clients können kein Re-Import derselben Datei mit einem neuen Key erzwingen. Wenn der Content einer Datei neu verarbeitet werden muss (Datenkorrektur, Bug-Fix), muss sich die Datei selbst ändern. Das ist eine bewusste Einschränkung.
 
-## Enforcing at the Database Level
+## Durchsetzen auf Datenbankebene
 
-The idempotency check happens in two places:
+Die Idempotency-Prüfung findet an zwei Stellen statt:
 
-1. **Application layer** — the `CreateImportJobHandler` checks for an existing job before inserting. If found, returns HTTP 200 with the existing job's ID and status.
+1. **Application Layer** — der `CreateImportJobHandler` prüft vor dem Insert auf einen bestehenden Job. Falls gefunden, gibt er HTTP 200 mit der ID und dem Status des bestehenden Jobs zurück.
 
-2. **Database unique index** — a unique constraint on `idempotency_key` catches concurrent requests that race past the application check. The second insert fails with a unique constraint violation, which the handler catches and converts to the same HTTP 200 response.
+2. **Datenbank-Unique-Index** — ein Unique Constraint auf `idempotency_key` fängt concurrent Requests ab, die an der Application-Prüfung vorbeirennen. Das zweite Insert schlägt mit einer Unique-Constraint-Verletzung fehl, die der Handler fängt und in dieselbe HTTP-200-Response umwandelt.
 
 ```sql
 CREATE UNIQUE INDEX uq_import_jobs_idempotency_key
 ON import_jobs (idempotency_key);
 ```
 
-The double-check matters. Without the database constraint, two concurrent requests for the same file could both pass the application check (before either has committed), creating duplicate jobs. With it, only one wins.
+Die Doppelprüfung ist wichtig. Ohne den Datenbank-Constraint könnten zwei concurrent Requests für dieselbe Datei beide die Application-Prüfung bestehen (bevor einer von beiden committed hat), was zu doppelten Jobs führt. Mit ihm gewinnt nur einer.
 
-## What the Client Sees
+## Was der Client sieht
 
-A duplicate submission returns HTTP 200 with the original job's state — not 409 Conflict, not 422. The client gets a valid response with a job ID they can use to check status. From the client's perspective, the upload succeeded; it just happened to be a no-op.
+Eine doppelte Einreichung gibt HTTP 200 mit dem State des ursprünglichen Jobs zurück — kein 409 Conflict, kein 422. Der Client bekommt eine gültige Response mit einer Job-ID, mit der er den Status prüfen kann. Aus Sicht des Clients war der Upload erfolgreich; er war zufällig ein No-op.
 
-This makes retry logic trivial on the client side: upload, get a job ID, poll for status. Retries on network failure are safe. Accidental double-submissions are safe. The pipeline absorbs them silently.
+Das macht Retry-Logik auf der Client-Seite trivial: hochladen, Job-ID bekommen, Status pollen. Retries bei Netzwerkfehlern sind sicher. Versehentliche Doppeleinreichungen sind sicher. Die Pipeline absorbiert sie still.
 
-## Limits
+## Grenzen
 
-SHA256 over raw file bytes is fast enough for delivery advice files (typically under a few MB). For very large files, you'd want to hash a streaming read rather than loading the entire payload into memory first. Ingestor loads the full payload for validation anyway, so this isn't a practical concern at current scale.
+SHA256 über rohe File-Bytes ist schnell genug für Delivery-Advice-Dateien (typischerweise unter einigen MB). Für sehr große Dateien würde man einen Streaming-Read hashen wollen, statt den gesamten Payload zuerst in den Speicher zu laden. Ingestor lädt den vollständigen Payload ohnehin für die Validation, also ist das kein praktisches Problem bei der aktuellen Größe.
 
-The design also assumes file content is the canonical identity. If the same physical content should be processable multiple times (batch reprocessing, corrections), a different keying strategy is needed — time-scoped keys, explicit version fields, or client-controlled keys with content validation.
+Das Design geht auch davon aus, dass der File-Content die kanonische Identität ist. Wenn derselbe physische Content mehrfach verarbeitbar sein soll (Batch-Reprocessing, Korrekturen), ist eine andere Keying-Strategie nötig — time-scoped Keys, explizite Versionsfelder oder client-kontrollierte Keys mit Content-Validierung.
