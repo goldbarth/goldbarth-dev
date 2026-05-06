@@ -1,46 +1,46 @@
 ---
 title: "Ingestor"
-description: "A .NET 10 import pipeline built around reliability: outbox pattern, strict domain state machine, idempotent processing, and a config-switchable dispatch strategy — every design decision focused on correctness and auditability."
+description: "Eine .NET 10 Import-Pipeline, gebaut um Reliability: Outbox Pattern, strikte Domain State Machine, idempotente Verarbeitung und eine config-switchable Dispatch-Strategie — jede Design-Entscheidung auf Korrektheit und Nachvollziehbarkeit ausgerichtet."
 date: "2026-05-02"
 readMin: 6
 draft: false
 ---
 
-## What it is
+## Was es ist
 
-Ingestor is a production-grade import pipeline for the fictional Fleetholm Logistics domain. It ingests delivery advice files — CSV or JSON — validates them, processes them in configurable chunks, and tracks every operation with a full audit trail. Three independently deployable services: an API for uploads and status queries, a background worker for processing, and a Blazor Server dashboard for operations. Built on .NET 10 with PostgreSQL, optionally extended with RabbitMQ.
+Ingestor ist eine production-grade Import-Pipeline für die fiktive Fleetholm-Logistics-Domain. Sie nimmt Delivery-Advice-Dateien entgegen — CSV oder JSON —, validiert sie, verarbeitet sie in konfigurierbaren Chunks und protokolliert jeden Vorgang mit einem vollständigen Audit-Trail. Drei unabhängig deploybare Services: eine API für Uploads und Status-Queries, ein Background Worker für die Verarbeitung und ein Blazor Server Dashboard für den Betrieb. Gebaut auf .NET 10 mit PostgreSQL, optional erweitert mit RabbitMQ.
 
 ## Problem / Motivation
 
-I wanted a project that forced me to think through distributed systems problems at a realistic scale — not toy examples, but something with actual failure modes: concurrent workers racing for jobs, files too large to process atomically, infrastructure errors that deserve a retry versus those that should fail immediately, and the question of how to publish to a message broker without creating a race condition with your own database.
+Ich wollte ein Projekt, das mich zwingt, distributed systems Probleme in realistischem Maßstab durchzudenken — keine Lehrbuch-Beispiele, sondern etwas mit echten Failure-Modes: concurrent Workers, die um Jobs konkurrieren, Dateien, die zu groß sind, um sie atomar zu verarbeiten, Infrastructure-Fehler, die einen Retry verdienen, versus solche, die sofort fehlschlagen sollten, und die Frage, wie man an einen Message Broker publiziert, ohne eine Race Condition mit der eigenen Datenbank zu erzeugen.
 
-Every production system I've read about eventually adds an outbox, a state machine, and some form of idempotency. I wanted to build those things from scratch and understand *why* each pattern exists — not just how to copy it.
+Jedes Production-System, über das ich gelesen habe, fügt irgendwann einen Outbox, eine State Machine und irgendeine Form von Idempotency hinzu. Ich wollte diese Dinge von Grund auf bauen und verstehen, *warum* jedes Pattern existiert — nicht nur, wie man es kopiert.
 
-## Architecture / Key Decisions
+## Architecture / Wichtige Entscheidungen
 
-The core is a database-backed outbox. Jobs and their dispatch signals are committed in the same transaction — no distributed transactions, no "did the message actually get sent?" ambiguity. Workers poll with `FOR UPDATE SKIP LOCKED` to claim jobs without thundering herd. The tradeoff: more database load than a dedicated broker, but a far simpler operational story.
+Der Kern ist ein database-backed Outbox. Jobs und ihre Dispatch-Signale werden in derselben Transaction committed — keine distributed Transactions, kein „Ist die Message tatsächlich angekommen?"-Zweifel. Workers pollen mit `FOR UPDATE SKIP LOCKED`, um Jobs ohne Thundering-Herd-Problem zu beanspruchen. Der Trade-off: mehr Datenbank-Last als ein dedizierter Broker, dafür ein deutlich einfacheres Betriebsbild.
 
-State is managed by an explicit domain state machine with nine named states. Every allowed transition is enumerated in a `HashSet`; anything not in that set throws a `DomainException` immediately. No silent state corruption, no implicit fallback paths.
+State wird durch eine explizite Domain State Machine mit neun benannten States verwaltet. Jede erlaubte Transition ist in einem `HashSet` aufgezählt; alles außerhalb wirft sofort eine `DomainException`. Keine stille State-Korruption, keine impliziten Fallback-Pfade.
 
-Idempotency keys are computed as `SHA256(fileBytes + supplierCode)` — deterministic, safe for client retries, enforced by a unique index. Duplicate submissions return HTTP 200 with the existing job — no questions asked.
+Idempotency Keys werden als `SHA256(fileBytes + supplierCode)` berechnet — deterministisch, sicher für Client-Retries, durch einen Unique Index erzwungen. Doppelte Einreichungen geben HTTP 200 mit dem bestehenden Job zurück — ohne Rückfragen.
 
-Error handling uses a `Result<T>` type instead of exceptions across the application boundary. Every outcome is explicit. Infrastructure exceptions are classified as `Transient` or `Permanent`: transient errors retry with exponential backoff, permanent ones dead-letter immediately.
+Error Handling verwendet einen `Result<T>`-Typ statt Exceptions über die Application Boundary. Jedes Ergebnis ist explizit. Infrastructure Exceptions werden als `Transient` oder `Permanent` klassifiziert: transiente Fehler retrien mit exponentiellem Backoff, permanente werden sofort dead-lettered.
 
-Batch processing splits large files into 500-line chunks, each committed atomically. If chunk 16 of 20 fails, chunks 1–15 stay committed and the job transitions to `PartiallySucceeded` rather than rolling everything back. Operationally more useful than all-or-nothing for large imports.
+Batch Processing teilt große Dateien in 500-Zeilen-Chunks auf, jeder atomar committed. Schlägt Chunk 16 von 20 fehl, bleiben Chunks 1–15 committed und der Job transitioniert zu `PartiallySucceeded`, statt alles zurückzurollen. Operativ nützlicher als All-or-Nothing bei großen Importen.
 
-RabbitMQ dispatch — when configured — publishes only *after* the database commit via a post-commit callback registry. This eliminates the classic race where a consumer processes a message before the producing transaction is visible to the database.
+RabbitMQ Dispatch — wenn konfiguriert — publiziert erst *nach* dem Database-Commit, über eine Post-Commit-Callback-Registry. Das eliminiert die klassische Race Condition, bei der ein Consumer eine Message verarbeitet, bevor die produzierende Transaction für die Datenbank sichtbar ist.
 
 → [Outbox vs. Message Broker](/decisions/outbox-vs-message-broker)
-→ [State Machine with Explicit Transitions](/decisions/state-machine-explicit-transitions)
+→ [State Machine mit expliziten Transitions](/decisions/state-machine-explicit-transitions)
 → [Idempotency Key Strategy](/decisions/idempotency-key-strategy)
-→ [Result Pattern over Exceptions](/decisions/result-pattern-over-exceptions)
-→ [Chunk-based Batch Processing](/decisions/chunk-based-batch-processing)
+→ [Result Pattern statt Exceptions](/decisions/result-pattern-over-exceptions)
+→ [Chunk-basierte Batch-Verarbeitung](/decisions/chunk-based-batch-processing)
 
-## Challenges
+## Herausforderungen
 
-The hardest problem was one the test suite couldn't find.
+Das härteste Problem war eines, das die Test-Suite nicht finden konnte.
 
-The `RabbitMqJobDispatcher` originally called `BasicPublishAsync` inside `DispatchAsync` — eagerly, before the database transaction committed. The handler called them in this order:
+Der `RabbitMqJobDispatcher` rief `BasicPublishAsync` ursprünglich innerhalb von `DispatchAsync` auf — eager, bevor die Database-Transaction committed hatte. Der Handler rief sie in dieser Reihenfolge auf:
 
 ```csharp
 await jobRepository.AddAsync(job, payload, ct);
@@ -48,20 +48,20 @@ await jobDispatcher.DispatchAsync(job, ct);   // publishes immediately
 await unitOfWork.SaveChangesAsync(ct);         // job written after message already sent
 ```
 
-In unit tests: green. In integration tests: green. The race window — between the message arriving in the queue and the database commit completing — is microseconds wide under normal conditions. Every test passed.
+In Unit-Tests: grün. In Integration-Tests: grün. Das Race-Window — zwischen dem Eintreffen der Message in der Queue und dem Abschluss des Database-Commits — ist unter normalen Bedingungen Mikrosekunden breit. Jeder Test bestand.
 
-The benchmarks exposed it. Under load, with the RabbitMQ worker running in the same process, the worker consumed the message before `SaveChangesAsync` finished. `GetByIdAsync` returned `null`. The message was nacked, routed to the dead-letter exchange, and the job was permanently stuck in `Received`. Reproducible, but only at benchmark throughput.
+Die Benchmarks haben es aufgedeckt. Unter Last, mit dem RabbitMQ Worker im selben Prozess, konsumierte der Worker die Message, bevor `SaveChangesAsync` abgeschlossen war. `GetByIdAsync` gab `null` zurück. Die Message wurde genackt, zum Dead-Letter-Exchange geroutet, und der Job steckte permanent in `Received` fest. Reproduzierbar, aber nur bei Benchmark-Throughput.
 
-The root cause wasn't a call-site ordering bug — it was a design-level defect. The `IJobDispatcher` abstraction said nothing about *when* dispatch takes effect relative to the database commit. `DatabaseJobDispatcher` was lazy (writes into the EF change tracker, commits with the job). `RabbitMqJobDispatcher` was eager (fires immediately). Two implementations, same interface, opposite timing semantics. Reordering the handler calls would have fixed the symptom but broken `DatabaseJobDispatcher`, whose `OutboxEntry` write must be committed atomically with the job.
+Die Ursache war kein Call-Site-Ordering-Bug — es war ein Design-Level-Defekt. Die `IJobDispatcher`-Abstraktion sagte nichts darüber, *wann* Dispatch relativ zum Database-Commit wirkt. `DatabaseJobDispatcher` war lazy (schreibt in den EF Change Tracker, committed mit dem Job). `RabbitMqJobDispatcher` war eager (feuert sofort). Zwei Implementierungen, dasselbe Interface, entgegengesetzte Timing-Semantik. Die Handler-Aufrufe umzuordnen hätte das Symptom behoben, aber `DatabaseJobDispatcher` gebrochen, dessen `OutboxEntry`-Write atomar mit dem Job committed werden muss.
 
-The fix was an `IAfterSaveCallbackRegistry` — an internal infrastructure interface that `EfUnitOfWork` implements alongside `IUnitOfWork`. `RabbitMqJobDispatcher` registers the publish as a callback; it fires after `SaveChangesAsync` completes, never before. The handler needed no changes.
+Der Fix war ein `IAfterSaveCallbackRegistry` — ein internes Infrastructure-Interface, das `EfUnitOfWork` neben `IUnitOfWork` implementiert. `RabbitMqJobDispatcher` registriert das Publish als Callback; es feuert nach dem Abschluss von `SaveChangesAsync`, niemals davor. Der Handler brauchte keine Änderungen.
 
-The lesson wasn't about RabbitMQ. It was about what tests can and can't find. All the unit and integration tests were written for correctness under normal conditions. None of them exercised the timing relationship between dispatch and commit at real concurrency. The benchmarks weren't written to find bugs — but they did.
+Die Lektion war nicht über RabbitMQ. Sie handelte davon, was Tests finden können und was nicht. Alle Unit- und Integration-Tests waren auf Korrektheit unter normalen Bedingungen ausgelegt. Keiner davon hat die Timing-Beziehung zwischen Dispatch und Commit bei echter Concurrency geprüft. Die Benchmarks waren nicht geschrieben, um Bugs zu finden — aber sie haben es getan.
 
-The partial batch failure case was the other significant friction point. The outbox and idempotency systems were designed independently; making requeue idempotent *across partially succeeded jobs* required revisiting both. The `PartiallySucceeded` state ended up needing its own transition rules in the state machine — and its own dead-letter snapshot format.
+Der partial Batch-Failure-Fall war der andere bedeutende Reibungspunkt. Das Outbox- und das Idempotency-System wurden unabhängig voneinander entworfen; Requeue idempotent *über partially succeeded Jobs hinweg* zu machen, erforderte, beide zu überarbeiten. Der `PartiallySucceeded`-State brauchte am Ende eigene Transition-Regeln in der State Machine — und ein eigenes Dead-Letter-Snapshot-Format.
 
 ## Takeaways
 
-The patterns here — outbox, state machine, result type, idempotency — are individually well-known. The value of the project was understanding how they interact. The state machine made the outbox recovery logic obvious. The result type kept error classification clean. The idempotency key made the chunk retry problem tractable.
+Die Patterns hier — Outbox, State Machine, Result-Typ, Idempotency — sind einzeln gut bekannt. Der Wert des Projekts lag darin zu verstehen, wie sie interagieren. Die State Machine hat die Outbox-Recovery-Logik offensichtlich gemacht. Der Result-Typ hat die Error-Klassifizierung sauber gehalten. Der Idempotency Key hat das Chunk-Retry-Problem handhabbar gemacht.
 
-If I built it again, I'd design the `PartiallySucceeded` state earlier. Treating it as an afterthought created ripple effects through the state machine, the retry logic, and the dead-letter schema. And I'd write the benchmark suite before the production code; the `BenchmarkDotNet` benchmarks I added late revealed chunk-size sensitivity I wouldn't have caught otherwise.
+Würde ich es nochmal bauen, würde ich den `PartiallySucceeded`-State früher entwerfen. Ihn als Nachgedanken zu behandeln hat Welleneffekte durch die State Machine, die Retry-Logik und das Dead-Letter-Schema erzeugt. Und ich würde die Benchmark-Suite vor dem Production-Code schreiben; die `BenchmarkDotNet`-Benchmarks, die ich spät hinzugefügt habe, haben eine Chunk-Size-Sensitivität offenbart, die ich sonst nicht gefunden hätte.

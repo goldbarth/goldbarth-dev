@@ -1,18 +1,18 @@
 ---
-title: "Strongly-Typed Domain Identifiers"
-description: "Why ServiceDeskLite wraps Guid in a TicketId record struct — what the compiler catches, what the mapping overhead costs, and how UUIDv7 makes it better."
+title: "Stark typisierte Domain-IDs"
+description: "Warum ServiceDeskLite Guid in einem TicketId Record Struct kapselt — was der Compiler abfängt, was der Mapping-Overhead kostet und wie UUIDv7 es verbessert."
 date: "2026-05-04"
 readMin: 3
 draft: false
 ---
 
-Every aggregate needs an identifier. The simplest choice is `Guid` — one type, no ceremony, works everywhere. The problem becomes visible the moment you have two aggregates.
+Jedes Aggregate braucht einen Identifier. Die einfachste Wahl ist `Guid` — ein Typ, kein Aufwand, funktioniert überall. Das Problem wird sichtbar, sobald man zwei Aggregates hat.
 
-With raw `Guid`, a method that expects a ticket ID will silently accept any other `Guid` in scope — an audit event ID, a comment ID, a future user ID. The compiler sees `Guid`, the method expects `Guid`, everything compiles. The mistake surfaces at runtime, usually as a confusing 404 or a silent data association across the wrong records. The compiler could have caught it before the code ran, but there was nothing for it to catch.
+Mit rohem `Guid` akzeptiert eine Methode, die eine Ticket-ID erwartet, stillschweigend jeden anderen `Guid` im Scope — eine Audit-Event-ID, eine Comment-ID, eine zukünftige User-ID. Der Compiler sieht `Guid`, die Methode erwartet `Guid`, alles kompiliert. Der Fehler taucht zur Laufzeit auf — meistens als verwirrende 404 oder als stille Daten-Assoziation über die falschen Records. Der Compiler hätte es abfangen können, bevor der Code lief — aber er hatte nichts zum Abfangen.
 
-ServiceDeskLite uses a distinct `readonly record struct` for each aggregate identity.
+ServiceDeskLite verwendet ein eigenes `readonly record struct` für jede Aggregate-Identity.
 
-## The Type
+## Der Typ
 
 ```csharp
 public readonly record struct TicketId(Guid Value)
@@ -21,37 +21,37 @@ public readonly record struct TicketId(Guid Value)
 }
 ```
 
-That's the entire implementation. `readonly record struct` gives structural equality, immutability, stack allocation, and a clean `ToString()` for free. `TicketId.New()` encapsulates the ID generation strategy — callers never call `Guid.NewGuid()` or `Guid.CreateVersion7()` directly.
+Das ist die gesamte Implementierung. `readonly record struct` liefert strukturelle Gleichheit, Immutability, Stack-Allocation und ein sauberes `ToString()` gratis. `TicketId.New()` kapselt die ID-Generierungsstrategie — Aufrufer rufen `Guid.NewGuid()` oder `Guid.CreateVersion7()` nie direkt auf.
 
-Passing a `CommentId` where a `TicketId` is expected is now a compile error. Not a test failure — a compile error. The distinction matters.
+Eine `CommentId` dort zu übergeben, wo eine `TicketId` erwartet wird, ist jetzt ein Compile-Fehler. Kein Test-Fehler — ein Compile-Fehler. Der Unterschied ist entscheidend.
 
-## The UUIDv7 Choice
+## Die UUIDv7-Entscheidung
 
-The original implementation used `Guid.NewGuid()`, which produces random (version 4) UUIDs. Random UUIDs are problematic for B-tree indexes: each new insert lands at a random position in the index, causing page splits and fragmentation over time.
+Die ursprüngliche Implementierung verwendete `Guid.NewGuid()`, das zufällige (Version 4) UUIDs erzeugt. Zufällige UUIDs sind problematisch für B-Tree-Indexes: jedes neue Insert landet an einer zufälligen Position im Index, was mit der Zeit zu Page-Splits und Fragmentierung führt.
 
-`Guid.CreateVersion7()` — available since .NET 9 — generates time-ordered UUIDs. The most significant bits encode a millisecond timestamp, so new IDs are always appended near the end of the index rather than inserted at arbitrary positions. For PostgreSQL with a UUID primary key, time-ordered IDs improve insert performance under load and make index locality predictable.
+`Guid.CreateVersion7()` — verfügbar seit .NET 9 — generiert zeitgeordnete UUIDs. Die höchstwertigen Bits codieren einen Millisekunden-Timestamp, sodass neue IDs immer am Ende des Index angehängt werden, statt an beliebigen Positionen eingefügt zu werden. Für PostgreSQL mit einem UUID Primary Key verbessern zeitgeordnete IDs die Insert-Performance unter Last und machen die Index-Lokalität vorhersehbar.
 
-The change was one line in `TicketId.New()`. No consumers changed. That's the value of encapsulating the creation strategy.
+Die Änderung war eine Zeile in `TicketId.New()`. Keine Consumer haben sich geändert. Das ist der Wert der Kapselung der Erstellungsstrategie.
 
-## Layer Boundaries for ID Types
+## Layer Boundaries für ID-Typen
 
-Not every layer uses `TicketId`. The HTTP boundary and the JSON contract use raw `Guid`:
+Nicht jeder Layer verwendet `TicketId`. Die HTTP-Boundary und der JSON-Contract verwenden rohes `Guid`:
 
-| Layer          | Type used   | Note                                               |
+| Layer          | Type used   | Hinweis                                            |
 |----------------|-------------|----------------------------------------------------|
-| Domain         | `TicketId`  | Authoritative type                                 |
-| Application    | `TicketId`  | Handlers and use-case DTOs use the domain type     |
-| Infrastructure | `TicketId`  | Mapped to `Guid` column via `TicketIdConverter`    |
-| API (HTTP)     | `Guid`      | Route constraint `{id:guid}`, converted at entry  |
-| Contracts      | `Guid`      | Response DTOs use `Guid` for clean JSON output    |
+| Domain         | `TicketId`  | Autoritativer Typ                                  |
+| Application    | `TicketId`  | Handler und Use-Case-DTOs verwenden den Domain-Typ |
+| Infrastructure | `TicketId`  | Per `TicketIdConverter` auf `Guid`-Spalte gemappt  |
+| API (HTTP)     | `Guid`      | Route-Constraint `{id:guid}`, am Einstiegspunkt konvertiert |
+| Contracts      | `Guid`      | Response-DTOs verwenden `Guid` für sauberen JSON-Output |
 
-The API endpoint receives a `Guid` from the route and converts it to `new TicketId(id)` at the boundary. Inside the application and domain layers, only `TicketId` appears. `Guid` never leaks inward.
+Der API Endpoint empfängt ein `Guid` aus der Route und konvertiert es an der Boundary zu `new TicketId(id)`. Innerhalb der Application- und Domain-Layer erscheint nur `TicketId`. `Guid` leckt nie nach innen.
 
-The Contracts layer uses `Guid` in response DTOs because `TicketId` would serialise as `{ "value": "..." }` rather than a plain string. Using `Guid` there means a simple `Guid` field in JSON — no custom converter needed on the client side.
+Der Contracts Layer verwendet `Guid` in Response-DTOs, weil `TicketId` als `{ "value": "..." }` serialisiert würde statt als einfacher String. Dort `Guid` zu verwenden bedeutet ein einfaches `Guid`-Feld in JSON — kein Custom Converter auf der Client-Seite nötig.
 
-## The Cost
+## Der Preis
 
-Each new aggregate requires a new ID type, a new EF Core value converter, and a `ValueGeneratedNever()` call in the entity configuration. The value converter bridges the type to the database column and back:
+Jedes neue Aggregate erfordert einen neuen ID-Typ, einen neuen EF Core Value Converter und einen `ValueGeneratedNever()`-Aufruf in der Entity-Konfiguration. Der Value Converter überbrückt den Typ zur Datenbank-Spalte und zurück:
 
 ```csharp
 public class TicketIdConverter : ValueConverter<TicketId, Guid>
@@ -61,8 +61,8 @@ public class TicketIdConverter : ValueConverter<TicketId, Guid>
 }
 ```
 
-For a single aggregate, this is a one-time setup cost. For five aggregates, it's five converters. The converter code is mechanical and short, but it must be remembered when a new aggregate is introduced.
+Für ein einzelnes Aggregate ist das ein einmaliger Setup-Aufwand. Für fünf Aggregates sind es fünf Converter. Der Converter-Code ist mechanisch und kurz, aber er muss beim Einführen eines neuen Aggregates bedacht werden.
 
-The mapping step at the HTTP boundary — `new TicketId(id)` in the endpoint — is also something that must be done intentionally. It's a good reminder that the boundary is real, but it's friction nonetheless.
+Der Mapping-Schritt an der HTTP-Boundary — `new TicketId(id)` im Endpoint — ist ebenfalls etwas, das bewusst getan werden muss. Es ist eine gute Erinnerung daran, dass die Boundary real ist — aber es ist dennoch Friction.
 
-Whether the tradeoff is worth it depends on how many aggregates exist and how important cross-aggregate ID confusion is in the specific domain. For a codebase with one aggregate, the benefit is modest. For a codebase with ten, catching an ID confusion at compile time rather than at runtime pays for itself immediately.
+Ob der Trade-off es wert ist, hängt davon ab, wie viele Aggregates existieren und wie wichtig aggregate-übergreifende ID-Verwechslung in der spezifischen Domain ist. Für eine Codebase mit einem Aggregate ist der Nutzen bescheiden. Für eine Codebase mit zehn amortisiert sich das Abfangen einer ID-Verwechslung zur Compile-Zeit statt zur Laufzeit sofort.

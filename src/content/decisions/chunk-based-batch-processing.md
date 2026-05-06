@@ -1,24 +1,24 @@
 ---
-title: "Chunk-based Batch Processing"
-description: "Why Ingestor processes large import files in 500-line chunks instead of all-at-once — bounded blast radius, partial success semantics, and the tradeoffs that came with it."
+title: "Chunk-basierte Batch-Verarbeitung"
+description: "Warum Ingestor große Import-Dateien in 500-Zeilen-Chunks verarbeitet statt auf einmal — begrenzter Blast Radius, Partial-Success-Semantik und die Trade-offs, die damit kamen."
 date: "2026-05-02"
 readMin: 4
 draft: false
 ---
 
-A delivery advice file can be large. Ten thousand lines is not unrealistic. Processing ten thousand lines in a single database transaction has a specific failure profile: if line 9,847 fails, you lose everything. The transaction rolls back, zero items are imported, and the job has to start over.
+Eine Delivery-Advice-Datei kann groß sein. Zehntausend Zeilen sind nicht unrealistisch. Zehntausend Zeilen in einer einzigen Database-Transaction zu verarbeiten hat ein spezifisches Failure-Profil: Wenn Zeile 9.847 fehlschlägt, geht alles verloren. Die Transaction rollt zurück, null Items werden importiert, und der Job muss von vorne beginnen.
 
-That's a bad tradeoff for an import pipeline. Chunk-based processing trades atomicity for bounded blast radius.
+Das ist ein schlechter Trade-off für eine Import-Pipeline. Chunk-basierte Verarbeitung tauscht Atomarität gegen begrenzten Blast Radius.
 
-## How It Works
+## Wie es funktioniert
 
-The `LineChunker` splits the parsed file into fixed-size chunks before processing begins:
+Der `LineChunker` teilt die geparste Datei vor der Verarbeitung in fest dimensionierte Chunks auf:
 
 ```
-10,000 lines ÷ 500 per chunk = 20 chunks
+10.000 Zeilen ÷ 500 pro Chunk = 20 Chunks
 ```
 
-Each chunk is processed independently:
+Jeder Chunk wird unabhängig verarbeitet:
 
 ```csharp
 foreach (var chunk in chunks)
@@ -39,40 +39,40 @@ foreach (var chunk in chunks)
 }
 ```
 
-The key line is `// continue`. A failed chunk is logged and counted, but doesn't abort the pipeline. Chunks 1–15 stay committed even if chunk 16 fails.
+Die entscheidende Zeile ist `// continue`. Ein fehlgeschlagener Chunk wird geloggt und gezählt, bricht aber die Pipeline nicht ab. Chunks 1–15 bleiben committed, auch wenn Chunk 16 fehlschlägt.
 
-The job tracks three counters independently: `TotalLines`, `ProcessedLines`, `FailedLines`. When the pipeline finishes, the final state is determined by whether any lines failed:
+Der Job trackt drei Counter unabhängig: `TotalLines`, `ProcessedLines`, `FailedLines`. Wenn die Pipeline fertig ist, wird der finale State danach bestimmt, ob Zeilen fehlgeschlagen sind:
 
 ```csharp
 job.TransitionTo(job.FailedLines > 0 ? JobStatus.PartiallySucceeded : JobStatus.Succeeded);
 ```
 
-## Why 500
+## Warum 500
 
-The chunk size is configurable, but 500 is the default. The benchmarks I ran late in development showed that chunk sizes between 200 and 1,000 have similar throughput for typical delivery advice content — the dominant cost is the round-trip to PostgreSQL per chunk, not the chunk assembly. Below 100, the overhead of many small transactions adds up. Above 2,000, memory pressure from loading a large batch into the EF change tracker becomes noticeable.
+Die Chunk-Größe ist konfigurierbar, aber 500 ist der Default. Benchmarks, die ich spät in der Entwicklung durchgeführt habe, zeigten, dass Chunk-Größen zwischen 200 und 1.000 für typischen Delivery-Advice-Content ähnlichen Throughput haben — der dominante Kostenfaktor ist der Round-Trip zu PostgreSQL pro Chunk, nicht die Chunk-Zusammenstellung. Unter 100 summiert sich der Overhead vieler kleiner Transactions. Über 2.000 wird der Memory-Druck durch das Laden eines großen Batches in den EF Change Tracker spürbar.
 
-500 is a round number in the middle of a flat performance curve. If profiling revealed a real bottleneck here, I'd tune it. In practice, a 10,000-line file takes about two seconds either way on a local Postgres instance.
+500 ist eine runde Zahl in der Mitte einer flachen Performance-Kurve. Wenn Profiling einen echten Bottleneck hier aufdecken würde, würde ich ihn tunen. In der Praxis dauert eine 10.000-Zeilen-Datei auf einer lokalen Postgres-Instanz so oder so etwa zwei Sekunden.
 
-## PartiallySucceeded — The Complication
+## PartiallySucceeded — Die Komplikation
 
-`PartiallySucceeded` was added to model the case where some lines succeed and some fail. It seemed straightforward until I considered requeue.
+`PartiallySucceeded` wurde hinzugefügt, um den Fall zu modellieren, in dem einige Zeilen erfolgreich sind und andere fehlschlagen. Es schien unkompliziert, bis ich Requeue bedacht habe.
 
-If a job is `PartiallySucceeded` and the user requeues it, what happens? The current design reprocesses the entire file from scratch. The 9,500 lines that already succeeded will attempt to insert again. This requires `DeliveryItem` creation to be idempotent — inserting a `DeliveryItem` that already exists must not fail.
+Wenn ein Job `PartiallySucceeded` ist und der User ihn requeuet, was passiert dann? Das aktuelle Design verarbeitet die gesamte Datei von Grund auf neu. Die 9.500 Zeilen, die bereits erfolgreich waren, versuchen erneut zu inserieren. Das erfordert, dass die `DeliveryItem`-Erstellung idempotent ist — ein `DeliveryItem` zu inserieren, das bereits existiert, darf nicht fehlschlagen.
 
-The solution is an upsert on reprocess, keyed on `(job_id, article_number, supplier_ref)`. This keeps requeue simple at the cost of slightly more complex insert logic.
+Die Lösung ist ein Upsert beim Reprocess, gekeyed auf `(job_id, article_number, supplier_ref)`. Das hält Requeue einfach auf Kosten etwas komplexerer Insert-Logik.
 
-The alternative — tracking which chunks succeeded and only reprocessing failed ones — is more efficient but significantly more complex. Chunk-level state tracking, resumable processing, modified idempotency logic. For the current scale, the simpler approach is the right call.
+Die Alternative — tracken, welche Chunks erfolgreich waren, und nur fehlgeschlagene neu verarbeiten — ist effizienter, aber deutlich komplexer. Chunk-Level State Tracking, resumable Processing, angepasste Idempotency-Logik. Für den aktuellen Scale ist der einfachere Ansatz die richtige Entscheidung.
 
-## The Tradeoff in Plain Terms
+## Der Trade-off in klaren Worten
 
-Chunk processing gives you:
-- **Bounded blast radius** — a failure affects at most one chunk's worth of lines
-- **Incremental progress** — large files make observable progress rather than appearing stuck
-- **Partial success semantics** — some lines committed is better than none for most import scenarios
+Chunk-Verarbeitung bringt:
+- **Begrenzter Blast Radius** — ein Fehler betrifft maximal die Zeilen eines Chunks
+- **Inkrementeller Fortschritt** — große Dateien machen sichtbaren Fortschritt statt stillzustehen
+- **Partial-Success-Semantik** — einige committete Zeilen sind für die meisten Import-Szenarien besser als keine
 
-It costs you:
-- **Non-atomic import** — a job in `PartiallySucceeded` state has some lines in the database and some not
-- **Requeue complexity** — reprocessing must be idempotent at the line level, not just the job level
-- **Late-stage design changes** — `PartiallySucceeded` forced changes to the state machine, requeue handler, and dead-letter schema simultaneously
+Sie kostet:
+- **Nicht-atomarer Import** — ein Job im `PartiallySucceeded`-State hat einige Zeilen in der Datenbank und andere nicht
+- **Requeue-Komplexität** — Reprocessing muss auf Zeilen-Ebene idempotent sein, nicht nur auf Job-Ebene
+- **Late-Stage Design-Änderungen** — `PartiallySucceeded` erzwang simultane Änderungen an State Machine, Requeue-Handler und Dead-Letter-Schema
 
-Whether the tradeoff is right depends on whether partial success is meaningful in your domain. For delivery advice — where an operator cares about knowing which items arrived — 9,500 of 10,000 successfully imported is genuinely better than 0 of 10,000. For a payment batch, you'd want different semantics entirely.
+Ob der Trade-off richtig ist, hängt davon ab, ob Partial Success in der Domain bedeutsam ist. Für Delivery Advice — wo ein Operator wissen will, welche Items angekommen sind — sind 9.500 von 10.000 erfolgreich importierten Zeilen genuinely besser als 0 von 10.000. Für einen Payment-Batch würde man ganz andere Semantik wollen.

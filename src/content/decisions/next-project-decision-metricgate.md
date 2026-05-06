@@ -1,49 +1,49 @@
 ---
-title: "What I'm building"
-description: "The decision after sitting on it for a few days."
+title: "Was ich baue"
+description: "Die Entscheidung, nachdem es ein paar Tage gesackt ist."
 date: "2026-05-05T16:24:00"
 readMin: 3
 draft: false
 ---
 
-A few days of letting it sit, and the answer turned out to be sharper than I expected.
+Ein paar Tage sacken lassen, und die Antwort war schärfer als erwartet.
 
-It's a **tenant-aware quota and rate-limiting backend**. Three .NET microservices: one owns plans and tenant hierarchy, one runs the hot-path enforcement against Redis, one persists usage events from Kafka and serves reports. Working title: **MetricGate**.
+Es ist ein **Tenant-aware Quota- und Rate-Limiting-Backend**. Drei .NET Microservices: einer besitzt Plans und Tenant-Hierarchie, einer führt die Hot-Path-Enforcement gegen Redis aus, einer persistiert Usage-Events aus Kafka und liefert Reports. Arbeitstitel: **MetricGate**.
 
-The interesting part isn't the domain — quota enforcement is well-understood territory, every API platform has some version of it. The interesting part is **what the domain forces you to deal with**. Real auth, because API keys, JWT for admins, OIDC against Keycloak, and **resource-based authorization across a tenant hierarchy** aren't optional in this kind of system. Real caching, because a **sub-10ms hot path** against three different sources of truth doesn't work without it. And real cache invalidation — the hard part, the part where Redis tag sets, Pub/Sub channels, and TTL backstops have to coordinate when **a reseller restructures their sub-tenants and a hundred cached authorization decisions become wrong at once**.
+Das Interessante ist nicht die Domain — Quota-Enforcement ist gut verstandenes Terrain, jede API-Plattform hat irgendeine Version davon. Das Interessante ist **womit die Domain einen konfrontiert**. Echtes Auth, weil API-Keys, JWT für Admins, OIDC gegen Keycloak und **resource-based Authorization über eine Tenant-Hierarchie** in diesem System nicht optional sind. Echtes Caching, weil ein **sub-10ms Hot Path** gegen drei unterschiedliche Sources of Truth nicht ohne es funktioniert. Und echte Cache-Invalidierung — der schwierige Teil, der Teil, wo Redis Tag-Sets, Pub/Sub-Channels und TTL-Backstops koordinieren müssen, wenn **ein Reseller seine Sub-Tenants umstrukturiert und hundert gecachte Authorization-Entscheidungen auf einmal falsch werden**.
 
-That's the shape I wanted from the missing-piece list, and it lined up with the domain almost without forcing.
+Das ist genau die Form, die ich gesucht hatte, und sie hat sich mit der Domain fast ohne Zwang gedeckt.
 
-## Why three services and not a modular monolith
+## Warum drei Services und kein modularer Monolith
 
-I'll be honest: I started this with **modular monolith as the assumed architecture**, because that was the missing piece I most wanted to learn. Spent a few hours trying to make it fit, and **it didn't**. The three concerns inside MetricGate have genuinely different load profiles, failure modes, and scaling needs. Plans is configuration-heavy, write-rare. Enforcement is latency-critical and read-heavy. Usage is write-heavy on ingest and query-heavy on reports. Forcing them into one deployable would be **the wrong call, dressed up as architectural discipline**.
+Ich bin ehrlich: Am Anfang stand **der modulare Monolith als angenommene Architecture**, weil das der fehlende Teil war, den ich am meisten lernen wollte. Ein paar Stunden versucht, es zum Passen zu bringen — **es hat nicht gepasst**. Die drei Concerns innerhalb von MetricGate haben tatsächlich unterschiedliche Load-Profile, Failure-Modes und Skalierungsanforderungen. Plans ist konfigurationsintensiv, schreibselten. Enforcement ist latenz-kritisch und read-heavy. Usage ist write-heavy beim Ingest und query-heavy bei Reports. Sie in einen Deployable zu zwingen wäre **die falsche Entscheidung, verkleidet als architektonische Disziplin**.
 
-So I'm building it as **three microservices with their own databases**, async via Kafka where it can be async, sync HTTP only where the hot path needs it. The modular monolith goes on the list for a different project — one where the load profiles actually argue for it.
+Also baue ich es als **drei Microservices mit eigenen Datenbanken**, async via Kafka wo es async sein kann, sync HTTP nur wo der Hot Path es braucht. Der modulare Monolith kommt auf die Liste für ein anderes Projekt — eines, wo die Load-Profile tatsächlich dafür sprechen.
 
-This was the harder lesson of the week: **architecture follows the domain, not the learning goal**. If the goal is to learn something, the project still has to make sense on its own terms first. Otherwise it's a **tutorial in disguise**, and reviewers can smell that.
+Das war die schwierigere Lektion der Woche: **Architecture folgt der Domain, nicht dem Lernziel**. Wenn das Ziel ist, etwas zu lernen, muss das Projekt trotzdem zuerst für sich selbst Sinn ergeben. Sonst ist es ein **Tutorial in Verkleidung**, und Reviewer können das riechen.
 
-The same logic applies inside each service. Plans has a real domain — tenant hierarchy with invariants, plan inheritance with constraints, API key lifecycle with grace periods. Enforcement has token bucket semantics and counter rollback rules. Usage has aggregation logic. So **Clean Architecture inside each service**, not Vertical Slices. Picking a different architectural style just to be different from my last project would be exactly the kind of **portfolio-driven decision I'm trying to stop making**.
+Dieselbe Logik gilt innerhalb jedes Services. Plans hat eine echte Domain — Tenant-Hierarchie mit Invarianten, Plan-Vererbung mit Constraints, API-Key-Lifecycle mit Grace Periods. Enforcement hat Token-Bucket-Semantik und Counter-Rollback-Regeln. Usage hat Aggregations-Logik. Also **Clean Architecture innerhalb jedes Services**, keine Vertical Slices. Einen anderen architektonischen Stil zu wählen, nur um anders zu sein als beim letzten Projekt, wäre genau die Art von **portfolio-getriebener Entscheidung, die ich bewusst vermeide**.
 
-## What's in, what's out
+## Was drin ist, was draußen ist
 
-**The auth surface is real.** JWT with refresh tokens, OAuth2/OIDC against Keycloak in Compose, policy-based authorization for role gates, **resource-based authorization for the tenant subtree**. API keys for external consumers, internal JWT for service-to-service. Cookie auth was on the original list and got pushed to V2 — the React admin frontend will pull it in naturally.
+**Die Auth-Oberfläche ist real.** JWT mit Refresh-Tokens, OAuth2/OIDC gegen Keycloak in Compose, policy-based Authorization für Role-Gates, **resource-based Authorization für den Tenant-Subtree**. API-Keys für externe Consumer, internes JWT für Service-to-Service. Cookie-Auth stand auf der ursprünglichen Liste und wurde auf V2 verschoben — das React-Admin-Frontend wird es natürlich einbeziehen.
 
-**The caching is real.** Plan resolution cached per API key, tenant hierarchy cached per tenant, fixed-window counters for monthly quotas, token bucket via Lua script for rate limits. **Three invalidation mechanisms** working together: TTL as backstop, Pub/Sub for single-key eviction, **tag-based sets for hierarchy cascades**. I wrote the ADR for this one first because it's the part that **actually scared me**.
+**Das Caching ist real.** Plan-Resolution gecacht per API-Key, Tenant-Hierarchie gecacht per Tenant, Fixed-Window-Counter für monatliche Quotas, Token-Bucket via Lua-Script für Rate-Limits. **Drei Invalidierungsmechanismen** arbeiten zusammen: TTL als Backstop, Pub/Sub für Single-Key-Eviction, **tag-basierte Sets für Hierarchie-Kaskaden**. Ich habe das ADR dafür zuerst geschrieben, weil es der Teil ist, der mich **tatsächlich erschreckt hat**.
 
-A small detail that matters more than it sounds: **the mediator pattern inside each service is hand-written**, not MediatR. About thirty lines of code, no library dependency. With MediatR going commercial earlier this year, the trade-off shifted — for a pattern this trivial, **the cost of writing it yourself is lower than the cost of carrying a third-party dependency you don't fully control**. It's also a chance to actually understand what's underneath, instead of accepting it as magic.
+Ein kleines Detail, das mehr bedeutet als es klingt: **das Mediator-Pattern innerhalb jedes Services ist handgeschrieben**, nicht MediatR. Ungefähr dreißig Zeilen Code, keine Library-Dependency. Mit MediatR, das dieses Jahr kommerziell wurde, hat sich der Trade-off verschoben — für ein derart triviales Pattern **ist der Aufwand, es selbst zu schreiben, geringer als der Aufwand, eine Third-Party-Dependency zu tragen, die man nicht vollständig kontrolliert**. Es ist auch eine Chance, tatsächlich zu verstehen, was darunter liegt, statt es als Magie zu akzeptieren.
 
-What's not in: **a frontend in V1**, real billing, multi-region, schema registry, Kubernetes. Most of these will live in the V2 scope or just stay out for good. **Three deep things, not seven shallow ones** — that part of the thinking didn't change.
+Was nicht drin ist: **ein Frontend in V1**, echte Abrechnung, Multi-Region, Schema-Registry, Kubernetes. Die meisten davon werden im V2-Scope leben oder einfach dauerhaft draußen bleiben. **Drei tiefe Dinge, nicht sieben oberflächliche** — dieser Teil des Denkens hat sich nicht geändert.
 
-## What I'm not sure about yet
+## Womit ich noch nicht sicher bin
 
-**Counter strategy under boundary conditions.** Fixed-window quotas allow burst doubling at month boundaries — a tenant can exhaust their plan in the last hour of one month and again in the first hour of the next. For a production-grade reference that's still defensible, the trade-off is documented in the ADR, and operators of real platforms accept it. But **I haven't actually run the numbers under sustained load yet**. That's a Phase 4 problem, not a today problem.
+**Counter-Strategie unter Grenzbedingungen.** Fixed-Window-Quotas erlauben Burst-Verdopplung an Monatsgrenzen — ein Tenant kann seinen Plan in der letzten Stunde eines Monats erschöpfen und wieder in der ersten Stunde des nächsten. Für eine production-grade Referenz, die noch vertretbar ist, ist der Trade-off im ADR dokumentiert, und Betreiber echter Plattformen akzeptieren ihn. Aber **ich habe die Zahlen unter anhaltender Last noch nicht tatsächlich durchgerechnet**. Das ist ein Phase-4-Problem, kein Problem von heute.
 
-**Service-to-service auth is still open.** mTLS or signed internal JWT, both are defensible, and I'm going to make the call when I get there in Phase 6 with more context than I have now. ADR-009 is reserved for it.
+**Service-to-Service-Auth ist noch offen.** mTLS oder signiertes internes JWT, beides ist vertretbar, und ich werde die Entscheidung treffen, wenn ich in Phase 6 mit mehr Kontext als jetzt dort ankomme. ADR-009 ist dafür reserviert.
 
-The **12-week timeline is ambitious** for solo work. I planned six phases with explicit "what gets cut if Phase 4 overruns" markers. That's not pessimism, that's **letting myself off the hook in advance** — production-grade scope plus learning curve plus job search makes 12 calendar weeks unrealistic. Real elapsed time will probably be longer. **The point is the project, not the schedule.**
+Der **12-Wochen-Zeitplan ist ambitioniert** für Einzelarbeit. Ich habe sechs Phasen mit expliziten „Was fällt raus, wenn Phase 4 überläuft"-Markierungen geplant. Das ist kein Pessimismus, das ist **mich im Voraus vom Haken lassen** — production-grade Scope plus Lernkurve plus Jobsuche macht 12 Kalenderwochen unrealistisch. Die tatsächliche verstrichene Zeit wird wahrscheinlich länger sein. **Es geht um das Projekt, nicht den Zeitplan.**
 
-## The repo
+## Das Repo
 
-[github.com/goldbarth/MetricGate](https://github.com/goldbarth/MetricGate). Right now it has scope (DE and EN), four ADRs, the milestone and issue plan, and **not a single line of production code**. That comes next. **The architecture has to be defensible before it's worth building**, and writing it down was the test for whether it actually was.
+[github.com/goldbarth/MetricGate](https://github.com/goldbarth/MetricGate). Im Moment hat es Scope (DE und EN), vier ADRs, den Milestone- und Issue-Plan und **keine einzige Zeile Production-Code**. Das kommt als nächstes. **Die Architecture muss vertretbar sein, bevor sie es wert ist, gebaut zu werden**, und sie aufzuschreiben war der Test, ob sie es tatsächlich war.
 
-Phase 1 starts this week.
+Phase 1 beginnt diese Woche.

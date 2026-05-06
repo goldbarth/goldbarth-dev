@@ -7,16 +7,16 @@ const posts = (await getCollection('projects', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
-<Base title="Projects" active="projects">
+<Base title="Projekte" active="projects">
   <div class="container">
     <section class="cat-intro">
-      <h1>projects</h1>
-      <p>Things I've built — and what I learned along the way.</p>
+      <h1>projekte</h1>
+      <p>Was ich gebaut habe — und was ich dabei gelernt habe.</p>
     </section>
 
     <div class="list">
       {posts.length === 0 ? (
-        <p class="muted">No posts yet.</p>
+        <p class="muted">Noch keine Projekte.</p>
       ) : (
         posts.map((post) => (
           <EntryRow

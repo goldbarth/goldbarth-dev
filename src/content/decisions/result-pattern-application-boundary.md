@@ -1,18 +1,18 @@
 ---
-title: "Result Pattern at the Application Boundary"
-description: "How ServiceDeskLite uses an explicit Result type to make handler outcomes visible — and where DomainExceptions still belong."
+title: "Result Pattern an der Application Boundary"
+description: "Wie ServiceDeskLite einen expliziten Result-Typ verwendet, um Handler-Ergebnisse sichtbar zu machen — und wo DomainExceptions noch hingehören."
 date: "2026-05-04"
 readMin: 4
 draft: false
 ---
 
-The default error-handling model in C# is exceptions. A method returns a value on success and throws on failure. The problem is that "failure" covers a lot of ground. A ticket not found is failure. A title field missing is failure. An invalid status transition is failure. So is a database connection dropping.
+Das Standard-Error-Handling-Modell in C# sind Exceptions. Eine Methode gibt bei Erfolg einen Wert zurück und wirft bei Misserfolg. Das Problem ist, dass „Misserfolg" viel abdeckt. Ein nicht gefundenes Ticket ist Misserfolg. Ein fehlendes Titel-Feld ist Misserfolg. Eine ungültige Status-Transition ist Misserfolg. Eine abgebrochene Datenbankverbindung auch.
 
-Those four cases call for four different HTTP status codes. They represent fundamentally different kinds of problems. But from the call site, they all look the same — a thrown exception that the caller either catches specifically or lets propagate.
+Diese vier Fälle verlangen vier unterschiedliche HTTP-Status-Codes. Sie repräsentieren fundamental unterschiedliche Arten von Problemen. Aber von der Call-Site aus sehen sie alle gleich aus — eine geworfene Exception, die der Aufrufer entweder spezifisch fängt oder propagieren lässt.
 
-ServiceDeskLite uses a `Result<T>` type instead. Every handler returns `Result` (for void operations) or `Result<T>` (when there's a value). Success and failure are both explicit in the return type.
+ServiceDeskLite verwendet stattdessen einen `Result<T>`-Typ. Jeder Handler gibt `Result` zurück (für Void-Operationen) oder `Result<T>` (wenn es einen Wert gibt). Erfolg und Misserfolg sind beide im Return-Typ explizit.
 
-## What the Type Carries
+## Was der Typ enthält
 
 ```csharp
 // void operation
@@ -22,23 +22,23 @@ Result result = await handler.HandleAsync(command, ct);
 Result<TicketResponse> result = await handler.HandleAsync(query, ct);
 ```
 
-A failure result carries an `ApplicationError` with three fields: a machine-readable `code` (e.g. `"create_ticket.title.required"`), a human-readable `message`, and an `ErrorType` enum that drives HTTP status mapping:
+Ein Failure-Result trägt einen `ApplicationError` mit drei Feldern: einen maschinenlesbaren `code` (z.B. `"create_ticket.title.required"`), eine menschenlesbare `message` und ein `ErrorType`-Enum, das das HTTP-Status-Mapping steuert:
 
-| ErrorType        | HTTP Status |
-|------------------|-------------|
-| `Validation`     | 400         |
-| `DomainViolation`| 400         |
-| `NotFound`       | 404         |
-| `Conflict`       | 409         |
-| `Unexpected`     | 500         |
+| ErrorType         | HTTP-Status |
+|-------------------|-------------|
+| `Validation`      | 400         |
+| `DomainViolation` | 400         |
+| `NotFound`        | 404         |
+| `Conflict`        | 409         |
+| `Unexpected`      | 500         |
 
-The API layer has one mapper — `ResultToProblemDetailsMapper` — that reads the `ErrorType` and produces the correct `ProblemDetails` response. There's no exception filter chain, no `catch (SpecificException)` scattered across endpoints. One place, one switch, done.
+Der API Layer hat einen Mapper — `ResultToProblemDetailsMapper` — der den `ErrorType` liest und die korrekte `ProblemDetails`-Response erzeugt. Keine Exception-Filter-Chain, kein `catch (SpecificException)` über Endpoints verteilt. Eine Stelle, ein Switch, fertig.
 
-## The DomainException Boundary
+## Die DomainException-Boundary
 
-The domain layer still uses exceptions to enforce invariants — that's its job. A ticket in `Closed` state that receives a `Reopen` command throws a `DomainException` immediately, before any persistence is touched.
+Der Domain Layer verwendet weiterhin Exceptions, um Invarianten durchzusetzen — das ist seine Aufgabe. Ein Ticket im `Closed`-State, das einen `Reopen`-Command erhält, wirft sofort eine `DomainException`, bevor Persistence berührt wird.
 
-The application handler catches it, exactly once:
+Der Application Handler fängt sie genau einmal:
 
 ```csharp
 try
@@ -51,17 +51,17 @@ catch (DomainException ex)
 }
 ```
 
-After that catch, no domain exception reaches the HTTP layer. The handler converts it into a `Result.DomainViolation`, which the API maps to HTTP 400. The domain can enforce its rules aggressively using exceptions; the application boundary converts those exceptions into structured outcomes before they leave.
+Nach diesem Catch erreicht keine Domain-Exception den HTTP Layer. Der Handler konvertiert sie in ein `Result.DomainViolation`, das die API auf HTTP 400 mappt. Die Domain kann ihre Regeln aggressiv mit Exceptions durchsetzen; die Application Boundary konvertiert diese Exceptions in strukturierte Ergebnisse, bevor sie sie verlassen.
 
-## What Is Never Caught
+## Was nie gefangen wird
 
-`OperationCanceledException` is explicitly not caught by handlers. Request cancellation is not a business error — it's infrastructure. If the client disconnects mid-request, the exception propagates to the API's exception handler, which classifies it separately from application errors.
+`OperationCanceledException` wird von Handlers explizit nicht gefangen. Request-Abbruch ist kein Business-Fehler — es ist Infrastructure. Wenn der Client mitten im Request die Verbindung trennt, propagiert die Exception zum Exception-Handler der API, der sie separat von Application-Errors klassifiziert.
 
-This is an intentional gap in the handler's error handling surface. Catching `OperationCanceledException` in a handler would silently swallow client disconnects, mask them as application errors, and write misleading log entries. The rule is simple: handlers catch `DomainException`, nothing else.
+Das ist eine bewusste Lücke in der Error-Handling-Oberfläche des Handlers. `OperationCanceledException` in einem Handler zu fangen würde Client-Disconnects still verschlucken, sie als Application-Errors maskieren und irreführende Log-Einträge schreiben. Die Regel ist einfach: Handler fangen `DomainException`, sonst nichts.
 
-## The Cost
+## Der Preis
 
-Every error case needs an explicit return. There's no implicit propagation — if a validation check fails, the handler must return `Result.Validation(...)` at that point. For handlers with multiple validation steps, the structure becomes repetitive:
+Jeder Error-Fall braucht ein explizites Return. Keine implizite Propagation — wenn ein Validation-Check fehlschlägt, muss der Handler an dieser Stelle `Result.Validation(...)` zurückgeben. Für Handler mit mehreren Validation-Steps wird die Struktur repetitiv:
 
 ```csharp
 var validationResult = Validate(command);
@@ -71,11 +71,11 @@ var ticket = await _repository.FindAsync(id, ct);
 if (ticket is null) return Result.NotFound("ticket.not_found", "Ticket not found.");
 ```
 
-More lines than a version that throws and lets middleware catch. But the failure surface is visible at each step. Reading the handler tells you exactly what can go wrong and where.
+Mehr Zeilen als eine Version, die wirft und Middleware fangen lässt. Aber die Failure-Oberfläche ist bei jedem Schritt sichtbar. Den Handler zu lesen sagt einem genau, was schiefgehen kann und wo.
 
-## What This Buys in Tests
+## Was das in Tests bringt
 
-Handler tests don't need try/catch. They call `HandleAsync` and assert on the result:
+Handler-Tests brauchen kein try/catch. Sie rufen `HandleAsync` auf und assertieren auf dem Result:
 
 ```csharp
 var result = await handler.HandleAsync(command, ct);
@@ -85,4 +85,4 @@ Assert.Equal(ErrorType.Validation, result.Error.Type);
 Assert.Equal("create_ticket.title.required", result.Error.Code);
 ```
 
-No `Assert.Throws`, no exception inspection, no implicit test behaviour from uncaught exceptions. The test reads like a specification of what the handler returns under each condition.
+Kein `Assert.Throws`, keine Exception-Inspektion, kein implizites Test-Verhalten durch ungefangene Exceptions. Der Test liest sich wie eine Spezifikation dessen, was der Handler unter jeder Bedingung zurückgibt.

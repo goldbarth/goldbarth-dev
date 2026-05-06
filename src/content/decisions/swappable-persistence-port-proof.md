@@ -1,26 +1,26 @@
 ---
-title: "Swappable Persistence as Port Proof"
-description: "Why ServiceDeskLite ships two complete persistence implementations — and why EF Core's built-in InMemory provider wasn't one of them."
+title: "Swappable Persistence als Port-Beweis"
+description: "Warum ServiceDeskLite zwei vollständige Persistence-Implementierungen mitbringt — und warum der eingebaute InMemory Provider von EF Core keine davon ist."
 date: "2026-05-04"
 readMin: 4
 draft: false
 ---
 
-Clean Architecture makes a claim: adapters are interchangeable. Swap the persistence layer and nothing above the port boundary changes. The claim is easy to write in a README. The way to verify it is to actually do the swap, run the same tests against both implementations, and see if they pass.
+Clean Architecture macht eine Aussage: Adapter sind austauschbar. Swap die Persistence Layer und nichts oberhalb der Port-Boundary ändert sich. Die Aussage ist leicht in einem README zu schreiben. Der Weg, sie zu verifizieren, ist, den Swap tatsächlich durchzuführen, dieselben Tests gegen beide Implementierungen laufen zu lassen und zu sehen, ob sie bestehen.
 
-ServiceDeskLite has two complete persistence implementations: one backed by EF Core and PostgreSQL, one hand-rolled against a `ConcurrentDictionary`. Both implement the same `ITicketRepository` and `IUnitOfWork` interfaces. Both run against the same integration test suite. The active implementation is selected at startup by reading a configuration value — no code change, no recompile.
+ServiceDeskLite hat zwei vollständige Persistence-Implementierungen: eine auf EF Core und PostgreSQL basierend, eine selbst geschriebene gegen ein `ConcurrentDictionary`. Beide implementieren dieselben `ITicketRepository`- und `IUnitOfWork`-Interfaces. Beide laufen gegen dieselbe Integration-Test-Suite. Die aktive Implementierung wird beim Start durch einen Config-Wert ausgewählt — keine Code-Änderung, kein Recompile.
 
-## Why Not EF Core's InMemory Provider
+## Warum nicht der InMemory Provider von EF Core
 
-EF Core ships a built-in `InMemory` provider. It's the obvious choice for tests and development: no files, no migration step, fast startup. I ruled it out for one reason — it doesn't honour transaction semantics.
+EF Core liefert einen eingebauten `InMemory` Provider. Die offensichtliche Wahl für Tests und Development: keine Dateien, kein Migration-Schritt, schneller Start. Ich habe ihn aus einem Grund ausgeschlossen — er hält keine Transaction-Semantik ein.
 
-In EF Core's `InMemory` provider, writes are visible immediately without calling `SaveChanges`. Uncommitted adds are readable by the same context and by other operations in the same process. For a codebase where the unit-of-work commit boundary is an explicit architectural decision — where `SaveChangesAsync` is the single point at which pending writes become durable — this behaviour makes the InMemory and PostgreSQL paths fundamentally different. A test that passes against the EF Core InMemory provider is not testing the same commit semantics that PostgreSQL enforces.
+Im `InMemory` Provider von EF Core sind Writes sofort sichtbar, ohne `SaveChanges` aufzurufen. Uncommitted Adds sind vom selben Context und von anderen Operationen im selben Prozess lesbar. Für eine Codebase, in der die Unit-of-Work Commit-Boundary eine explizite architektonische Entscheidung ist — wo `SaveChangesAsync` der einzige Punkt ist, an dem pending Writes dauerhaft werden — macht dieses Verhalten die InMemory- und PostgreSQL-Pfade fundamental unterschiedlich. Ein Test, der gegen den EF Core InMemory Provider besteht, testet nicht dieselbe Commit-Semantik, die PostgreSQL durchsetzt.
 
-If the two providers behave differently, the swap isn't real. It's a different application with a different name.
+Wenn die zwei Provider sich unterschiedlich verhalten, ist der Swap nicht real. Es ist eine andere Applikation mit einem anderen Namen.
 
-## The Hand-Rolled Store
+## Der selbst geschriebene Store
 
-The InMemory implementation is intentionally minimal. `InMemoryStore` is a singleton `ConcurrentDictionary` that holds committed tickets. `InMemoryUnitOfWork` is a scoped service that holds a `PendingAdds` list. The commit operation applies pending adds to the store atomically:
+Die InMemory-Implementierung ist bewusst minimal. `InMemoryStore` ist ein Singleton `ConcurrentDictionary`, das committed Tickets hält. `InMemoryUnitOfWork` ist ein scoped Service, der eine `PendingAdds`-Liste hält. Die Commit-Operation wendet pending Adds atomar auf den Store an:
 
 ```csharp
 public Task SaveChangesAsync(CancellationToken ct = default)
@@ -33,33 +33,33 @@ public Task SaveChangesAsync(CancellationToken ct = default)
 }
 ```
 
-Before `SaveChangesAsync` is called, the added ticket is invisible to the repository's read methods. After it's called, it's visible. That's the same contract EF Core enforces with a real database transaction. The commit boundary means the same thing in both implementations.
+Vor dem Aufruf von `SaveChangesAsync` ist das hinzugefügte Ticket für die Read-Methoden des Repository unsichtbar. Danach ist es sichtbar. Das ist derselbe Contract, den EF Core mit einer echten Database-Transaction durchsetzt. Die Commit-Boundary bedeutet in beiden Implementierungen dasselbe.
 
-## DI Lifetimes Matter
+## DI Lifetimes sind entscheidend
 
-Getting the lifetimes right was more subtle than the implementation itself:
+Die Lifetimes richtig zu setzen war subtiler als die Implementierung selbst:
 
-| Type                       | Lifetime  | Reason                                          |
+| Type                       | Lifetime  | Grund                                           |
 |----------------------------|-----------|-------------------------------------------------|
-| `InMemoryStore`            | Singleton | Shared in-process state — survives requests     |
-| `InMemoryUnitOfWork`       | Scoped    | Per-request pending-add buffer                  |
-| `InMemoryTicketRepository` | Scoped    | Reads from singleton store, references scoped UoW |
+| `InMemoryStore`            | Singleton | Gemeinsamer In-Process State — überlebt Requests |
+| `InMemoryUnitOfWork`       | Scoped    | Per-Request Pending-Add Buffer                  |
+| `InMemoryTicketRepository` | Scoped    | Liest aus Singleton Store, referenziert scoped UoW |
 
-If `InMemoryStore` were scoped, data would disappear between requests. If `InMemoryUnitOfWork` were singleton, pending adds from one request would bleed into another. The lifetimes encode the same assumptions that a database transaction encodes: shared durable state (singleton), per-request transient buffer (scoped).
+Wäre `InMemoryStore` scoped, würden Daten zwischen Requests verschwinden. Wäre `InMemoryUnitOfWork` ein Singleton, würden pending Adds eines Requests in einen anderen überlaufen. Die Lifetimes codieren dieselben Annahmen wie eine Database-Transaction: gemeinsamer dauerhafter State (Singleton), per-Request transienter Buffer (Scoped).
 
 ## Fail-Fast Configuration
 
-The composition root reads `Persistence:Provider` and registers either the PostgreSQL or InMemory adapter. Any value other than `"Postgres"` or `"InMemory"` throws `InvalidOperationException` at startup:
+Der Composition Root liest `Persistence:Provider` und registriert entweder den PostgreSQL- oder den InMemory-Adapter. Jeder andere Wert als `"Postgres"` oder `"InMemory"` wirft beim Start eine `InvalidOperationException`:
 
 ```csharp
 _ => throw new InvalidOperationException(
     $"Unknown persistence provider: '{provider}'. Valid values: 'Postgres', 'InMemory'.")
 ```
 
-No silent fallback. A misconfigured deployment fails immediately with a clear message rather than starting up in an unintended state and failing later with a confusing error.
+Kein stilles Fallback. Ein falsch konfiguriertes Deployment schlägt sofort mit einer klaren Meldung fehl, statt in einem unbeabsichtigten State zu starten und später mit einem verwirrenden Fehler zu scheitern.
 
-## What the Swap Proves
+## Was der Swap beweist
 
-The end-to-end test suite runs both providers via a `[ProviderMatrix]` attribute. Tests that cover the commit boundary — uncommitted writes are not readable, committed writes are — run against both implementations and pass against both.
+Die End-to-End-Test-Suite führt beide Provider per `[ProviderMatrix]` Attribute aus. Tests, die die Commit-Boundary abdecken — uncommitted Writes sind nicht lesbar, committed Writes sind es — laufen gegen beide Implementierungen und bestehen gegen beide.
 
-The swap proves the port boundary is real. Not claimed in documentation — demonstrated in running tests. That's the difference between an architecture that holds and one that's aspirational.
+Der Swap beweist, dass die Port-Boundary real ist. Nicht in Dokumentation behauptet — in laufenden Tests demonstriert. Das ist der Unterschied zwischen einer Architecture, die hält, und einer, die es nur behauptet.

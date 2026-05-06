@@ -1,26 +1,26 @@
 ---
-title: "Minimal API Without MediatR"
-description: "Why ServiceDeskLite injects handlers directly into endpoints instead of dispatching through a mediator — and when that decision should be revisited."
+title: "Minimal API ohne MediatR"
+description: "Warum ServiceDeskLite Handler direkt in Endpoints injiziert statt über einen Mediator zu dispatchen — und wann diese Entscheidung überdacht werden sollte."
 date: "2026-05-04"
 readMin: 3
 draft: false
 ---
 
-Two questions shape the API host in most .NET projects: which routing model, and whether to use a mediator library. ServiceDeskLite answers both deliberately: Minimal API, and no mediator.
+Zwei Fragen prägen den API Host in den meisten .NET-Projekten: welches Routing-Modell und ob eine Mediator-Library verwendet werden soll. ServiceDeskLite beantwortet beide bewusst: Minimal API, und kein Mediator.
 
-Neither is the default choice in many architectures. MediatR in particular has become something of a convention — added early, used everywhere, regardless of whether the pipeline it enables is actually needed. The question I started with was: what's missing if I don't add it?
+Beides ist in vielen Architekturen nicht die Standardwahl. MediatR im Besonderen ist zu einer Art Konvention geworden — früh hinzugefügt, überall verwendet, unabhängig davon, ob die Pipeline, die es ermöglicht, tatsächlich benötigt wird. Die Frage, mit der ich angefangen habe: Was fehlt, wenn ich es nicht hinzufüge?
 
-## What MediatR Would Add
+## Was MediatR hinzufügen würde
 
-MediatR's core value is `IPipelineBehavior<,>`. Cross-cutting concerns — logging every handler invocation, running validation before every command, enforcing authentication — can be expressed once as a behaviour and applied to every handler call without touching the call site.
+MediatRs Kernwert ist `IPipelineBehavior<,>`. Cross-cutting Concerns — jeden Handler-Aufruf loggen, Validation vor jedem Command ausführen, Authentication durchsetzen — können einmal als Behaviour ausgedrückt und auf jeden Handler-Aufruf angewendet werden, ohne die Call-Site zu berühren.
 
-Without MediatR, those concerns live at the middleware level or are handled per-handler. For ServiceDeskLite's current surface — four ticket endpoints, one aggregate — there are no cross-cutting handler concerns that need a pipeline. Logging is handled by Serilog at the middleware level. Validation is per-handler. Authentication isn't in scope.
+Ohne MediatR leben diese Concerns auf Middleware-Ebene oder werden per Handler behandelt. Für ServiceDeskLites aktuelle Oberfläche — vier Ticket-Endpoints, ein Aggregate — gibt es keine Cross-cutting Handler-Concerns, die eine Pipeline brauchen. Logging wird von Serilog auf Middleware-Ebene behandelt. Validation ist per Handler. Authentication ist nicht im Scope.
 
-Adding MediatR before there's something to put in the pipeline is infrastructure debt, not capital. The registration layer, the `ISender` abstraction, the assembly scanning — all of it is overhead for zero current benefit.
+MediatR hinzuzufügen, bevor es etwas gibt, das in die Pipeline kommt, ist Infrastructure-Schuld, kein Kapital. Der Registration Layer, die `ISender`-Abstraktion, das Assembly-Scanning — alles davon ist Overhead für null aktuellen Nutzen.
 
-## How Handlers Are Wired Instead
+## Wie Handler stattdessen verdrahtet werden
 
-Endpoints are defined as static methods on a `RouteGroupBuilder` extension class. Handler types are injected directly as endpoint parameters by the framework's DI-aware parameter binding:
+Endpoints werden als statische Methoden auf einer `RouteGroupBuilder`-Extension-Klasse definiert. Handler-Typen werden direkt als Endpoint-Parameter durch das DI-aware Parameter-Binding des Frameworks injiziert:
 
 ```csharp
 group.MapPost("/", async (
@@ -34,18 +34,18 @@ group.MapPost("/", async (
 });
 ```
 
-`CreateTicketHandler` is registered as a scoped service in DI. The endpoint calls it directly. No `ISender.Send(command)`, no mediator lookup, no dispatch indirection.
+`CreateTicketHandler` ist als scoped Service in DI registriert. Der Endpoint ruft ihn direkt auf. Kein `ISender.Send(command)`, kein Mediator-Lookup, keine Dispatch-Indirektion.
 
-The call site is explicit: you can read an endpoint and know exactly which handler it calls. There's no layer of convention-based dispatch to trace through.
+Die Call-Site ist explizit: Man kann einen Endpoint lesen und weiß genau, welchen Handler er aufruft. Es gibt keine Layer von convention-basiertem Dispatch, durch die man sich durcharbeiten muss.
 
-## The CQRS Question
+## Die CQRS-Frage
 
-ServiceDeskLite separates commands and queries as distinct types with distinct handlers — `CreateTicketHandler`, `GetTicketByIdHandler`, `UpdateTicketStatusHandler`, `GetTicketsHandler`. That's lightweight CQRS: separate read and write models at the application layer, with explicit handler types per use case.
+ServiceDeskLite trennt Commands und Queries als unterschiedliche Typen mit unterschiedlichen Handlers — `CreateTicketHandler`, `GetTicketByIdHandler`, `UpdateTicketStatusHandler`, `GetTicketsHandler`. Das ist leichtgewichtiges CQRS: separate Read- und Write-Models auf Application-Layer-Ebene, mit expliziten Handler-Typen pro Use Case.
 
-It's not the heavier CQRS variant — no MediatR request pipeline, no separate read database, no event projection. The read/write boundary is visible without the infrastructure. Lightweight CQRS with direct handler injection is a different point on the tradeoff curve than "full CQRS with MediatR", and it's worth keeping them distinct.
+Es ist nicht die schwergewichtigere CQRS-Variante — keine MediatR-Request-Pipeline, keine separate Read-Datenbank, keine Event-Projektion. Die Read/Write-Boundary ist ohne die Infrastructure sichtbar. Leichtgewichtiges CQRS mit direkter Handler-Injektion ist ein anderer Punkt auf der Trade-off-Kurve als „vollständiges CQRS mit MediatR", und es lohnt sich, beides auseinanderzuhalten.
 
-## When to Revisit
+## Wann überdenken
 
-There are two concrete triggers. First: a cross-cutting concern that needs to apply uniformly to every handler call — authentication enforcement, retry logic, distributed tracing spans. At that point, `IPipelineBehavior<,>` earns its existence and MediatR becomes the right answer. Second: the endpoint surface grows to the point where each endpoint orchestrates multiple handlers, making the parameter list unwieldy. At that point, Controllers or a dispatcher starts to justify the ceremony.
+Es gibt zwei konkrete Auslöser. Erstens: ein Cross-cutting Concern, der gleichmäßig auf jeden Handler-Aufruf angewendet werden muss — Authentication-Enforcement, Retry-Logik, Distributed-Tracing-Spans. An diesem Punkt verdient `IPipelineBehavior<,>` seine Existenz und MediatR wird die richtige Antwort. Zweitens: die Endpoint-Oberfläche wächst so weit, dass jeder Endpoint mehrere Handler orchestriert, was die Parameter-Liste unhandlich macht. An diesem Punkt beginnen Controller oder ein Dispatcher, das Zeremoniell zu rechtfertigen.
 
-Neither has happened yet. The re-evaluation point is named explicitly, not deferred indefinitely — the ADR for this decision lists the triggers. When the complexity arrives, the migration path is clear: endpoints call `ISender.Send(command)` instead of `handler.HandleAsync(command, ct)`. The handlers themselves don't change.
+Keines davon ist bisher passiert. Der Neubewertungspunkt ist explizit benannt, nicht auf unbestimmte Zeit verschoben — das ADR für diese Entscheidung listet die Auslöser auf. Wenn die Komplexität kommt, ist der Migrationspfad klar: Endpoints rufen `ISender.Send(command)` statt `handler.HandleAsync(command, ct)` auf. Die Handler selbst ändern sich nicht.
