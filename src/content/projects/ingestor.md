@@ -30,10 +30,10 @@ Batch Processing teilt große Dateien in 500-Zeilen-Chunks auf, jeder atomar com
 
 RabbitMQ Dispatch — wenn konfiguriert — publiziert erst *nach* dem Database-Commit, über eine Post-Commit-Callback-Registry. Das eliminiert die klassische Race Condition, bei der ein Consumer eine Message verarbeitet, bevor die produzierende Transaction für die Datenbank sichtbar ist.
 
-→ [Outbox vs. Message Broker](/decisions/outbox-vs-message-broker)
-→ [State Machine mit expliziten Transitions](/decisions/state-machine-explicit-transitions)
-→ [Idempotency Key Strategy](/decisions/idempotency-key-strategy)
-→ [Result Pattern statt Exceptions](/decisions/result-pattern-over-exceptions)
+→ [Outbox vs. Message Broker](/decisions/outbox-vs-message-broker)  
+→ [State Machine mit expliziten Transitions](/decisions/state-machine-explicit-transitions)  
+→ [Idempotency Key Strategy](/decisions/idempotency-key-strategy)  
+→ [Result Pattern statt Exceptions](/decisions/result-pattern-over-exceptions)  
 → [Chunk-basierte Batch-Verarbeitung](/decisions/chunk-based-batch-processing)
 
 ## Herausforderungen

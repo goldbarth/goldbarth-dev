@@ -55,26 +55,29 @@ Synchrone Kommunikation nur auf dem Cache-Miss-Pfad (Enforcement → Plans). All
 
 **Caching-Strategie:**
 
-| Cache | Zweck | Invalidierung |
-|---|---|---|
-| Plan Resolution | API Key → Tenant + effektiver Plan + Limits | TTL + Pub/Sub auf `plans.changes` |
-| Quota Counter | Fixed-Window `INCR` pro Tenant pro Periode | TTL aligned to Window Expiry |
-| Rate-Limit Bucket | Token-Bucket-State pro Tenant | Atomic Mutation via Lua Script |
-| Tenant Hierarchy | Resolved Parent Chains | Tag-basierte Kaskade auf `TenantHierarchyChanged` |
+| Cache             | Zweck                                       | Invalidierung                                     |
+|-------------------|---------------------------------------------|---------------------------------------------------|
+| Plan Resolution   | API Key → Tenant + effektiver Plan + Limits | TTL + Pub/Sub auf `plans.changes`                 |
+| Quota Counter     | Fixed-Window `INCR` pro Tenant pro Periode  | TTL aligned to Window Expiry                      |
+| Rate-Limit Bucket | Token-Bucket-State pro Tenant               | Atomic Mutation via Lua Script                    |
+| Tenant Hierarchy  | Resolved Parent Chains                      | Tag-basierte Kaskade auf `TenantHierarchyChanged` |
 
 Der nicht-triviale Fall ist die Hierarchie-Kaskade: ein einzelnes `TenantHierarchyChanged`-Event invalidiert Plan-Resolutions, Hierarchy-Caches und Authorization-Decisions über einen gesamten Sub-Tree. Tag-basierte Eviction via Redis Sets.
 
 **Authentication:**
 
-| Caller | Mechanismus |
-|---|---|
-| Externer API Consumer | API Key im Header |
-| Tenant Admin | OIDC (Keycloak) → JWT mit Refresh |
-| Service-to-Service | Internes JWT (Enforcement → Plans auf Cache Miss) |
+| Caller                | Mechanismus                                       |
+|-----------------------|---------------------------------------------------|
+| Externer API Consumer | API Key im Header                                 |
+| Tenant Admin          | OIDC (Keycloak) → JWT mit Refresh                 |
+| Service-to-Service    | Internes JWT (Enforcement → Plans auf Cache Miss) |
 
 **In-House Mediator:** Ein eigener Mediator (~30 LOC, keine externe Library) ersetzt MediatR. Kein Overhead, kein Magic.
 
 Alle Architekturentscheidungen sind als ADRs dokumentiert: [`docs/adrs/`](https://github.com/goldbarth/MetricGate/tree/main/docs/adrs).
+
+→ [SELECT FOR UPDATE bei konkurrenten Tree-Mutationen](/decisions/select-for-update-tree-mutations)  
+→ [Integrationstests mit Testcontainers](/decisions/integration-tests-testcontainers)
 
 ## Entwicklungsstand
 
