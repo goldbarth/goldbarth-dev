@@ -46,12 +46,12 @@ Zwei Persistence-Implementierungen leben hinter denselben `ITicketRepository`- u
 
 Jeder Handler gibt `Result<T>` zurück — wirft nie für erwartete Fehler. Der API Layer mappt Error-Typen an einer Stelle auf HTTP-Statuscodes. RFC 9457 `ProblemDetails` ist der Error-Contract über die gesamte API-Oberfläche.
 
-→ [Architecture, vom Compiler durchgesetzt](/decisions/clean-architecture-enforced-by-compiler)
-→ [Result Pattern an der Application Boundary](/decisions/result-pattern-application-boundary)
-→ [RFC 9457 als einheitlicher Error-Contract](/decisions/rfc9457-problem-details)
-→ [Minimal API ohne MediatR](/decisions/minimal-api-without-mediatr)
-→ [Swappable Persistence als Port-Beweis](/decisions/swappable-persistence-port-proof)
-→ [Stark typisierte Domain-IDs](/decisions/strongly-typed-domain-ids)
+→ [Architecture, vom Compiler durchgesetzt](/decisions/clean-architecture-enforced-by-compiler)  
+→ [Result Pattern an der Application Boundary](/decisions/result-pattern-application-boundary)  
+→ [RFC 9457 als einheitlicher Error-Contract](/decisions/rfc9457-problem-details)  
+→ [Minimal API ohne MediatR](/decisions/minimal-api-without-mediatr)  
+→ [Swappable Persistence als Port-Beweis](/decisions/swappable-persistence-port-proof)  
+→ [Stark typisierte Domain-IDs](/decisions/strongly-typed-domain-ids)  
 
 ## Herausforderungen
 
