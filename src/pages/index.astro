@@ -8,6 +8,16 @@ import ProjectRow from '../components/ProjectRow.astro';
 // Move to a content collection once the list grows.
 const featuredProjects = [
   {
+    title: 'MetricGate',
+    slug: 'metric-gate',
+    status: 'wip' as const,
+    description: 'Tenant-aware Quota- und Rate-Limiting-Backend für SaaS-APIs. Drei unabhängig deploybare .NET 10 Services — Plans, Enforcement, Usage — mit Redis, Redpanda (Kafka API) und Keycloak OIDC. Aktuell in Entwicklung: Milestone 3 von 6.',
+    stack: ['.NET 10', 'Redis', 'Redpanda', 'Keycloak', 'PostgreSQL', 'EF Core 10', 'OpenTelemetry', 'Docker'],
+    links: [
+      { label: 'github.com/goldbarth/metric-gate', href: 'https://github.com/goldbarth/MetricGate' },
+    ],
+  },
+  {
     title: 'Ingestor',
     slug: 'ingestor',
     status: 'live' as const,
