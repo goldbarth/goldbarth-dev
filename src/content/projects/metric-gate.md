@@ -85,19 +85,19 @@ Alle Architekturentscheidungen sind als ADRs dokumentiert: [`docs/adrs/`](https:
 
 Solution-Struktur, Plans-Schema, Tenant-Hierarchie (Adjacency List mit begrenzter Tiefe), Plan-Definitionen und -Zuweisungen, API Key Management, OIDC-Integration mit Keycloak, Policy-based und Resource-based Authorization.
 
-18 Issues geschlossen.
+18 Issues geschlossen — fertiggestellt
 
 ### M2: Plans Lifecycle & Events — abgeschlossen
 
 API Key Rotation mit Grace Period, Tenant Move mit Hierarchie-Validierung, Outbox Pattern für zuverlässiges Kafka Publishing, `plans.changes`-Broadcast.
 
-8 Issues geschlossen.
+8 Issues geschlossen — fertiggestellt
 
 ### M3: Enforcement & Caching — aktiv
 
 Check API (Hot-Path: *ist dieser API Key für diesen Call erlaubt?*), Redis Plan Cache mit TTL, Pub/Sub-basierte Cache-Invalidierung auf `plans.changes`, tag-basierte Eviction bei Hierarchie-Änderungen.
 
-2 Issues geschlossen, 7 offen.
+9 Issues geschlossen — fertiggestellt
 
 ### M4: Counters & Rate Limits — ausstehend
 

@@ -447,6 +447,40 @@ img { max-width: 100%; display: block; }
 }
 .prose strong { color: var(--color-text); font-weight: 600; }
 
+/* Tables */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin: 1.6em 0;
+  display: block;
+  overflow-x: auto;
+}
+.prose thead tr {
+  border-bottom: 1px solid var(--color-border-2);
+  background: var(--color-surface-2);
+}
+.prose th {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-2);
+  font-weight: 500;
+  padding: 0.6em 1em;
+  text-align: left;
+  white-space: nowrap;
+}
+.prose td {
+  padding: 0.55em 1em;
+  color: var(--color-text-2);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.prose tbody tr:last-child td { border-bottom: none; }
+.prose tbody tr:hover td { background: var(--color-surface); }
+
 /* Code blocks (Shiki output) */
 .codeblock {
   margin: 1.6em 0;
