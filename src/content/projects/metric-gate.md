@@ -81,32 +81,38 @@ Alle Architekturentscheidungen sind als ADRs dokumentiert: [`docs/adrs/`](https:
 
 ## Entwicklungsstand
 
-### M1: Plans Foundation — abgeschlossen
+### M1: Plans Foundation — <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span>
 
 Solution-Struktur, Plans-Schema, Tenant-Hierarchie (Adjacency List mit begrenzter Tiefe), Plan-Definitionen und -Zuweisungen, API Key Management, OIDC-Integration mit Keycloak, Policy-based und Resource-based Authorization.
 
-18 Issues geschlossen — fertiggestellt
+18 Issues geschlossen
 
-### M2: Plans Lifecycle & Events — abgeschlossen
+### M2: Plans Lifecycle & Events — <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span>
 
 API Key Rotation mit Grace Period, Tenant Move mit Hierarchie-Validierung, Outbox Pattern für zuverlässiges Kafka Publishing, `plans.changes`-Broadcast.
 
-8 Issues geschlossen — fertiggestellt
+8 Issues geschlossen
 
-### M3: Enforcement & Caching — aktiv
+### M3: Enforcement & Caching — <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span>
 
 Check API (Hot-Path: *ist dieser API Key für diesen Call erlaubt?*), Redis Plan Cache mit TTL, Pub/Sub-basierte Cache-Invalidierung auf `plans.changes`, tag-basierte Eviction bei Hierarchie-Änderungen.
 
-9 Issues geschlossen — fertiggestellt
+9 Issues geschlossen
 
-### M4: Counters & Rate Limits — ausstehend
+### M4: Counters & Rate Limits — <span style="color:oklch(0.80 0.13 75)">aktiv</span>
 
 Fixed-Window-Counter für monatliche Quotas, Token Bucket via Redis Lua Script für kurzfristige Rate Limits, Usage Event Publishing.
+
+2 Issues geschlossen, 5 offen
 
 ### M5: Usage Service — ausstehend
 
 Kafka Consumer, Event Persistence mit Idempotency-Dedup-Window, Aggregation Worker, Reports API.
 
+10 Issues offen
+
 ### M6: Hardening & Documentation — ausstehend
 
 Trace Propagation, Failure Tests, Edge Cases, Runbook, README finalisieren.
+
+9 Issues offen
