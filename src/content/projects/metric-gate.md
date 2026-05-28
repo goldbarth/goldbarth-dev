@@ -77,7 +77,8 @@ Der nicht-triviale Fall ist die Hierarchie-Kaskade: ein einzelnes `TenantHierarc
 Alle Architekturentscheidungen sind als ADRs dokumentiert: [`docs/adrs/`](https://github.com/goldbarth/MetricGate/tree/main/docs/adrs).
 
 → [SELECT FOR UPDATE bei konkurrenten Tree-Mutationen](/decisions/select-for-update-tree-mutations)  
-→ [Integrationstests mit Testcontainers](/decisions/integration-tests-testcontainers)
+→ [Integrationstests mit Testcontainers](/decisions/integration-tests-testcontainers)  
+→ [Redis Lua & atomare Ops](/decisions/redis-lua-and-atomar-ops)
 
 ## Entwicklungsstand
 
@@ -103,7 +104,7 @@ Check API (Hot-Path: *ist dieser API Key für diesen Call erlaubt?*), Redis Plan
 
 Fixed-Window-Counter für monatliche Quotas, Token Bucket via Redis Lua Script für kurzfristige Rate Limits, Usage Event Publishing.
 
-2 Issues geschlossen, 5 offen
+3 Issues geschlossen, 4 offen
 
 ### M5: Usage Service — ausstehend
 
