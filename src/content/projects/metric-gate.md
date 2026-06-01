@@ -100,19 +100,19 @@ Check API (Hot-Path: *ist dieser API Key für diesen Call erlaubt?*), Redis Plan
 
 9 Issues geschlossen
 
-### M4: Counters & Rate Limits — <span style="color:oklch(0.80 0.13 75)">aktiv</span>
+### M4: Counters & Rate Limits — <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span>
 
 Fixed-Window-Counter für monatliche Quotas, Token Bucket via Redis Lua Script für kurzfristige Rate Limits, Usage Event Publishing.
 
-3 Issues geschlossen, 4 offen
+7 Issues geschlossen
 
-### M5: Usage Service — ausstehend
+### M5: Usage Service — <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span>
 
 Kafka Consumer, Event Persistence mit Idempotency-Dedup-Window, Aggregation Worker, Reports API.
 
-10 Issues offen
+10 Issues geschlossen
 
-### M6: Hardening & Documentation — ausstehend
+### M6: Hardening & Documentation — <span style="color:oklch(0.80 0.13 75)">aktiv</span>
 
 Trace Propagation, Failure Tests, Edge Cases, Runbook, README finalisieren.
 
