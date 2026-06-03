@@ -1,11 +1,11 @@
 ---
 title: "MetricGate"
-description: "Tenant-aware Quota- und Rate-Limiting-Backend für SaaS-APIs. Drei .NET 10 Microservices mit Redis, Redpanda und Keycloak — aktuell in Entwicklung."
-date: "2026-05-22"
+description: "Tenant-aware Quota- und Rate-Limiting-Backend für SaaS-APIs. Drei .NET 10 Microservices mit Redis, Redpanda und Keycloak — V1 released."
+date: "2026-06-03"
 draft: false
 ---
 
-> In Entwicklung — diese Seite wächst mit dem Projekt. Milestone 3 von 6 ist aktiv.
+> V1 (Backend) released — drei Services, vollständig getestet und dokumentiert. V2 (Frontend mit Angular) in Planung.
 
 ## Was es ist
 
@@ -72,13 +72,16 @@ Der nicht-triviale Fall ist die Hierarchie-Kaskade: ein einzelnes `TenantHierarc
 | Tenant Admin          | OIDC (Keycloak) → JWT mit Refresh                 |
 | Service-to-Service    | Internes JWT (Enforcement → Plans auf Cache Miss) |
 
-**In-House Mediator:** Ein eigener Mediator (~30 LOC, keine externe Library) ersetzt MediatR. Kein Overhead, kein Magic.
+**Kein Mediator:** Application Services werden direkt injiziert — kein MediatR-Overhead, kein Magic. ([ADR-005](https://github.com/goldbarth/MetricGate/blob/main/docs/adrs/005-mediator-abstraction.md))
 
 Alle Architekturentscheidungen sind als ADRs dokumentiert: [`docs/adrs/`](https://github.com/goldbarth/MetricGate/tree/main/docs/adrs).
 
+**Performance (BenchmarkDotNet):** p95 Cache-Hit: **109 µs** (91× unter 10 ms Ziel); Latenz bei 50 Concurrent: **4 µs/Request** — Details: [`docs/benchmarks.md`](https://github.com/goldbarth/MetricGate/blob/main/docs/benchmarks.md).
+
 → [SELECT FOR UPDATE bei konkurrenten Tree-Mutationen](/decisions/select-for-update-tree-mutations)  
 → [Integrationstests mit Testcontainers](/decisions/integration-tests-testcontainers)  
-→ [Redis Lua & atomare Ops](/decisions/redis-lua-and-atomar-ops)
+→ [Redis Lua & atomare Ops](/decisions/redis-lua-and-atomar-ops)  
+→ [KI-gestützte Entwicklung: gemessene Aufwandsrechnung](/decisions/ai-assisted-development-metric-gate)
 
 ## Entwicklungsstand
 
@@ -112,8 +115,8 @@ Kafka Consumer, Event Persistence mit Idempotency-Dedup-Window, Aggregation Work
 
 10 Issues geschlossen
 
-### M6: Hardening & Documentation — <span style="color:oklch(0.80 0.13 75)">aktiv</span>
+### M6: Hardening & Documentation — <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span>
 
 Trace Propagation, Failure Tests, Edge Cases, Runbook, README finalisieren.
 
-9 Issues offen
+9 Issues + 5 follow-ups geschlossen

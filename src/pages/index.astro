@@ -10,8 +10,8 @@ const featuredProjects = [
   {
     title: 'MetricGate',
     slug: 'metric-gate',
-    status: 'wip' as const,
-    description: 'Tenant-aware Quota- und Rate-Limiting-Backend für SaaS-APIs. Drei unabhängig deploybare .NET 10 Services — Plans, Enforcement, Usage — mit Redis, Redpanda (Kafka API) und Keycloak OIDC. Aktuell in Entwicklung: Milestone 3 von 6.',
+    status: 'live' as const,
+    description: 'Tenant-aware Quota- und Rate-Limiting-Backend für SaaS-APIs. Drei unabhängig deploybare .NET 10 Services — Plans, Enforcement, Usage — mit Redis, Redpanda (Kafka API) und Keycloak OIDC. V1 (Backend) released. V2 (Angular Frontend) in Planung.',
     stack: ['.NET 10', 'Redis', 'Redpanda', 'Keycloak', 'PostgreSQL', 'EF Core 10', 'OpenTelemetry', 'Docker'],
     links: [
       { label: 'github.com/goldbarth/metric-gate', href: 'https://github.com/goldbarth/MetricGate' },
@@ -20,7 +20,7 @@ const featuredProjects = [
   {
     title: 'Ingestor',
     slug: 'ingestor',
-    status: 'live' as const,
+    status: 'archived' as const,
     description: 'Eine .NET 10 Import-Pipeline, gebaut um Reliability: Outbox Pattern, strikte Domain State Machine, idempotente Verarbeitung und eine config-switchable Dispatch-Strategie — jede Design-Entscheidung auf Korrektheit und Nachvollziehbarkeit ausgerichtet.',
     stack: ['.NET 10', 'OpenTelemetry', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
     links: [
@@ -65,7 +65,7 @@ const writings = (
         Unfertig, hauptsächlich für mein zukünftiges Ich — öffentlich, falls es jemandem hilft.
       </p>
       <div class="intro__now">
-        <span>baue metricgate — auth, caching, microservices in .net · lese project hail mary — andy weir</span>
+        <span>metricgate v1 released · plane v2 — frontend mit angular · lese project hail mary — andy weir</span>
       </div>
     </section>
 
