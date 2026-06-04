@@ -5,7 +5,7 @@ date: "2026-06-03"
 draft: false
 ---
 
-> V1 (Backend) released — drei Services, vollständig getestet und dokumentiert. V2 (Frontend mit Angular) in Arbeit — BFF Foundation läuft.
+> V1 (Backend) released — drei Services, vollständig getestet und dokumentiert. V2 (Frontend mit Angular) in Arbeit — Move & Plans als Nächstes.
 
 ## Was es ist
 
