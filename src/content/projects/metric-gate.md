@@ -131,13 +131,13 @@ Duende.BFF als serverseitiger Auth-Proxy, OIDC Login/Logout gegen Keycloak, sile
 
 7 Issues geschlossen
 
-### M8: Angular Scaffold & Hierarchy — <span style="color:oklch(0.80 0.13 75)">aktiv</span>
+### M8: Angular Scaffold & Hierarchy — <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span>
 
 Angular 21 Scaffold (zoneless, signal-first), Auth Guard gegen BFF-Session, Login/Logout Wiring, Subtree-Laden via `httpResource`, Subtree-Navigation UI, Tenant-Erstellung mit Hierarchie-Validierung, BFF User-Authorization (Roles + Subtree).
 
-7 Issues
+7 Issues geschlossen
 
-### M9: Move & Plans — <span style="color:oklch(0.6 0 0)">ausstehend</span>
+### M9: Move & Plans — <span style="color:oklch(0.80 0.13 75)">aktiv</span>
 
 Tenant Move UI, Plan Definition Create/Edit, Plan Assignment mit Ceiling-Check, Overbooking Warning als non-blocking Notice, Plan-Vererbung entlang der Hierarchie visualisieren.
 
