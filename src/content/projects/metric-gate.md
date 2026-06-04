@@ -5,7 +5,7 @@ date: "2026-06-03"
 draft: false
 ---
 
-> V1 (Backend) released — drei Services, vollständig getestet und dokumentiert. V2 (Frontend mit Angular) in Planung.
+> V1 (Backend) released — drei Services, vollständig getestet und dokumentiert. V2 (Frontend mit Angular) in Arbeit — BFF Foundation läuft.
 
 ## Was es ist
 
@@ -120,3 +120,37 @@ Kafka Consumer, Event Persistence mit Idempotency-Dedup-Window, Aggregation Work
 Trace Propagation, Failure Tests, Edge Cases, Runbook, README finalisieren.
 
 9 Issues + 5 follow-ups geschlossen
+
+---
+
+## V2: Angular Frontend
+
+### M7: BFF Foundation — <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span>
+
+Duende.BFF als serverseitiger Auth-Proxy, OIDC Login/Logout gegen Keycloak, silent Token Refresh server-seitig, CSRF/Antiforgery-Schutz, Internal-JWT-Edge-Auth BFF → Plans, same-origin Serving des Angular Bundles.
+
+7 Issues geschlossen
+
+### M8: Angular Scaffold & Hierarchy — <span style="color:oklch(0.80 0.13 75)">aktiv</span>
+
+Angular 21 Scaffold (zoneless, signal-first), Auth Guard gegen BFF-Session, Login/Logout Wiring, Subtree-Laden via `httpResource`, Subtree-Navigation UI, Tenant-Erstellung mit Hierarchie-Validierung, BFF User-Authorization (Roles + Subtree).
+
+7 Issues
+
+### M9: Move & Plans — <span style="color:oklch(0.6 0 0)">ausstehend</span>
+
+Tenant Move UI, Plan Definition Create/Edit, Plan Assignment mit Ceiling-Check, Overbooking Warning als non-blocking Notice, Plan-Vererbung entlang der Hierarchie visualisieren.
+
+5 Issues
+
+### M10: Check-Path Demo Widget — <span style="color:oklch(0.6 0 0)">ausstehend</span>
+
+Demo API Key Seed in Keycloak Realm, `/check` Counter Remaining State, Demo Widget gegen `/check`, Live Request-History via RxJS Stream.
+
+4 Issues
+
+### M11: Hardening & Documentation — <span style="color:oklch(0.6 0 0)">ausstehend</span>
+
+BFF Auth-Flow Integrationstests, UI Error-Path Coverage, README und Dokumentations-Update.
+
+3 Issues
