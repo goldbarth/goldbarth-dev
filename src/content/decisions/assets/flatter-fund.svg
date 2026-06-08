@@ -1,28 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 680 480" role="img" aria-label="Der Flatter-Fund: derselbe zitternde Pegel ohne Hysterese flackert die Stufe, mit Hysterese bleibt sie ruhig">
+<style>
+.bg { fill: var(--color-surface, #141414); stroke: var(--color-border, #222222); rx: var(--radius, 2px); }
+.t-title  { fill: var(--color-text, #e8e8e8); }
+.t-sub    { fill: var(--color-text-2, #b8b8b8); }
+.t-muted  { fill: var(--color-muted, #6a6a6a); }
+.t-body   { fill: var(--color-text-2, #b8b8b8); }
+.c-normal  { fill: var(--g-normal, oklch(0.70 0.08 155)); }
+.c-warning { fill: var(--color-accent, oklch(0.80 0.13 75)); }
+.c-severe  { fill: var(--g-severe, oklch(0.65 0.12 25)); }
+.s-normal  { stroke: var(--g-normal, oklch(0.70 0.08 155)); }
+.s-warning { stroke: var(--color-accent, oklch(0.80 0.13 75)); }
+.s-severe  { stroke: var(--g-severe, oklch(0.65 0.12 25)); }
+.c-pegel   { fill: var(--tk-keyword, oklch(0.78 0.07 245)); }
+.s-pegel   { stroke: var(--tk-keyword, oklch(0.78 0.07 245)); }
+.s-axis    { stroke: var(--color-border-2, #2a2a2a); }
+.s-div     { stroke: var(--color-border, #222222); }
+</style>
+
 <title>Der Flatter-Fund: ohne und mit Hysterese</title>
 <desc>Ein Pegel zittert um 4.40 Meter, knapp unter der warning-Schwelle bei 4.50. Links ohne Hysterese flackert die Stufe bei jeder Messung zwischen normal und warning. Rechts mit Hysterese bleibt die Stufe ruhig.</desc>
-<rect x="1" y="1" width="678" height="478" rx="10" fill="#0d0d0f" stroke="#2a2a2e" stroke-width="1"/>
-<text x="36" y="44" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="15" font-weight="500" fill="#e8e6df">Derselbe zitternde Pegel, zwei Mal gelesen</text>
-<text x="36" y="66" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" fill="#8a8980">Pegel pendelt um 4.40 — knapp unter warning (4.50)</text>
-<text x="36" y="104" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="13" font-weight="500" fill="#F09595">ohne Hysterese</text>
-<line x1="60" y1="160" x2="320" y2="160" stroke="#EF9F27" stroke-width="0.75" stroke-dasharray="4 4" opacity="0.6"/>
-<text x="60" y="152" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" fill="#8a8980">4.50</text>
-<polyline points="60,180 90,168 120,184 150,170 180,186 210,172 240,182 270,169 300,183 320,174" fill="none" stroke="#85B7EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="36" y="232" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" fill="#8a8980">Stufe</text>
-<polyline points="60,250 75,250 75,224 105,224 105,250 135,250 135,224 165,224 165,250 195,250 195,224 225,224 225,250 255,250 255,224 285,224 285,250 320,250" fill="none" stroke="#F09595" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="60" y="272" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" fill="#F09595">flackert jede Messung: normal &#8596; warning</text>
-<line x1="340" y1="100" x2="340" y2="290" stroke="#2a2a2e" stroke-width="1"/>
-<text x="364" y="104" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="13" font-weight="500" fill="#5DCAA5">mit Hysterese</text>
-<line x1="388" y1="160" x2="620" y2="160" stroke="#EF9F27" stroke-width="0.75" stroke-dasharray="4 4" opacity="0.6"/>
-<text x="388" y="152" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" fill="#8a8980">4.50</text>
-<polyline points="388,180 416,168 444,184 472,170 500,186 528,172 556,182 584,169 612,183 620,174" fill="none" stroke="#85B7EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="364" y="232" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" fill="#8a8980">Stufe</text>
-<polyline points="388,224 620,224" fill="none" stroke="#5DCAA5" stroke-width="2" stroke-linecap="round"/>
-<text x="388" y="272" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" fill="#5DCAA5">bleibt ruhig: warning gehalten</text>
-<line x1="36" y1="320" x2="644" y2="320" stroke="#2a2a2e" stroke-width="1"/>
-<text x="36" y="354" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" fill="#a8a69d">Die Hysterese senkt die Stufe erst, wenn der Pegel</text>
-<text x="36" y="376" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" fill="#a8a69d">die Schwelle um einen festen Abstand unterschreitet —</text>
-<text x="36" y="398" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" fill="#a8a69d">hier bei 4.35. Bis dahin: gehalten, kein Flackern.</text>
-<rect x="36" y="424" width="320" height="32" rx="6" fill="#EF9F27" opacity="0.12"/>
-<text x="52" y="444" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12" fill="#EF9F27">Invariante: HysteresisMargin &#8805; TrendMargin</text>
+<rect class="bg" x="1" y="1" width="678" height="478" stroke-width="1"/>
+<text x="36" y="44" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="15" font-weight="500" class="t-title">Derselbe zitternde Pegel, zwei Mal gelesen</text>
+<text x="36" y="66" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" class="t-sub">Pegel pendelt um 4.40 — knapp unter warning (4.50)</text>
+<text x="36" y="104" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="13" font-weight="500" class="c-severe">ohne Hysterese</text>
+<line x1="60" y1="160" x2="320" y2="160" class="s-warning" stroke-width="0.75" stroke-dasharray="4 4" opacity="0.6"/>
+<text x="60" y="152" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" class="t-sub">4.50</text>
+<polyline points="60,180 90,168 120,184 150,170 180,186 210,172 240,182 270,169 300,183 320,174" fill="none" class="s-pegel" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="36" y="232" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" class="t-sub">Stufe</text>
+<polyline points="60,250 75,250 75,224 105,224 105,250 135,250 135,224 165,224 165,250 195,250 195,224 225,224 225,250 255,250 255,224 285,224 285,250 320,250" fill="none" class="s-severe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="60" y="272" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" class="c-severe">flackert jede Messung: normal &#8596; warning</text>
+<line x1="340" y1="100" x2="340" y2="290" class="s-div" stroke-width="1"/>
+<text x="364" y="104" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="13" font-weight="500" class="c-normal">mit Hysterese</text>
+<line x1="388" y1="160" x2="620" y2="160" class="s-warning" stroke-width="0.75" stroke-dasharray="4 4" opacity="0.6"/>
+<text x="388" y="152" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" class="t-sub">4.50</text>
+<polyline points="388,180 416,168 444,184 472,170 500,186 528,172 556,182 584,169 612,183 620,174" fill="none" class="s-pegel" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="364" y="232" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" class="t-sub">Stufe</text>
+<polyline points="388,224 620,224" fill="none" class="s-normal" stroke-width="2" stroke-linecap="round"/>
+<text x="388" y="272" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="11" class="c-normal">bleibt ruhig: warning gehalten</text>
+<line x1="36" y1="320" x2="644" y2="320" class="s-div" stroke-width="1"/>
+<text x="36" y="354" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" class="t-body">Die Hysterese senkt die Stufe erst, wenn der Pegel</text>
+<text x="36" y="376" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" class="t-body">die Schwelle um einen festen Abstand unterschreitet —</text>
+<text x="36" y="398" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" class="t-body">hier bei 4.35. Bis dahin: gehalten, kein Flackern.</text>
+<rect x="36" y="424" width="320" height="32" rx="6" class="c-warning" opacity="0.12"/>
+<text x="52" y="444" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12" class="c-warning">Invariante: HysteresisMargin &#8805; TrendMargin</text>
 </svg>
