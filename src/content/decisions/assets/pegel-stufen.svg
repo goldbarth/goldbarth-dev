@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 680 440" role="img" aria-label="Pegelstufen an echten Metern: normal ab 0, warning ab 4.50, severe ab 5.50 Meter NHN, mit steigender Pegelkurve">
+<title>Pegel rein, Stufe raus</title>
+<desc>Eine Pegelachse in Metern NHN mit drei Stufen: normal ab 0, warning ab 4.50, severe ab 5.50. Eine steigende Pegelkurve ueberschreitet die warning-Schwelle.</desc>
+<defs>
+<marker id="arrowL" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<rect x="1" y="1" width="678" height="438" rx="10" fill="#0d0d0f" stroke="#2a2a2e" stroke-width="1"/>
+<text x="36" y="44" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="15" font-weight="500" fill="#e8e6df">Pegel rein, Stufe raus</text>
+<text x="36" y="66" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" fill="#8a8980">Schwellen in Metern NHN</text>
+<rect x="120" y="300" width="470" height="70" fill="#1D9E75" opacity="0.13"/>
+<rect x="120" y="180" width="470" height="120" fill="#EF9F27" opacity="0.15"/>
+<rect x="120" y="110" width="470" height="70" fill="#E24B4A" opacity="0.15"/>
+<line x1="120" y1="110" x2="120" y2="370" stroke="#3a3a3e" stroke-width="1"/>
+<line x1="120" y1="370" x2="590" y2="370" stroke="#3a3a3e" stroke-width="1"/>
+<line x1="120" y1="300" x2="590" y2="300" stroke="#5DCAA5" stroke-width="0.75" stroke-dasharray="4 4" opacity="0.7"/>
+<line x1="120" y1="180" x2="590" y2="180" stroke="#EF9F27" stroke-width="0.75" stroke-dasharray="4 4" opacity="0.7"/>
+<text x="112" y="374" text-anchor="end" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" fill="#8a8980">0</text>
+<text x="112" y="304" text-anchor="end" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" fill="#8a8980">4.50</text>
+<text x="112" y="184" text-anchor="end" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" fill="#8a8980">5.50</text>
+<text x="138" y="342" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="14" font-weight="500" fill="#5DCAA5">normal</text>
+<text x="138" y="256" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="14" font-weight="500" fill="#EF9F27">warning</text>
+<text x="138" y="148" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="14" font-weight="500" fill="#F09595">severe</text>
+<path d="M120 362 C 200 358, 280 344, 360 326 C 440 308, 520 292, 580 276" fill="none" stroke="#85B7EB" stroke-width="2.5" stroke-linecap="round"/>
+<circle cx="580" cy="276" r="4" fill="#85B7EB"/>
+<text x="36" y="406" font-family="'DM Mono', ui-monospace, 'JetBrains Mono', 'Fira Mono', monospace" font-size="12.5" fill="#8a8980">Pegel steigt</text>
+<line x1="118" y1="401" x2="138" y2="401" stroke="#85B7EB" stroke-width="2" marker-end="url(#arrowL)"/>
+</svg>
