@@ -12,6 +12,19 @@ port-tidewatch ist ein fokussierter Ingestion-Service für Pegelstand-Telemetrie
 
 Der Datenfluss ist bewusst geradlinig: **Simulator → Ingestion-Service → Dashboard**. Ein Simulator emittiert Pegel-Readings für mehrere Messstellen über RabbitMQ. Der Ingestion-Service konsumiert sie, evaluiert jedes Reading gegen den Threshold, hält per-Gauge State und leitet Alarmzustände ab. Poison Messages werden in eine Dead-Letter-Queue geroutet, statt die Pipeline zu blockieren. Ein read-only Angular Dashboard zeigt aktuelle Pegel, den Alarmstatus pro Messstelle (normal / warning) und historische Trends.
 
+```
+┌─────────────┐    readings     ┌──────────────────┐  alerts / state    ┌─────────────┐
+│  simulator  │ ──────────────▶ │ ingestion service│ ─────────────────▶ │  dashboard  │
+│   (.NET)    │    RabbitMQ     │      (.NET)      │     REST / SSE     │  (Angular)  │
+└─────────────┘                 └──────────────────┘                    └─────────────┘
+                                          │
+                                          │ poison messages
+                                          ▼
+                                ┌──────────────────┐
+                                │ dead-letter queue│
+                                └──────────────────┘
+```
+
 ## Problem / Motivation
 
 Ich wollte eine Ingestion-Pipeline, die ich end-to-end reliable und observable bekomme — ohne mich in Breite zu verlieren. Statt eines generalisierten Systems habe ich den Scope hart eingegrenzt: eine Domain, ein Ingestion-Pfad, keine Write-Operationen aus dem UI. Die interessanten Probleme liegen hier nicht in der Feature-Menge, sondern darin, eine Message-getriebene Pipeline so zu bauen, dass Failure-Modes — Poison Messages, Consumer-Restarts, partielle Verfügbarkeit — sauber gehandhabt werden und im Tracing sichtbar bleiben.
@@ -28,17 +41,21 @@ Vier ADRs dokumentieren die zentralen Entscheidungen: Ort der Threshold-Evaluati
 
 Für das Deployment fällt die Wahl bewusst auf **Kubernetes + Argo CD (GitOps)** statt nur Azure Container Apps — wegen des declarative Infrastructure-as-Code-Workflows und der Sichtbarkeit, die er verschafft. Azure Container Apps bleibt als Baseline-Target.
 
+Alle Architekturentscheidungen sind als ADRs dokumentiert: [`docs/adrs/`](https://github.com/goldbarth/port-tidewatch/tree/main/docs/adrs).
+
+→ [Surge Evaluator: sechs Entscheidungen, eine Richtung](/decisions/surge-evaluator-decisions)
+
 ## Roadmap
 
 Das Projekt ist in fünf Milestones strukturiert, jeder als kohärenter Zwischenzustand gedacht — das Repo bleibt über alle Phasen funktionsfähig.
 
-| Phase | Ziel | Status |
-|-------|------|--------|
-| M1 | Repo-Struktur, Data Contracts, Threshold-Config | **Fertig** |
-| M2 | RabbitMQ-Integration, Consumer-Logik, per-Gauge State | **In Arbeit** |
-| M3 | OpenTelemetry Tracing, Integration-Tests via Testcontainers | Geplant |
-| M4 | Angular Dashboard (read-only: Pegel, Status, Trends) | Geplant |
-| M5 | Deployment: Azure Container Apps → Kubernetes + Argo CD | Geplant |
+| Phase | Ziel                                                        | Status                                                       |
+|-------|-------------------------------------------------------------|--------------------------------------------------------------|
+| M1    | Repo-Struktur, Data Contracts, Threshold-Config             | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
+| M2    | RabbitMQ-Integration, Consumer-Logik, per-Gauge State       | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
+| M3    | OpenTelemetry Tracing, Integration-Tests via Testcontainers | <span style="color:oklch(0.80 0.13 75)">aktiv</span>         |
+| M4    | Angular Dashboard (read-only: Pegel, Status, Trends)        | <span style="color:oklch(0.6 0 0)">ausstehend</span>         |
+| M5    | Deployment: Azure Container Apps → Kubernetes + Argo CD     | <span style="color:oklch(0.6 0 0)">ausstehend</span>         |
 
 ## Stand
 
