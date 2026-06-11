@@ -20,8 +20,8 @@ const featuredProjects = [
   {
     title: 'port-tidewatch',
     slug: 'port-tidewatch',
-    status: 'wip' as const,
-    description: 'Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem (Alarm ab erwartetem Scheitelwert > 4,50 m über NN). Simulator erzeugt Readings, ein Ingestion-Service konsumiert über RabbitMQ mit Dead-Letter-Handling und Threshold-Evaluation, ein read-only Angular Dashboard zeigt Pegel und Alarmstatus. Foundation und Ingestion fertig; Observability, Dashboard und Deployment in Planung.',
+    status: 'live' as const,
+    description: 'Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem (gestuft: warning ab 4,50 m, severe ab 5,50 m über NN). Simulator erzeugt Readings, ein Ingestion-Service konsumiert über RabbitMQ mit Dead-Letter-Handling und gestufter, trend-aware Threshold-Evaluation, ein read-only Angular Dashboard zeigt Pegel, Alarmstufen und Trend-Sparklines. Seit v1.0.0 (Juni 2026) end-to-end lauffähig — mit OpenTelemetry-Tracing und zwei verifizierten Deployment-Pfaden (Kubernetes + Argo CD, Azure Container Apps).',
     stack: ['.NET 10', 'ASP.NET Core', 'RabbitMQ', 'OpenTelemetry', 'Angular', 'Docker', 'Kubernetes', 'Argo CD', 'Testcontainers'],
     links: [
       { label: 'github.com/goldbarth/port-tidewatch', href: 'https://github.com/goldbarth/port-tidewatch' },
