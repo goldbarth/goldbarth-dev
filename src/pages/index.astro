@@ -8,6 +8,16 @@ import ProjectRow from '../components/ProjectRow.astro';
 // Move to a content collection once the list grows.
 const featuredProjects = [
   {
+    title: 'port-tidewatch',
+    slug: 'port-tidewatch',
+    status: 'live' as const,
+    description: 'Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem (gestuft: warning ab 4,50 m, severe ab 5,50 m über NN). Simulator erzeugt Readings über ein Composite-Level-Modell, ein Ingestion-Service konsumiert über RabbitMQ mit Dead-Letter-Handling und gestufter, trend-aware Threshold-Evaluation, ein read-only Angular Dashboard zeigt Pegel, Alarmstufen und Trends als banded Area-Charts. Seit v1.1.0 (Juni 2026) demo-reif: Sturmflut-Szenarien, Alert-Event-Publishing über Fanout-Exchange, OpenTelemetry-Tracing und zwei verifizierte Deployment-Pfade (Kubernetes + Argo CD, Azure Container Apps).',
+    stack: ['.NET 10', 'ASP.NET Core', 'RabbitMQ', 'OpenTelemetry', 'Angular', 'Docker', 'Kubernetes', 'Argo CD', 'Testcontainers'],
+    links: [
+      { label: 'github.com/goldbarth/port-tidewatch', href: 'https://github.com/goldbarth/port-tidewatch' },
+    ],
+  },
+  {
     title: 'MetricGate',
     slug: 'metric-gate',
     status: 'live' as const,
@@ -15,16 +25,6 @@ const featuredProjects = [
     stack: ['.NET 10', 'Redis', 'Redpanda', 'Keycloak', 'PostgreSQL', 'EF Core 10', 'OpenTelemetry', 'Docker'],
     links: [
       { label: 'github.com/goldbarth/metric-gate', href: 'https://github.com/goldbarth/MetricGate' },
-    ],
-  },
-  {
-    title: 'port-tidewatch',
-    slug: 'port-tidewatch',
-    status: 'live' as const,
-    description: 'Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem (gestuft: warning ab 4,50 m, severe ab 5,50 m über NN). Simulator erzeugt Readings, ein Ingestion-Service konsumiert über RabbitMQ mit Dead-Letter-Handling und gestufter, trend-aware Threshold-Evaluation, ein read-only Angular Dashboard zeigt Pegel, Alarmstufen und Trend-Sparklines. Seit v1.0.0 (Juni 2026) end-to-end lauffähig — mit OpenTelemetry-Tracing und zwei verifizierten Deployment-Pfaden (Kubernetes + Argo CD, Azure Container Apps).',
-    stack: ['.NET 10', 'ASP.NET Core', 'RabbitMQ', 'OpenTelemetry', 'Angular', 'Docker', 'Kubernetes', 'Argo CD', 'Testcontainers'],
-    links: [
-      { label: 'github.com/goldbarth/port-tidewatch', href: 'https://github.com/goldbarth/port-tidewatch' },
     ],
   },
   {
