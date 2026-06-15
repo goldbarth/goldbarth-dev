@@ -1,6 +1,6 @@
 ---
 title: "port-tidewatch"
-description: "Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem. Wahlweise Simulator oder echter PEGELONLINE-Elbe-Feed, RabbitMQ-Consumer mit Dead-Letter-Handling und ein read-only Angular Dashboard. Bewusst klein gehalten: eine Domain, ein Ingestion-Pfad, end-to-end reliable und observable. Seit v1.2.0 mit echtem PEGELONLINE-Feed, Source-Switch und Threshold-What-if-Panel."
+description: "Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem. Wahlweise Simulator oder echter WSV/PEGELONLINE-Elbe-Feed, RabbitMQ-Consumer mit Dead-Letter-Handling und ein read-only Angular Dashboard. Bewusst klein gehalten: eine Domain, ein Ingestion-Pfad, end-to-end reliable und observable. Seit v1.2.0 mit echten WSV/PEGELONLINE-Daten und umschaltbarer Datenquelle."
 date: "2026-06-08T19:09:00"
 updated: "2026-06-15T00:00:00"
 readMin: 5
@@ -10,6 +10,10 @@ draft: false
 ## Was es ist
 
 port-tidewatch ist ein fokussierter Ingestion-Service für Pegelstand-Telemetrie von Häfen mit automatischem Sturmflut-Alerting. Das System ist an Hamburgs WADI-Warnsystem angelehnt und schlägt Alarm, wenn der erwartete Scheitelwert einer Sturmflut **4,50 m über NHN** (bzw. 2,40 m über MThw) übersteigt.
+
+![Live-Dashboard auf echten WSV/PEGELONLINE-Daten — vier Hamburger Elbe-Pegel (St. Pauli, Zollenspieker, Over, Bunthaus), alle in Stufe normal](./assets/tidewatch-dashboard.png)
+
+*Live-Dashboard auf **echten WSV/PEGELONLINE-Daten** — die öffentlichen Hamburger Elbe-Pegel (St. Pauli, Zollenspieker, Over, Bunthaus), alle `normal` (reale Pegel liegen weit unter den Sturmflut-Schwellen).*
 
 Der Datenfluss ist bewusst geradlinig: **Reading-Source → Ingestion-Service → Dashboard**. Eine Reading-Quelle — wahlweise der Simulator (scripted Surge) oder der echte PEGELONLINE-Elbe-Feed, per `ReadingSource`-Switch beim Start gewählt — emittiert Pegel-Readings für mehrere Messstellen über RabbitMQ. Der Ingestion-Service konsumiert sie, evaluiert jedes Reading gegen den Threshold, hält per-Gauge State und leitet Alarmzustände ab. Die Evaluation ist gestuft mit drei Stufen — **normal / warning (4,50 m) / severe (5,50 m)** — und trend-aware mit Hysterese, um falsche Eskalationen zu vermeiden. Poison Messages werden in eine Dead-Letter-Queue geroutet, statt die Pipeline zu blockieren. Ein read-only Angular Dashboard zeigt aktuelle Pegel, den Alarmstatus pro Messstelle und historische Trends als banded Area-Charts.
 
@@ -50,16 +54,16 @@ Alle Architekturentscheidungen sind als ADRs dokumentiert: [`docs/adrs/`](https:
 
 Das Projekt ist in Milestones strukturiert, jeder als kohärenter Zwischenzustand gedacht — das Repo bleibt über alle Phasen funktionsfähig.
 
-| Phase     | Ziel                                                                 | Status                                                       |
-|-----------|----------------------------------------------------------------------|--------------------------------------------------------------|
-| M1        | Repo-Struktur, Data Contracts, Threshold-Config                      | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
-| M2        | RabbitMQ-Integration, Consumer-Logik, per-Gauge State                | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
-| M3        | OpenTelemetry Tracing, Integration-Tests via Testcontainers          | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
-| M4        | Angular Dashboard (read-only: Pegel, Status, Trends)                 | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
-| M5        | Deployment: Azure Container Apps → Kubernetes + Argo CD              | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
-| M6 (v1.1) | Sturmflut-Szenarien, Dashboard-Politur, Alert-Event-Publishing       | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
-| M7 (v1.2) | Echter PEGELONLINE-Elbe-Feed, Source-Switch, Threshold-What-if-Panel | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
-| M8 (v1.3) | Observable OpenTelemetry-Pfad sichtbar machen                        | <span style="color:oklch(0.80 0.13 75)">geplant</span>       |
+| Phase     | Ziel                                                                   | Status                                                       |
+|-----------|------------------------------------------------------------------------|--------------------------------------------------------------|
+| M1        | Repo-Struktur, Data Contracts, Threshold-Config                        | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
+| M2        | RabbitMQ-Integration, Consumer-Logik, per-Gauge State                  | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
+| M3        | OpenTelemetry Tracing, Integration-Tests via Testcontainers            | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
+| M4        | Angular Dashboard (read-only: Pegel, Status, Trends)                   | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
+| M5        | Deployment: Azure Container Apps → Kubernetes + Argo CD                | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
+| M6 (v1.1) | Sturmflut-Szenarien, Dashboard-Politur, Alert-Event-Publishing         | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
+| M7 (v1.2) | Echter PEGELONLINE-Elbe-Feed, umschaltbare Datenquelle (Source-Switch) | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
+| M8 (v1.3) | Observable OpenTelemetry-Pfad sichtbar machen                          | <span style="color:oklch(0.80 0.13 75)">geplant</span>       |
 
 ## Stand
 
@@ -69,6 +73,6 @@ Die Basis kam mit [v1.0.0](https://github.com/goldbarth/port-tidewatch/releases/
 
 v1.1.0 (M6) bringt die Demo-Reife: Der Simulator nutzt jetzt ein Composite-Level-Modell (Baseline + Tide + scripted Surge + Rauschen), parametrierbar über `SURGE_PEAK_M` und `SURGE_PERIOD_S` — eine Messstelle (`CUX`) durchläuft die volle Alarm-Kaskade, die anderen bleiben normal. Das Angular Dashboard ist überarbeitet: banded Area-Charts auf fixer 0–6-m-Skala mit Threshold-Markern, Header-Summary, relative Time-in-Stage ("warning seit 3 min"), live/stale/offline-Indikatoren und animierte Stage-Übergänge. Das `GaugeDto` liefert nun Rate-of-Change (m/min), Time-in-Stage und Fenster-Min/Max, die als Trend-Pfeile im UI erscheinen. Neu außerdem ein `AlertEvent`-Contract: bei jedem Stage-Wechsel wird aus einem zentralen Chokepoint über einen RabbitMQ-Fanout-Exchange in eine durable Audit-Queue publiziert (initiale Stage-Etablierung unterdrückt, um spurious Events zu vermeiden). Dazu eine ~60-Sekunden-Demo des Sturmflut-Szenarios.
 
-v1.2.0 (M7) bringt echte Daten: Ein PEGELONLINE-Source-Adapter pollt die öffentliche WSV-REST-API für vier Hamburger Elbe-Pegel (St. Pauli, Bunthaus, Over, Zollenspieker) und emittiert dieselben `Reading`-Records wie der Simulator — Centimeter über Pegelnull werden in einem expliziten Mapping-Layer nach Meter NHN umgerechnet (W/100 + PNP-Offset), conditional GET (`If-None-Match`) verhindert Duplikate bei `304`, transiente API-Fehler werden geloggt und retried. Welche Quelle läuft, entscheidet ein einzelner `ReadingSource`-Switch (`Simulator | Pegelonline`) beim Start — fail-fast bei ungültiger Konfiguration. Das frühere Simulator-Projekt wurde dafür zum quellen-neutralen `Tidewatch.Source`-Host (Quellen hinter `IReadingSource`). Im Dashboard neu: ein read-only Threshold-What-if-Panel, das die Schwellen client-seitig verschiebbar macht und die Live-Readings dabei neu klassifiziert — illustriert „Schwellen sind Konfiguration, nicht Code" an echten Daten. Deployed (Kubernetes + Azure) läuft der Live-Feed, lokal bleibt der Simulator die dokumentierte Demo.
+v1.2.0 (M7) bringt echte Daten: Ein PEGELONLINE-Source-Adapter pollt die öffentliche WSV-REST-API für vier Hamburger Elbe-Pegel (St. Pauli, Bunthaus, Over, Zollenspieker) und emittiert dieselben `Reading`-Records wie der Simulator — Centimeter über Pegelnull werden in einem expliziten Mapping-Layer nach Meter NHN umgerechnet (W/100 + PNP-Offset), conditional GET (`If-None-Match`) verhindert Duplikate bei `304`, transiente API-Fehler werden geloggt und retried. Welche Quelle läuft, entscheidet ein einzelner `ReadingSource`-Switch (`Simulator | Pegelonline`) beim Start — fail-fast bei ungültiger Konfiguration. Das frühere Simulator-Projekt wurde dafür zum quellen-neutralen `Tidewatch.Source`-Host (Quellen hinter `IReadingSource`). Deployed (Kubernetes + Azure) läuft der Live-Feed, lokal bleibt der Simulator die dokumentierte Demo.
 
 Als Nächstes (M8 / v1.3): der Observability-Pfad im Dashboard sichtbar gemacht — Latency-Pulse, Jaeger-Deep-Link und ein optionaler Trace-Waterfall.
