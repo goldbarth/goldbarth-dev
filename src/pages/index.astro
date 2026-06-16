@@ -11,7 +11,7 @@ const featuredProjects = [
     title: 'port-tidewatch',
     slug: 'port-tidewatch',
     status: 'live' as const,
-    description: 'Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem (gestuft: warning ab 4,50 m, severe ab 5,50 m über NN). Simulator erzeugt Readings über ein Composite-Level-Modell, ein Ingestion-Service konsumiert über RabbitMQ mit Dead-Letter-Handling und gestufter, trend-aware Threshold-Evaluation, ein read-only Angular Dashboard zeigt Pegel, Alarmstufen und Trends als banded Area-Charts. Seit v1.1.0 (Juni 2026) demo-reif: Sturmflut-Szenarien, Alert-Event-Publishing über Fanout-Exchange, OpenTelemetry-Tracing und zwei verifizierte Deployment-Pfade (Kubernetes + Argo CD, Azure Container Apps).',
+    description: 'Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem (gestuft: warning ab 4,50 m, severe ab 5,50 m über NN). Eine Reading-Quelle — wahlweise Simulator (Composite-Level-Modell) oder der echte WSV/PEGELONLINE-Elbe-Feed, per Switch beim Start gewählt — liefert Readings; ein Ingestion-Service konsumiert über RabbitMQ mit Dead-Letter-Handling und gestufter, trend-aware Threshold-Evaluation; ein read-only Angular Dashboard zeigt Pegel, Alarmstufen und Trends als banded Area-Charts. Seit v1.2.0 mit echten Hamburger Elbe-Pegeln (St. Pauli, Bunthaus, Over, Zollenspieker; cm → NHN-Mapping, conditional polling); v1.3.0 (Juni 2026) macht die Frische der Werte ehrlich lesbar — Messwert-Alter statt Poll-Alter, Stale erst wenn der Daten-Zufluss aussetzt. Dazu Alert-Event-Publishing über Fanout-Exchange, OpenTelemetry-Tracing und zwei verifizierte Deployment-Pfade (Kubernetes + Argo CD, Azure Container Apps).',
     stack: ['.NET 10', 'ASP.NET Core', 'RabbitMQ', 'OpenTelemetry', 'Angular', 'Docker', 'Kubernetes', 'Argo CD', 'Testcontainers'],
     links: [
       { label: 'github.com/goldbarth/port-tidewatch', href: 'https://github.com/goldbarth/port-tidewatch' },
@@ -75,7 +75,7 @@ const writings = (
         Unfertig, hauptsächlich für mein zukünftiges Ich — öffentlich, falls es jemandem hilft.
       </p>
       <div class="intro__now">
-        <span>port-tidewatch v1.2 released · v1.3 — observability dashboard · lese project hail mary — andy weir</span>
+        <span>port-tidewatch v1.3 released · metric gate v2 in arbeit · lese project hail mary — andy weir</span>
       </div>
     </section>
 

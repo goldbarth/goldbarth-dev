@@ -1,8 +1,8 @@
 ---
 title: "port-tidewatch"
-description: "Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem. Wahlweise Simulator oder echter WSV/PEGELONLINE-Elbe-Feed, RabbitMQ-Consumer mit Dead-Letter-Handling und ein read-only Angular Dashboard. Bewusst klein gehalten: eine Domain, ein Ingestion-Pfad, end-to-end reliable und observable. Seit v1.2.0 mit echten WSV/PEGELONLINE-Daten und umschaltbarer Datenquelle."
+description: "Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem. Wahlweise Simulator oder echter WSV/PEGELONLINE-Elbe-Feed, RabbitMQ-Consumer mit Dead-Letter-Handling und ein read-only Angular Dashboard. Bewusst klein gehalten: eine Domain, ein Ingestion-Pfad, end-to-end reliable und observable. Seit v1.2.0 mit echten WSV/PEGELONLINE-Daten und umschaltbarer Datenquelle; v1.3.0 macht die Frische der Werte ehrlich lesbar."
 date: "2026-06-08T19:09:00"
-updated: "2026-06-15T00:00:00"
+updated: "2026-06-16T00:00:00"
 readMin: 5
 draft: false
 ---
@@ -63,11 +63,12 @@ Das Projekt ist in Milestones strukturiert, jeder als kohärenter Zwischenzustan
 | M5        | Deployment: Azure Container Apps → Kubernetes + Argo CD                | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
 | M6 (v1.1) | Sturmflut-Szenarien, Dashboard-Politur, Alert-Event-Publishing         | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
 | M7 (v1.2) | Echter PEGELONLINE-Elbe-Feed, umschaltbare Datenquelle (Source-Switch) | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
-| M8 (v1.3) | Observable OpenTelemetry-Pfad sichtbar machen                          | <span style="color:oklch(0.80 0.13 75)">geplant</span>       |
+| M8        | Observability-Pfad im Dashboard sichtbar machen                        | <span style="color:oklch(0.55 0.02 75)">verworfen (Revert)</span> |
+| M9 (v1.3.0) | Readability: Messwert-Alter statt Poll-Alter, ankunftsbasierte Frische, Header-Uhr | <span style="color:oklch(0.55 0.09 75)">abgeschlossen</span> |
 
 ## Stand
 
-**[v1.2.0](https://github.com/goldbarth/port-tidewatch/releases/tag/v1.2.0) ist da** (15.06.2026) — Milestones M1–M7 abgeschlossen.
+**[v1.3.0](https://github.com/goldbarth/port-tidewatch/releases/tag/v1.3.0) ist da** (16.06.2026) — Milestones M1–M7 und M9 abgeschlossen (M8 verworfen).
 
 Die Basis kam mit [v1.0.0](https://github.com/goldbarth/port-tidewatch/releases/tag/v1.0.0) (11.06.2026, M1–M5): Die Pipeline läuft end-to-end — Simulator → RabbitMQ → Ingestion → State → Dashboard. Gestufte Surge-Evaluation (normal / warning / severe) mit Hysterese, OpenTelemetry-Tracing mit W3C-Context-Propagation über das ganze System, HTTP-API für Gauge-Snapshots und Health-Checks. Unit-Tests für die Evaluation-Logik, Testcontainers-Integration-Tests gegen echtes RabbitMQ. Zwei verifizierte Deployment-Pfade: Kubernetes + Argo CD (GitOps) und Azure Container Apps + Static Web Apps.
 
@@ -75,4 +76,6 @@ v1.1.0 (M6) bringt die Demo-Reife: Der Simulator nutzt jetzt ein Composite-Level
 
 v1.2.0 (M7) bringt echte Daten: Ein PEGELONLINE-Source-Adapter pollt die öffentliche WSV-REST-API für vier Hamburger Elbe-Pegel (St. Pauli, Bunthaus, Over, Zollenspieker) und emittiert dieselben `Reading`-Records wie der Simulator — Centimeter über Pegelnull werden in einem expliziten Mapping-Layer nach Meter NHN umgerechnet (W/100 + PNP-Offset), conditional GET (`If-None-Match`) verhindert Duplikate bei `304`, transiente API-Fehler werden geloggt und retried. Welche Quelle läuft, entscheidet ein einzelner `ReadingSource`-Switch (`Simulator | Pegelonline`) beim Start — fail-fast bei ungültiger Konfiguration. Das frühere Simulator-Projekt wurde dafür zum quellen-neutralen `Tidewatch.Source`-Host (Quellen hinter `IReadingSource`). Deployed (Kubernetes + Azure) läuft der Live-Feed, lokal bleibt der Simulator die dokumentierte Demo.
 
-Als Nächstes (M8 / v1.3): der Observability-Pfad im Dashboard sichtbar gemacht — Latency-Pulse, Jaeger-Deep-Link und ein optionaler Trace-Waterfall.
+v1.3.0 (M9) macht die angezeigten Werte ehrlich lesbar — Readability statt der ursprünglich geplanten Observability-Oberfläche (M8 wurde verworfen, der OpenTelemetry-Pfad bleibt verdrahtet, aber unsichtbar; siehe ADR-003-Amendment). Die Frische-Anzeige zeigt jetzt das Alter des **Messwerts** (`Reading.Timestamp`) statt des letzten Polls — bei PEGELONLINE mit seiner mehrminütigen Publikations-Latenz war ein frischer Poll auf einen alten Messwert vorher fälschlich „live". Der **Stale-Zustand koppelt an den Daten-Zufluss, nicht ans Messwert-Alter**: eine Kachel wird erst orange, wenn *keine neuen* Werte mehr ankommen — gemessen ab der Ankunftszeit, gegen eine aus der inferierten Quell-Cadence abgeleitete Schwelle (`2× cadence`, mit Untergrenze für das Poll-Intervall). So bekommen Simulator (Sekunden) und PEGELONLINE (Minuten) automatisch die passende Schwelle, nichts ist hartkodiert. Dazu eine mitlaufende **Header-Uhr** (`HH:MM:SS`, Europe/Berlin) als Zeitanker und ein Fix, der das Dashboard auf einem frischen Clone lokal lauffähig macht (unaufgelöster `config.json`-Deploy-Platzhalter → same-origin `/api`).
+
+Als Nächstes: die Roadmap jenseits M9 ist offen — der Kern (Pipeline, echte Daten, beide Deploy-Pfade, lesbare Frische) steht.
