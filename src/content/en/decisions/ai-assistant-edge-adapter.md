@@ -8,7 +8,7 @@ draft: false
 
 ServiceDeskLite gained an intake assistant: the user describes their problem in free text, a Claude model decides via tool calling whether to create a ticket or correct an existing one, and the answer appears in the browser token by token. Taken by itself, a manageable feature. It becomes interesting where it touches the architecture: an external service whose answers aren't predictable is supposed to be allowed to change domain state — and its output arrives as a stream that should reach the client with as little delay as possible.
 
-![Chat with the intake assistant: the user reports a broken printer, the model asks for the deadline and creates the ticket via a tool call](../../decisions/assets/ai-assistant-chat-conversation.png)
+![Chat with the intake assistant: the user reports a broken printer, the model asks for the deadline and creates the ticket via a tool call](../../decisions/assets/ai-assistant-chat-conversation-trimmed.png)
 
 The question the ADR answers is therefore less "how do you build this" than "where does something like this belong".
 
@@ -26,7 +26,7 @@ How does the model reach the domain? The same way everyone else does: the tools 
 
 That sounds unspectacular, but it carries far. Every AI-created ticket passes the same validation, lands in the same audit trail and the same outbox staging as a hand-created one — without anything being built twice. The question of whether the business rules also apply to the AI no longer comes up; there is simply no path on which they could be bypassed.
 
-![Ticket history of an AI-created ticket: creation and correction appear in the same audit trail as manual changes, with "ai-assistant" as the actor](../../decisions/assets/ticket-audit-trail.png)
+![Ticket history of an AI-created ticket: creation and correction appear in the same audit trail as manual changes, with "ai-assistant" as the actor](../../decisions/assets/ticket-audit-trail-trimmed.png)
 
 Domain and Application compile without any Anthropic reference. If the feature were dropped again, one folder, one endpoint group, and one DI call would have to be removed.
 
