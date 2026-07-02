@@ -20,9 +20,9 @@ const featuredProjects = [
   {
     title: 'ServiceDeskLite',
     slug: 'service-desk-lite',
-    status: 'archived' as const,
-    description: 'A .NET 10 backend reference built around strict layering: compiler-enforced boundaries, two interchangeable persistence adapters, and result-based error handling — every architectural decision documented and justified.',
-    stack: ['.NET 10', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
+    status: 'live' as const,
+    description: 'A .NET 10 backend reference built around strict layering: compiler-enforced boundaries, two interchangeable persistence adapters, and result-based error handling — every architectural decision documented and justified. Since v1.1.0 with an AI intake assistant: a Claude model creates tickets via tool calling, streamed live over SSE, built as an edge adapter that acts exclusively through the existing command handlers — the domain knows no LLM.',
+    stack: ['.NET 10', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API'],
     links: [
       { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
     ],
@@ -55,7 +55,7 @@ const writings = (
         Unpolished, mostly for my future self — public in case it helps someone.
       </p>
       <div class="intro__now">
-        <span>building metricgate — auth, caching, microservices in .net · reading project hail mary — andy weir</span>
+        <span>servicedesklite v1.1 released — ai intake assistant · metric gate v2 in progress · reading project hail mary — andy weir</span>
       </div>
     </section>
 
