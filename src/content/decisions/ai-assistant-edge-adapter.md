@@ -8,7 +8,7 @@ draft: false
 
 ServiceDeskLite hat einen Intake-Assistenten bekommen: Der Nutzer beschreibt sein Problem in Freitext, ein Claude-Modell entscheidet per Tool Calling, ob es ein Ticket anlegt oder ein bestehendes korrigiert, und die Antwort erscheint Token für Token im Browser. Für sich genommen ein überschaubares Feature. Interessant wird es an der Stelle, an der es die Architektur berührt: Ein externer Dienst, dessen Antworten nicht vorhersagbar sind, soll Domain-Zustand verändern dürfen — und seine Ausgabe kommt als Stream, der mit möglichst wenig Verzögerung beim Client ankommen soll.
 
-![Chat mit dem Intake-Assistenten: Der Nutzer meldet einen ausgefallenen Drucker, das Modell fragt die Frist nach und legt das Ticket per Tool-Aufruf an](./assets/ai-assistant-chat-conversation.png)
+![Chat mit dem Intake-Assistenten: Der Nutzer meldet einen ausgefallenen Drucker, das Modell fragt die Frist nach und legt das Ticket per Tool-Aufruf an](./assets/ai-assistant-chat-conversation-trimmed.png)
 
 Die Frage, die das ADR beantwortet, ist deshalb weniger „wie baut man das" als „wo gehört so etwas hin".
 
@@ -26,7 +26,7 @@ Wie erreicht das Modell die Domain? Über denselben Weg wie alle anderen: Die To
 
 Das klingt unspektakulär, trägt aber weit. Jedes KI-erzeugte Ticket durchläuft dieselbe Validierung, landet im selben Audit-Trail und im selben Outbox-Staging wie ein von Hand erzeugtes — ohne dass dafür etwas doppelt gebaut wurde. Die Frage, ob die Business-Regeln auch für die KI gelten, stellt sich damit nicht mehr; es gibt schlicht keinen Pfad, auf dem sie umgangen werden könnten.
 
-![Ticket-History eines KI-erzeugten Tickets: Anlage und Korrektur erscheinen im selben Audit-Trail wie manuelle Änderungen, als Actor steht „ai-assistant"](./assets/ticket-audit-trail.png)
+![Ticket-History eines KI-erzeugten Tickets: Anlage und Korrektur erscheinen im selben Audit-Trail wie manuelle Änderungen, als Actor steht „ai-assistant"](./assets/ticket-audit-trail-trimmed.png)
 
 Domain und Application kompilieren ohne jede Anthropic-Referenz. Ließe man das Feature wieder fallen, wären ein Ordner, eine Endpoint-Gruppe und ein DI-Aufruf zu entfernen.
 
