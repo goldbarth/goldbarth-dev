@@ -41,8 +41,8 @@ const featuredProjects = [
     title: 'ServiceDeskLite',
     slug: 'service-desk-lite',
     status: 'live' as const,
-    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling — jede architektonische Entscheidung dokumentiert und begründet. Seit v1.1.0 mit AI-Intake-Assistent: ein Claude-Modell legt Tickets per Tool Calling an, live gestreamt über SSE, als Edge-Adapter ausschließlich durch die bestehenden Command-Handler — die Domain kennt kein LLM.',
-    stack: ['.NET 10', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API'],
+    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling — jede architektonische Entscheidung dokumentiert und begründet. Der AI-Intake-Assistent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: ein Claude-Modell prüft per semantischer Suche (Voyage-Embeddings + pgvector) auf Duplikate, bevor es Tickets anlegt — als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM.',
+    stack: ['.NET 10', 'Postgres', 'pgvector', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API', 'Voyage AI'],
     links: [
       { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
     ],
@@ -75,7 +75,7 @@ const writings = (
         Unfertig, hauptsächlich für mein zukünftiges Ich — öffentlich, falls es jemandem hilft.
       </p>
       <div class="intro__now">
-        <span>servicedesklite v1.1 released — ai-intake-assistent · metric gate v2 in arbeit · lese project hail mary — andy weir</span>
+        <span>servicedesklite: semantische ticket-suche (rag) — voyage + pgvector · metric gate v2 in arbeit · lese project hail mary — andy weir</span>
       </div>
     </section>
 
