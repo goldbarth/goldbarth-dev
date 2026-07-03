@@ -1,6 +1,6 @@
 ---
 title: "ServiceDeskLite"
-description: "Eine .NET 10 Clean Architecture Referenz — strikte Layer-Boundaries, compiler-enforced, zwei austauschbare Persistence-Adapter, ein AI-Intake-Assistent als Edge-Adapter und jede Entscheidung als ADR dokumentiert."
+description: "Eine .NET 10 Clean Architecture Referenz — strikte Layer-Boundaries, compiler-enforced, zwei austauschbare Persistence-Adapter, ein AI-Intake-Assistent mit Tool Calling, Streaming und RAG als Edge-Adapter und jede Entscheidung als ADR dokumentiert."
 date: "2026-05-04"
 readMin: 7
 draft: false
@@ -10,11 +10,11 @@ draft: false
 
 ServiceDeskLite ist ein Ticket-Workflow-Backend, gebaut auf .NET 10. Tickets durchlaufen eine Kanban-ähnliche State Machine — open, in progress, resolved, closed — mit expliziten Transition-Regeln, die auf Domain-Ebene durchgesetzt werden. Drei unabhängig testbare Layer: eine Domain, die nichts über HTTP oder Datenbanken weiß, ein Application Layer, der Use Cases orchestriert, und zwei austauschbare Persistence-Adapter hinter denselben Repository-Interfaces. Ein Blazor Server Frontend konsumiert die API über HTTP.
 
-Seit v1.1.0 gehört ein AI-Intake-Assistent dazu: Nutzer beschreiben ihr Problem in Freitext, ein Claude-Modell legt per Tool Calling das Ticket an — live gestreamt über SSE, ausgeführt ausschließlich durch die bestehenden Command-Handler.
+Seit v1.1.0 gehört ein AI-Intake-Assistent dazu: Nutzer beschreiben ihr Problem in Freitext, ein Claude-Modell legt per Tool Calling das Ticket an — live gestreamt über SSE, ausgeführt ausschließlich durch die bestehenden Command-Handler. Inzwischen prüft der Assistent vor dem Anlegen per semantischer Suche auf Duplikate: Retrieval über Voyage-Embeddings und pgvector, als drittes Tool im selben Agentic Loop (RAG).
 
 Das Ziel ist keine Feature-Breite. Das Ziel ist strukturelle Klarheit — jede Layer-Boundary sichtbar und compiler-enforced, jede Entscheidung dokumentiert, jeder Trade-off begründet.
 
-Vollständige Dokumentation und alle 23 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
+Vollständige Dokumentation und alle 24 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
 
 ## Problem / Motivation
 
@@ -50,6 +50,8 @@ Jeder Handler gibt `Result<T>` zurück — wirft nie für erwartete Fehler. Der 
 
 Der AI-Assistent ist die jüngste Belastungsprobe für diese Boundaries: Ein LLM ist ein externer, nicht-deterministischer Dienst, dessen Tool-Calls Domain-Zustand verändern wollen. Er lebt als Edge-Adapter im API-Projekt — Streaming und SSE-Framing sind Presentation-Concerns — und erreicht die Domain nur über dieselben Command-Handler wie die REST-Endpoints. Tool-Inputs werden wie untrusted Input behandelt: geparst und geprüft, bevor sie einen Handler sehen; abgelehnte Inputs gehen als Fehler-`tool_result` zurück, sodass das Modell sich in einer begrenzten Schleife selbst korrigiert. Domain und Application kompilieren ohne jede Anthropic-Referenz.
 
+Dieselbe Linie setzt die semantische Ticket-Suche fort: Embeddings sind abgeleiteter Infrastruktur-Zustand und leben in einer eigenen pgvector-Tabelle statt am Aggregate; ein Poll-basierter Background-Worker embedded asynchron (Content-Hash für Staleness), sodass der Ticket-Schreibpfad keine Netzwerk-Abhängigkeit bekommt. Das Retrieval selbst ist ein Tool des Modells — es entscheidet, wann gesucht wird, und der Duplikat-Check funktioniert cross-lingual. Ohne Voyage-Key oder auf dem InMemory-Provider meldet das Tool die Suche ehrlich als nicht verfügbar, statt leere Treffer vorzutäuschen.
+
 → [Architecture, vom Compiler durchgesetzt](/decisions/clean-architecture-enforced-by-compiler)  
 → [Result Pattern an der Application Boundary](/decisions/result-pattern-application-boundary)  
 → [RFC 9457 als einheitlicher Error-Contract](/decisions/rfc9457-problem-details)  
@@ -57,6 +59,7 @@ Der AI-Assistent ist die jüngste Belastungsprobe für diese Boundaries: Ein LLM
 → [Swappable Persistence als Port-Beweis](/decisions/swappable-persistence-port-proof)  
 → [Stark typisierte Domain-IDs](/decisions/strongly-typed-domain-ids)  
 → [AI-Assistant als Edge-Adapter](/decisions/ai-assistant-edge-adapter)  
+→ [Semantische Ticket-Suche — RAG als Werkzeug des Modells](/decisions/semantic-ticket-search-rag)  
 
 ## Herausforderungen
 

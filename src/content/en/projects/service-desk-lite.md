@@ -1,6 +1,6 @@
 ---
 title: "ServiceDeskLite"
-description: "A .NET 10 Clean Architecture reference — strict layer boundaries enforced by the compiler, two interchangeable persistence adapters, an AI intake assistant as an edge adapter, and every decision documented as an ADR."
+description: "A .NET 10 Clean Architecture reference — strict layer boundaries enforced by the compiler, two interchangeable persistence adapters, an AI intake assistant with tool calling, streaming and RAG as an edge adapter, and every decision documented as an ADR."
 date: "2026-05-04"
 readMin: 7
 draft: false
@@ -10,11 +10,11 @@ draft: false
 
 ServiceDeskLite is a ticket workflow backend built on .NET 10. Tickets move through a Kanban-style state machine — open, in progress, resolved, closed — with explicit transition rules enforced at the domain level. Three independently testable layers: a domain that knows nothing about HTTP or databases, an application layer that orchestrates use cases, and two interchangeable persistence adapters behind the same repository interfaces. A Blazor Server frontend consumes the API over HTTP.
 
-Since v1.1.0 it also ships an AI intake assistant: users describe their problem in free text and a Claude model creates the ticket via tool calling — streamed live over SSE, executed exclusively through the existing command handlers.
+Since v1.1.0 it also ships an AI intake assistant: users describe their problem in free text and a Claude model creates the ticket via tool calling — streamed live over SSE, executed exclusively through the existing command handlers. The assistant now checks for duplicates via semantic search before creating: retrieval over Voyage embeddings and pgvector, as a third tool inside the same agentic loop (RAG).
 
 The goal isn't feature breadth. The goal is structural clarity — every layer boundary visible and compiler-enforced, every decision documented, every tradeoff argued.
 
-Full documentation and all 23 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
+Full documentation and all 24 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
 
 ## Problem / Motivation
 
@@ -50,6 +50,8 @@ Every handler returns `Result<T>` — never throws for expected failures. The AP
 
 The AI assistant is the newest stress test for these boundaries: an LLM is an external, non-deterministic service whose tool calls want to mutate domain state. It lives as an edge adapter in the API project — streaming and SSE framing are presentation concerns — and reaches the domain only through the same command handlers the REST endpoints use. Tool inputs are treated as untrusted input: parsed and guarded before they touch a handler; rejected inputs return as error `tool_result`s so the model self-corrects inside a bounded loop. Domain and Application compile without any Anthropic reference.
 
+Semantic ticket search continues the same line: embeddings are derived infrastructure state and live in a separate pgvector table rather than on the aggregate; a poll-based background worker embeds asynchronously (content hash for staleness), so the ticket write path gains no network dependency. Retrieval itself is a tool of the model — it decides when to search, and the duplicate check works cross-lingually. Without a Voyage key, or on the InMemory provider, the tool honestly reports search as unavailable instead of faking empty results.
+
 → [Architecture Enforced by the Compiler](/decisions/clean-architecture-enforced-by-compiler)
 → [Result Pattern at the Application Boundary](/decisions/result-pattern-application-boundary)
 → [RFC 9457 as the Unified Error Contract](/decisions/rfc9457-problem-details)
@@ -57,6 +59,7 @@ The AI assistant is the newest stress test for these boundaries: an LLM is an ex
 → [Swappable Persistence as Port Proof](/decisions/swappable-persistence-port-proof)
 → [Strongly-Typed Domain Identifiers](/decisions/strongly-typed-domain-ids)
 → [AI Assistant as an Edge Adapter](/decisions/ai-assistant-edge-adapter)
+→ [Semantic Ticket Search — RAG as a Tool of the Model](/decisions/semantic-ticket-search-rag)
 
 ## Challenges
 
