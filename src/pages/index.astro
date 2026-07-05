@@ -8,13 +8,13 @@ import ProjectRow from '../components/ProjectRow.astro';
 // Move to a content collection once the list grows.
 const featuredProjects = [
   {
-    title: 'port-tidewatch',
-    slug: 'port-tidewatch',
+    title: 'ServiceDeskLite',
+    slug: 'service-desk-lite',
     status: 'live' as const,
-    description: 'Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem (gestuft: warning ab 4,50 m, severe ab 5,50 m über NN). Eine Reading-Quelle — wahlweise Simulator (Composite-Level-Modell) oder der echte WSV/PEGELONLINE-Elbe-Feed, per Switch beim Start gewählt — liefert Readings; ein Ingestion-Service konsumiert über RabbitMQ mit Dead-Letter-Handling und gestufter, trend-aware Threshold-Evaluation; ein read-only Angular Dashboard zeigt Pegel, Alarmstufen und Trends als banded Area-Charts. Seit v1.2.0 mit echten Hamburger Elbe-Pegeln (St. Pauli, Bunthaus, Over, Zollenspieker; cm → NHN-Mapping, conditional polling); v1.3.0 (Juni 2026) macht die Frische der Werte ehrlich lesbar — Messwert-Alter statt Poll-Alter, Stale erst wenn der Daten-Zufluss aussetzt. Dazu Alert-Event-Publishing über Fanout-Exchange, OpenTelemetry-Tracing und zwei verifizierte Deployment-Pfade (Kubernetes + Argo CD, Azure Container Apps).',
-    stack: ['.NET 10', 'ASP.NET Core', 'RabbitMQ', 'OpenTelemetry', 'Angular', 'Docker', 'Kubernetes', 'Argo CD', 'Testcontainers'],
+    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling — jede architektonische Entscheidung dokumentiert und begründet. Der AI-Intake-Assistent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: ein Claude-Modell prüft per semantischer Suche (Voyage-Embeddings + pgvector) auf Duplikate, bevor es Tickets anlegt — als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM.',
+    stack: ['.NET 10', 'Postgres', 'pgvector', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API', 'Voyage AI'],
     links: [
-      { label: 'github.com/goldbarth/port-tidewatch', href: 'https://github.com/goldbarth/port-tidewatch' },
+      { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
     ],
   },
   {
@@ -38,13 +38,13 @@ const featuredProjects = [
     ],
   },
   {
-    title: 'ServiceDeskLite',
-    slug: 'service-desk-lite',
+    title: 'port-tidewatch',
+    slug: 'port-tidewatch',
     status: 'live' as const,
-    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling — jede architektonische Entscheidung dokumentiert und begründet. Der AI-Intake-Assistent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: ein Claude-Modell prüft per semantischer Suche (Voyage-Embeddings + pgvector) auf Duplikate, bevor es Tickets anlegt — als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM.',
-    stack: ['.NET 10', 'Postgres', 'pgvector', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API', 'Voyage AI'],
+    description: 'Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting — orientiert an Hamburgs WADI-Warnsystem (gestuft: warning ab 4,50 m, severe ab 5,50 m über NN). Eine Reading-Quelle — wahlweise Simulator (Composite-Level-Modell) oder der echte WSV/PEGELONLINE-Elbe-Feed, per Switch beim Start gewählt — liefert Readings; ein Ingestion-Service konsumiert über RabbitMQ mit Dead-Letter-Handling und gestufter, trend-aware Threshold-Evaluation; ein read-only Angular Dashboard zeigt Pegel, Alarmstufen und Trends als banded Area-Charts. Seit v1.2.0 mit echten Hamburger Elbe-Pegeln (St. Pauli, Bunthaus, Over, Zollenspieker; cm → NHN-Mapping, conditional polling); v1.3.0 (Juni 2026) macht die Frische der Werte ehrlich lesbar — Messwert-Alter statt Poll-Alter, Stale erst wenn der Daten-Zufluss aussetzt. Dazu Alert-Event-Publishing über Fanout-Exchange, OpenTelemetry-Tracing und zwei verifizierte Deployment-Pfade (Kubernetes + Argo CD, Azure Container Apps).',
+    stack: ['.NET 10', 'ASP.NET Core', 'RabbitMQ', 'OpenTelemetry', 'Angular', 'Docker', 'Kubernetes', 'Argo CD', 'Testcontainers'],
     links: [
-      { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
+      { label: 'github.com/goldbarth/port-tidewatch', href: 'https://github.com/goldbarth/port-tidewatch' },
     ],
   },
 ];
@@ -66,16 +66,18 @@ const writings = (
 
     <section class="intro">
       <p>
-        Felix Wahl — .NET Backend Engineer mit Fokus auf distributed
-        systems — Reliability, Consistency, und das Zeug, über das niemand redet, bis es kaputt ist.
+        Felix Wahl — .NET Backend Engineer. Verteilte Systeme, Reliability,
+        Consistency: solide Grundlagen, auf denen sich bauen lässt.
       </p>
       <p>
-        Notizen aus der Arbeit: Überlegungen hinter technischen Entscheidungen,
-        halbgare Gedanken und was ich gerade baue.
-        Unfertig, hauptsächlich für mein zukünftiges Ich — öffentlich, falls es jemandem hilft.
+        Gerade wächst daraus etwas Neues. Ich arbeite mich in LLMs und AI Engineering
+        ein — nicht weg vom Backend, sondern darauf aufbauend. Hier sammle ich, was
+        ich dabei lerne: Überlegungen hinter Entscheidungen, offene Fragen und die
+        Projekte, an denen ich das ausprobiere. Unfertig und ehrlich, vor allem für
+        mich selbst — und für jeden, dem es weiterhilft.
       </p>
       <div class="intro__now">
-        <span>servicedesklite: semantische ticket-suche (rag) — voyage + pgvector · metric gate v2 in arbeit · lese project hail mary — andy weir</span>
+        <span>dometrain-kurs »ai for .net developers« · servicedesklite: semantische ticket-suche (rag) — voyage + pgvector · metric gate auf hold · project hail mary durchgelesen — andy weirs berührender schluss</span>
       </div>
     </section>
 
