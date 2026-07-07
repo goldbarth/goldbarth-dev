@@ -10,11 +10,11 @@ draft: false
 
 ServiceDeskLite ist ein Ticket-Workflow-Backend, gebaut auf .NET 10. Tickets durchlaufen eine Kanban-ähnliche State Machine — open, in progress, resolved, closed — mit expliziten Transition-Regeln, die auf Domain-Ebene durchgesetzt werden. Drei unabhängig testbare Layer: eine Domain, die nichts über HTTP oder Datenbanken weiß, ein Application Layer, der Use Cases orchestriert, und zwei austauschbare Persistence-Adapter hinter denselben Repository-Interfaces. Ein Blazor Server Frontend konsumiert die API über HTTP.
 
-Seit v1.1.0 gehört ein AI-Intake-Assistent dazu: Nutzer beschreiben ihr Problem in Freitext, ein Claude-Modell legt per Tool Calling das Ticket an — live gestreamt über SSE, ausgeführt ausschließlich durch die bestehenden Command-Handler. Inzwischen prüft der Assistent vor dem Anlegen per semantischer Suche auf Duplikate: Retrieval über Voyage-Embeddings und pgvector, als drittes Tool im selben Agentic Loop (RAG).
+Seit v1.1.0 gehört ein AI-Intake-Assistent dazu: Nutzer beschreiben ihr Problem in Freitext, ein Claude-Modell legt per Tool Calling das Ticket an — live gestreamt über SSE, ausgeführt ausschließlich durch die bestehenden Command-Handler. Inzwischen reicht sein Werkzeugkasten weiter: Tickets suchen, aktualisieren, im Workflow weiterschalten und an Agenten aus einem gepflegten Roster zuweisen — und vor dem Anlegen per semantischer Suche auf Duplikate prüfen (Retrieval über Voyage-Embeddings und pgvector, RAG im selben Agentic Loop).
 
 Das Ziel ist keine Feature-Breite. Das Ziel ist strukturelle Klarheit — jede Layer-Boundary sichtbar und compiler-enforced, jede Entscheidung dokumentiert, jeder Trade-off begründet.
 
-Vollständige Dokumentation und alle 24 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
+Vollständige Dokumentation und alle 25 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
 
 ## Problem / Motivation
 
