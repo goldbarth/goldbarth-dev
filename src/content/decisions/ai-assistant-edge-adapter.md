@@ -6,7 +6,7 @@ readMin: 4
 draft: false
 ---
 
-ServiceDeskLite hat einen Intake-Assistenten bekommen: Der Nutzer beschreibt sein Problem in Freitext, ein Claude-Modell entscheidet per Tool Calling, ob es ein Ticket anlegt oder ein bestehendes korrigiert, und die Antwort erscheint Token für Token im Browser. Für sich genommen ein überschaubares Feature. Interessant wird es an der Stelle, an der es die Architektur berührt: Ein externer Dienst, dessen Antworten nicht vorhersagbar sind, soll Domain-Zustand verändern dürfen — und seine Ausgabe kommt als Stream, der mit möglichst wenig Verzögerung beim Client ankommen soll.
+ServiceDeskLite hat einen Intake-Assistenten bekommen: Der Nutzer beschreibt sein Problem in Freitext, ein Claude-Modell entscheidet per Tool Calling, ob es ein Ticket anlegt, ein bestehendes ändert, im Workflow weiterschaltet oder zuweist, und die Antwort erscheint Token für Token im Browser. Für sich genommen ein überschaubares Feature. Interessant wird es an der Stelle, an der es die Architektur berührt: Ein externer Dienst, dessen Antworten nicht vorhersagbar sind, soll Domain-Zustand verändern dürfen — und seine Ausgabe kommt als Stream, der mit möglichst wenig Verzögerung beim Client ankommen soll.
 
 ![Chat mit dem Intake-Assistenten: Der Nutzer meldet einen ausgefallenen Drucker, das Modell fragt die Frist nach und legt das Ticket per Tool-Aufruf an](./assets/ai-assistant-chat-conversation-trimmed.png)
 
@@ -48,7 +48,7 @@ Ein Detail am Rand: Die API hält keinen Gesprächszustand. Jeder Turn schickt d
 
 ## Was bewusst fehlt
 
-Kein Application-Port, solange es keinen zweiten Konsumenten gibt. Keine Konversations-Persistenz — Transkripte leben in der Browser-Session. Kein generischer Tool-Plugin-Mechanismus — bei zwei Tools sind zwei explizite Klassen leichter zu lesen als eine Registry. Jedes dieser Dinge ließe sich später ergänzen; keines davon würde heute etwas verbessern.
+Kein Application-Port, solange es keinen zweiten Konsumenten gibt. Keine Konversations-Persistenz — Transkripte leben in der Browser-Session. Kein generischer Tool-Plugin-Mechanismus — die Tools bleiben einzelne, explizite Klassen; bei einer Handvoll liest sich das leichter als eine Registry. Mit inzwischen sechs Tools rückt dieser Punkt allerdings näher. Jedes dieser Dinge ließe sich später ergänzen; keines davon würde heute etwas verbessern.
 
 ## Wann überdenken
 

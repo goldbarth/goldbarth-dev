@@ -11,7 +11,7 @@ const featuredProjects = [
     title: 'ServiceDeskLite',
     slug: 'service-desk-lite',
     status: 'live' as const,
-    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling — jede architektonische Entscheidung dokumentiert und begründet. Der AI-Intake-Assistent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: ein Claude-Modell prüft per semantischer Suche (Voyage-Embeddings + pgvector) auf Duplikate, bevor es Tickets anlegt — als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM.',
+    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling — jede architektonische Entscheidung dokumentiert und begründet. Der AI-Intake-Assistent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: ein Claude-Modell sucht, aktualisiert, schaltet Status und weist Tickets an Agenten aus einem Roster zu — und prüft per semantischer Suche (Voyage-Embeddings + pgvector) auf Duplikate, bevor es neue anlegt — als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM.',
     stack: ['.NET 10', 'Postgres', 'pgvector', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API', 'Voyage AI'],
     links: [
       { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
@@ -77,7 +77,7 @@ const writings = (
         mich selbst — und für jeden, dem es weiterhilft.
       </p>
       <div class="intro__now">
-        <span>dometrain-kurs »ai for .net developers« · servicedesklite: semantische ticket-suche (rag) — voyage + pgvector · metric gate auf hold · project hail mary durchgelesen — andy weirs berührender schluss</span>
+        <span>dometrain-kurs »deep dive: microsoft.extensions.ai in .net« · servicedesklite v1.2.0: assistant-werkzeugkasten + agenten-roster, semantische ticket-suche (rag) · metric gate auf hold · project hail mary durchgelesen — andy weirs berührender schluss</span>
       </div>
     </section>
 
