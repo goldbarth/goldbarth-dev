@@ -6,7 +6,7 @@ readMin: 4
 draft: false
 ---
 
-An import job lives for a while. It's created, picked up by a worker, parsed, validated, processed chunk by chunk, and eventually lands in one of several terminal states. Along the way, things can go wrong in different ways — validation can fail, processing can fail, the worker can crash and leave the job stranded.
+An import job lives for a while. It's created, picked up by a worker, parsed, validated, processed chunk by chunk, and eventually lands in one of several terminal states. Along the way, things can go wrong in different ways - validation can fail, processing can fail, the worker can crash and leave the job stranded.
 
 The naive approach is a `Status` enum and scattered `if` checks. It works until someone adds a new status, or a bug sets `Succeeded` from `Received` without going through processing, or a requeue path accidentally skips `Validating`. The state becomes implicit, spread across handlers.
 
@@ -22,7 +22,7 @@ Received → Parsing → Validating → Processing → Succeeded
                                     → DeadLettered (terminal)
 ```
 
-The domain layer encodes all allowed transitions in a `HashSet<(JobStatus From, JobStatus To)>`. Any attempt to move to an unlisted transition throws a `DomainException` immediately — no silent corruption, no implicit fallback.
+The domain layer encodes all allowed transitions in a `HashSet<(JobStatus From, JobStatus To)>`. Any attempt to move to an unlisted transition throws a `DomainException` immediately - no silent corruption, no implicit fallback.
 
 ```csharp
 private static readonly HashSet<(JobStatus, JobStatus)> AllowedTransitions = new()
@@ -61,9 +61,9 @@ Every status change is recorded. The full history of a job is always reconstruct
 
 Three terminal states, not one. `ValidationFailed`, `ProcessingFailed`, and `DeadLettered` are all permanent, but they mean different things operationally:
 
-- `ValidationFailed` — bad input, retry won't help. Human intervention required.
-- `ProcessingFailed` — infrastructure problem, eligible for automatic retry.
-- `DeadLettered` — exhausted retries. Moved to `dead_letter_entries` with a JSON snapshot of job state at the time of death. Requires manual requeue.
+- `ValidationFailed` - bad input, retry won't help. Human intervention required.
+- `ProcessingFailed` - infrastructure problem, eligible for automatic retry.
+- `DeadLettered` - exhausted retries. Moved to `dead_letter_entries` with a JSON snapshot of job state at the time of death. Requires manual requeue.
 
 Having distinct states makes the dead-letter management UI straightforward. The dashboard filters by state rather than by retry count or error message. A dead-lettered job is unambiguously dead; a processing-failed job is unambiguously retryable.
 
@@ -77,7 +77,7 @@ This required new transitions:
 Processing → PartiallySucceeded
 ```
 
-And new questions: is a partially succeeded job retryable? If requeued, do we re-process only the failed chunks? (No — the current design re-processes everything and relies on `DeliveryItem` idempotency.) Can a partially succeeded job be dead-lettered? (Yes, if it fails enough times.)
+And new questions: is a partially succeeded job retryable? If requeued, do we re-process only the failed chunks? (No - the current design re-processes everything and relies on `DeliveryItem` idempotency.) Can a partially succeeded job be dead-lettered? (Yes, if it fails enough times.)
 
 The lesson: model your terminal and near-terminal states explicitly from the start. Adding them later forces you to revisit the transition table, the dead-letter schema, the requeue logic, and the UI filters simultaneously.
 
@@ -85,7 +85,7 @@ The lesson: model your terminal and near-terminal states explicitly from the sta
 
 The explicit state machine made two things dramatically easier:
 
-**Recovery logic is obvious.** When I wrote the stale-lock recovery — reclaiming outbox entries from crashed workers — the state machine told me exactly which job states were eligible for reclaim. I didn't have to reason about it.
+**Recovery logic is obvious.** When I wrote the stale-lock recovery - reclaiming outbox entries from crashed workers - the state machine told me exactly which job states were eligible for reclaim. I didn't have to reason about it.
 
 **Testing is mechanical.** Each transition is a single assertion. The happy path, the sad path, and the invalid transitions are all just table lookups. The domain tests read like a specification.
 

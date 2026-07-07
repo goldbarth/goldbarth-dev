@@ -10,7 +10,7 @@ Three content collections:
 | `decisions` | `/decisions` | Reasoning behind technical decisions |
 | `projects`  | `/projects`  | Project detail pages (content posts) |
 
-**Note:** Projects have two layers — see below.
+**Note:** Projects have two layers - see below.
 
 ---
 
@@ -37,14 +37,14 @@ draft: false            # true = not shown publicly
 
 | Field         | Type    | Required | Default | Notes                                      |
 |---------------|---------|----------|---------|--------------------------------------------|
-| `title`       | string  | yes      | —       |                                            |
-| `description` | string  | no       | —       | Shown in list views                        |
-| `date`        | date    | yes      | —       | Format: `"YYYY-MM-DD"` or `"YYYY-MM-DDTHH:MM:SS"` |
-| `updated`     | date    | no       | —       |                                            |
+| `title`       | string  | yes      | -       |                                            |
+| `description` | string  | no       | -       | Shown in list views                        |
+| `date`        | date    | yes      | -       | Format: `"YYYY-MM-DD"` or `"YYYY-MM-DDTHH:MM:SS"` |
+| `updated`     | date    | no       | -       |                                            |
 | `readMin`     | integer | no       | 2–3     | thoughts: 2, decisions: 3                  |
 | `draft`       | boolean | no       | `false` | `true` hides from listings                 |
 
-**Same-day ordering:** Posts with only `"YYYY-MM-DD"` are treated as midnight — multiple posts on the same day appear in undefined order. Use a datetime to control order explicitly:
+**Same-day ordering:** Posts with only `"YYYY-MM-DD"` are treated as midnight - multiple posts on the same day appear in undefined order. Use a datetime to control order explicitly:
 
 ```yaml
 date: "2026-05-04T10:00:00"   # appears earlier in the list
@@ -55,7 +55,7 @@ Write markdown content below the frontmatter.
 
 ---
 
-## Projects — Two Layers
+## Projects - Two Layers
 
 Projects work differently from thoughts/decisions. There are **two independent places**:
 
@@ -99,7 +99,7 @@ draft: false
 
 ### Suggested Structure for Project Posts
 
-Project posts cover the full arc of a project — not a single decision. Sections are suggestions, not required. Rename or skip what doesn't fit.
+Project posts cover the full arc of a project - not a single decision. Sections are suggestions, not required. Rename or skip what doesn't fit.
 
 ```markdown
 ## What it is

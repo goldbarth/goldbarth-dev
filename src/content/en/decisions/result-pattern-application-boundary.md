@@ -1,6 +1,6 @@
 ---
 title: "Result Pattern at the Application Boundary"
-description: "How ServiceDeskLite uses an explicit Result type to make handler outcomes visible — and where DomainExceptions still belong."
+description: "How ServiceDeskLite uses an explicit Result type to make handler outcomes visible - and where DomainExceptions still belong."
 date: "2026-05-04"
 readMin: 4
 draft: false
@@ -8,7 +8,7 @@ draft: false
 
 The default error-handling model in C# is exceptions. A method returns a value on success and throws on failure. The problem is that "failure" covers a lot of ground. A ticket not found is failure. A title field missing is failure. An invalid status transition is failure. So is a database connection dropping.
 
-Those four cases call for four different HTTP status codes. They represent fundamentally different kinds of problems. But from the call site, they all look the same — a thrown exception that the caller either catches specifically or lets propagate.
+Those four cases call for four different HTTP status codes. They represent fundamentally different kinds of problems. But from the call site, they all look the same - a thrown exception that the caller either catches specifically or lets propagate.
 
 ServiceDeskLite uses a `Result<T>` type instead. Every handler returns `Result` (for void operations) or `Result<T>` (when there's a value). Success and failure are both explicit in the return type.
 
@@ -32,11 +32,11 @@ A failure result carries an `ApplicationError` with three fields: a machine-read
 | `Conflict`       | 409         |
 | `Unexpected`     | 500         |
 
-The API layer has one mapper — `ResultToProblemDetailsMapper` — that reads the `ErrorType` and produces the correct `ProblemDetails` response. There's no exception filter chain, no `catch (SpecificException)` scattered across endpoints. One place, one switch, done.
+The API layer has one mapper - `ResultToProblemDetailsMapper` - that reads the `ErrorType` and produces the correct `ProblemDetails` response. There's no exception filter chain, no `catch (SpecificException)` scattered across endpoints. One place, one switch, done.
 
 ## The DomainException Boundary
 
-The domain layer still uses exceptions to enforce invariants — that's its job. A ticket in `Closed` state that receives a `Reopen` command throws a `DomainException` immediately, before any persistence is touched.
+The domain layer still uses exceptions to enforce invariants - that's its job. A ticket in `Closed` state that receives a `Reopen` command throws a `DomainException` immediately, before any persistence is touched.
 
 The application handler catches it, exactly once:
 
@@ -55,13 +55,13 @@ After that catch, no domain exception reaches the HTTP layer. The handler conver
 
 ## What Is Never Caught
 
-`OperationCanceledException` is explicitly not caught by handlers. Request cancellation is not a business error — it's infrastructure. If the client disconnects mid-request, the exception propagates to the API's exception handler, which classifies it separately from application errors.
+`OperationCanceledException` is explicitly not caught by handlers. Request cancellation is not a business error - it's infrastructure. If the client disconnects mid-request, the exception propagates to the API's exception handler, which classifies it separately from application errors.
 
 This is an intentional gap in the handler's error handling surface. Catching `OperationCanceledException` in a handler would silently swallow client disconnects, mask them as application errors, and write misleading log entries. The rule is simple: handlers catch `DomainException`, nothing else.
 
 ## The Cost
 
-Every error case needs an explicit return. There's no implicit propagation — if a validation check fails, the handler must return `Result.Validation(...)` at that point. For handlers with multiple validation steps, the structure becomes repetitive:
+Every error case needs an explicit return. There's no implicit propagation - if a validation check fails, the handler must return `Result.Validation(...)` at that point. For handlers with multiple validation steps, the structure becomes repetitive:
 
 ```csharp
 var validationResult = Validate(command);

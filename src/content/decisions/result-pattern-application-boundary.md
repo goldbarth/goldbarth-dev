@@ -1,6 +1,6 @@
 ---
 title: "Result Pattern an der Application Boundary"
-description: "Wie ServiceDeskLite einen expliziten Result-Typ verwendet, um Handler-Ergebnisse sichtbar zu machen — und wo DomainExceptions noch hingehören."
+description: "Wie ServiceDeskLite einen expliziten Result-Typ verwendet, um Handler-Ergebnisse sichtbar zu machen - und wo DomainExceptions noch hingehören."
 date: "2026-05-04"
 readMin: 4
 draft: false
@@ -8,7 +8,7 @@ draft: false
 
 Das Standard-Error-Handling-Modell in C# sind Exceptions. Eine Methode gibt bei Erfolg einen Wert zurück und wirft bei Misserfolg. Das Problem ist, dass „Misserfolg" viel abdeckt. Ein nicht gefundenes Ticket ist Misserfolg. Ein fehlendes Titel-Feld ist Misserfolg. Eine ungültige Status-Transition ist Misserfolg. Eine abgebrochene Datenbankverbindung auch.
 
-Diese vier Fälle verlangen vier unterschiedliche HTTP-Status-Codes. Sie repräsentieren fundamental unterschiedliche Arten von Problemen. Aber von der Call-Site aus sehen sie alle gleich aus — eine geworfene Exception, die der Aufrufer entweder spezifisch fängt oder propagieren lässt.
+Diese vier Fälle verlangen vier unterschiedliche HTTP-Status-Codes. Sie repräsentieren fundamental unterschiedliche Arten von Problemen. Aber von der Call-Site aus sehen sie alle gleich aus - eine geworfene Exception, die der Aufrufer entweder spezifisch fängt oder propagieren lässt.
 
 ServiceDeskLite verwendet stattdessen einen `Result<T>`-Typ. Jeder Handler gibt `Result` zurück (für Void-Operationen) oder `Result<T>` (wenn es einen Wert gibt). Erfolg und Misserfolg sind beide im Return-Typ explizit.
 
@@ -32,11 +32,11 @@ Ein Failure-Result trägt einen `ApplicationError` mit drei Feldern: einen masch
 | `Conflict`        | 409         |
 | `Unexpected`      | 500         |
 
-Der API Layer hat einen Mapper — `ResultToProblemDetailsMapper` — der den `ErrorType` liest und die korrekte `ProblemDetails`-Response erzeugt. Keine Exception-Filter-Chain, kein `catch (SpecificException)` über Endpoints verteilt. Eine Stelle, ein Switch, fertig.
+Der API Layer hat einen Mapper - `ResultToProblemDetailsMapper` - der den `ErrorType` liest und die korrekte `ProblemDetails`-Response erzeugt. Keine Exception-Filter-Chain, kein `catch (SpecificException)` über Endpoints verteilt. Eine Stelle, ein Switch, fertig.
 
 ## Die DomainException-Boundary
 
-Der Domain Layer verwendet weiterhin Exceptions, um Invarianten durchzusetzen — das ist seine Aufgabe. Ein Ticket im `Closed`-State, das einen `Reopen`-Command erhält, wirft sofort eine `DomainException`, bevor Persistence berührt wird.
+Der Domain Layer verwendet weiterhin Exceptions, um Invarianten durchzusetzen - das ist seine Aufgabe. Ein Ticket im `Closed`-State, das einen `Reopen`-Command erhält, wirft sofort eine `DomainException`, bevor Persistence berührt wird.
 
 Der Application Handler fängt sie genau einmal:
 
@@ -55,13 +55,13 @@ Nach diesem Catch erreicht keine Domain-Exception den HTTP Layer. Der Handler ko
 
 ## Was nie gefangen wird
 
-`OperationCanceledException` wird von Handlers explizit nicht gefangen. Request-Abbruch ist kein Business-Fehler — es ist Infrastructure. Wenn der Client mitten im Request die Verbindung trennt, propagiert die Exception zum Exception-Handler der API, der sie separat von Application-Errors klassifiziert.
+`OperationCanceledException` wird von Handlers explizit nicht gefangen. Request-Abbruch ist kein Business-Fehler - es ist Infrastructure. Wenn der Client mitten im Request die Verbindung trennt, propagiert die Exception zum Exception-Handler der API, der sie separat von Application-Errors klassifiziert.
 
 Das ist eine bewusste Lücke in der Error-Handling-Oberfläche des Handlers. `OperationCanceledException` in einem Handler zu fangen würde Client-Disconnects still verschlucken, sie als Application-Errors maskieren und irreführende Log-Einträge schreiben. Die Regel ist einfach: Handler fangen `DomainException`, sonst nichts.
 
 ## Der Preis
 
-Jeder Error-Fall braucht ein explizites Return. Keine implizite Propagation — wenn ein Validation-Check fehlschlägt, muss der Handler an dieser Stelle `Result.Validation(...)` zurückgeben. Für Handler mit mehreren Validation-Steps wird die Struktur repetitiv:
+Jeder Error-Fall braucht ein explizites Return. Keine implizite Propagation - wenn ein Validation-Check fehlschlägt, muss der Handler an dieser Stelle `Result.Validation(...)` zurückgeben. Für Handler mit mehreren Validation-Steps wird die Struktur repetitiv:
 
 ```csharp
 var validationResult = Validate(command);
