@@ -1,20 +1,20 @@
 ---
 title: "Integrationstests mit Testcontainers"
-description: "Wie MetricGate PostgreSQL, Redpanda und EF-Migrationen in einem Testlauf koordiniert — und welche Domain-Regeln Unit Tests schlicht nicht abfangen können."
+description: "Wie MetricGate PostgreSQL, Redpanda und EF-Migrationen in einem Testlauf koordiniert - und welche Domain-Regeln Unit Tests schlicht nicht abfangen können."
 date: "2026-05-21T19:48:00"
 readMin: 5
 draft: false
 ---
 
-Unit Tests lügen nicht — aber sie testen nicht, was man ihnen nicht zeigt. NSubstitute-Mocks prüfen, ob ein Service die richtigen Methoden aufruft. Sie prüfen nicht, ob die rekursive CTE, die Zyklenerkennung im Mandantenbaum implementiert, tatsächlich einen Zyklus erkennt. Das ist ein fundamentaler Unterschied.
+Unit Tests lügen nicht - aber sie testen nicht, was man ihnen nicht zeigt. NSubstitute-Mocks prüfen, ob ein Service die richtigen Methoden aufruft. Sie prüfen nicht, ob die rekursive CTE, die Zyklenerkennung im Mandantenbaum implementiert, tatsächlich einen Zyklus erkennt. Das ist ein fundamentaler Unterschied.
 
-Für MetricGate gibt es drei Kategorien von Invarianten, die nicht im Applikationslayer leben — sondern in der Datenbank oder im Broker:
+Für MetricGate gibt es drei Kategorien von Invarianten, die nicht im Applikationslayer leben - sondern in der Datenbank oder im Broker:
 
 - Hierarchietiefe: Die Tiefenprüfung nutzt eine `WITH RECURSIVE`-CTE direkt in PostgreSQL.
 - Plan-Ceiling: Die Elternbegrenzung bei Planzuweisungen benötigt reale Tabellenjoins.
 - Kafka-Reihenfolge: Der Outbox-Publisher muss Nachrichten in Erstellungsreihenfolge an Redpanda liefern.
 
-Keines davon ist mit Mocks testbar — zumindest nicht sinnvoll.
+Keines davon ist mit Mocks testbar - zumindest nicht sinnvoll.
 
 ## Die Factory
 
@@ -37,7 +37,7 @@ public sealed class PlansWebApplicationFactory : WebApplicationFactory<Program>,
 }
 ```
 
-`WebApplicationFactory<Program>` startet den vollständigen ASP.NET-Host — DI-Container, Middleware, alles. Die Container laufen gegen dieselbe `Program`-Registrierung wie die Produktion, nur mit überschriebenen Connection Strings.
+`WebApplicationFactory<Program>` startet den vollständigen ASP.NET-Host - DI-Container, Middleware, alles. Die Container laufen gegen dieselbe `Program`-Registrierung wie die Produktion, nur mit überschriebenen Connection Strings.
 
 ## Startup und Migration
 
@@ -56,7 +56,7 @@ public async Task InitializeAsync()
 }
 ```
 
-`Task.WhenAll` ist entscheidend: PostgreSQL und Redpanda starten unabhängig voneinander — sequenziell würde das Doppelte kosten. Migration läuft erst nach beiden Starts, weil `MigrateAsync` eine Datenbankverbindung braucht.
+`Task.WhenAll` ist entscheidend: PostgreSQL und Redpanda starten unabhängig voneinander - sequenziell würde das Doppelte kosten. Migration läuft erst nach beiden Starts, weil `MigrateAsync` eine Datenbankverbindung braucht.
 
 `ConfigureWebHost` überschreibt dann die Connection Strings bevor der Host hochfährt:
 
@@ -70,7 +70,7 @@ protected override void ConfigureWebHost(IWebHostBuilder builder)
 }
 ```
 
-Der Keycloak-Eintrag zeigt auf einen nicht-existenten Endpunkt. Das ist beabsichtigt — die Integrationstests testen keine Auth, und ein echter Keycloak-Container würde den Startup signifikant verlangsamen. Der Preis: Tests, die Bearer-Tokens benötigen, können nicht über den HTTP-Layer laufen.
+Der Keycloak-Eintrag zeigt auf einen nicht-existenten Endpunkt. Das ist beabsichtigt - die Integrationstests testen keine Auth, und ein echter Keycloak-Container würde den Startup signifikant verlangsamen. Der Preis: Tests, die Bearer-Tokens benötigen, können nicht über den HTTP-Layer laufen.
 
 ## Eine Factory, drei Testklassen
 
@@ -93,7 +93,7 @@ public sealed class TenantHierarchyIntegrationTests(PlansWebApplicationFactory f
 }
 ```
 
-Ein neuer DI-Scope pro Test isoliert transiente und scoped Abhängigkeiten. Die Datenbankverbindung ist geteilt — was bedeutet, dass Tests sich gegenseitig sehen können, wenn Testdaten nicht hinreichend isoliert sind.
+Ein neuer DI-Scope pro Test isoliert transiente und scoped Abhängigkeiten. Die Datenbankverbindung ist geteilt - was bedeutet, dass Tests sich gegenseitig sehen können, wenn Testdaten nicht hinreichend isoliert sind.
 
 ## Was nur mit echter Datenbank testbar ist
 
@@ -115,7 +115,7 @@ public async Task CreateTenant_AtDepth4_ThrowsDepthExceeded()
 }
 ```
 
-`GetAncestorChainAsync` ist eine `WITH RECURSIVE`-CTE in PostgreSQL. Die Tiefenprüfung passiert in SQL, nicht in C#. Ein Mock hätte die Methode aufgerufen und `true` zurückgegeben — der Test wäre grün gewesen, die CTE aber nie ausgeführt worden.
+`GetAncestorChainAsync` ist eine `WITH RECURSIVE`-CTE in PostgreSQL. Die Tiefenprüfung passiert in SQL, nicht in C#. Ein Mock hätte die Methode aufgerufen und `true` zurückgegeben - der Test wäre grün gewesen, die CTE aber nie ausgeführt worden.
 
 Gleiches gilt für den Zyklus-Test: `MoveTenant` nutzt `SELECT … FOR UPDATE`, um konkurrierende Reparent-Operationen zu serialisieren. Ob das Lock greift, ist mit einem In-Memory-Mock schlicht nicht beobachtbar.
 
@@ -180,12 +180,12 @@ Redpanda statt Kafka: Redpanda ist Kafka-API-kompatibel, startet in einem einzig
 
 ## Trade-offs
 
-Integrationstests kosten. Der erste Lauf auf einer Cold Machine — Images müssen gezogen werden — dauert deutlich länger als ein Unit-Test-Run. Auf warmem Docker-Cache sind die Container in drei bis fünf Sekunden gestartet.
+Integrationstests kosten. Der erste Lauf auf einer Cold Machine - Images müssen gezogen werden - dauert deutlich länger als ein Unit-Test-Run. Auf warmem Docker-Cache sind die Container in drei bis fünf Sekunden gestartet.
 
-Die geteilte Datenbankinstanz ist das größte Risiko. Wenn Test A Daten hinterlässt, die Test B nicht erwartet, schlägt B sporadisch fehl — je nach Ausführungsreihenfolge. Die aktuelle Lösung ist Namensraum-Isolation per Test (eindeutige Tenant-Namen wie `Root-H-5`), keine echte Datenbankisolation. Das funktioniert, solange Tests keine gegenseitigen Annahmen über Mengen machen.
+Die geteilte Datenbankinstanz ist das größte Risiko. Wenn Test A Daten hinterlässt, die Test B nicht erwartet, schlägt B sporadisch fehl - je nach Ausführungsreihenfolge. Die aktuelle Lösung ist Namensraum-Isolation per Test (eindeutige Tenant-Namen wie `Root-H-5`), keine echte Datenbankisolation. Das funktioniert, solange Tests keine gegenseitigen Annahmen über Mengen machen.
 
 ## Was ich ändern würde
 
-Für wachsende Test-Suiten würde ich `Respawn` hinzufügen — eine Library, die den Datenbankinhalt nach jedem Test auf einen sauberen Ausgangszustand zurücksetzt, ohne den Container neu zu starten. Dann entfiele das manuelle Namensraum-Management vollständig.
+Für wachsende Test-Suiten würde ich `Respawn` hinzufügen - eine Library, die den Datenbankinhalt nach jedem Test auf einen sauberen Ausgangszustand zurücksetzt, ohne den Container neu zu starten. Dann entfiele das manuelle Namensraum-Management vollständig.
 
-Die Keycloak-Lücke würde ich mit einem separaten Auth-Integration-Test-Projekt adressieren, das einen echten Keycloak-Container hochfährt — isoliert von den Domain-Tests, die Auth nicht brauchen. Alles in einen Test zu packen verlängert den Startup für die falsche Ursache.
+Die Keycloak-Lücke würde ich mit einem separaten Auth-Integration-Test-Projekt adressieren, das einen echten Keycloak-Container hochfährt - isoliert von den Domain-Tests, die Auth nicht brauchen. Alles in einen Test zu packen verlängert den Startup für die falsche Ursache.

@@ -1,6 +1,6 @@
 ---
 title: "Surge Evaluator: sechs Entscheidungen, eine Richtung"
-description: "Aus einem Fenster von Pegelmesswerten wird eine Stufe — normal, warning, severe. Sechs Entscheidungen, die alle in dieselbe Richtung ziehen: Zuverlässigkeit."
+description: "Aus einem Fenster von Pegelmesswerten wird eine Stufe - normal, warning, severe. Sechs Entscheidungen, die alle in dieselbe Richtung ziehen: Zuverlässigkeit."
 date: 2026-06-08T22:00:00
 readMin: 5
 draft: false
@@ -10,67 +10,67 @@ import stufen from './assets/pegel-stufen.svg?raw'
 import hysterese from './assets/hysterese-schaltpunkte.svg?raw'
 import flatter from './assets/flatter-fund.svg?raw'
 
-Ein Pegel-Surge-System hat eine unscheinbare Kernfrage: Aus einem Fenster von Messwerten muss eine Stufe werden — `normal`, `warning`, `severe`. Klingt nach einer Schwellwert-Abfrage. Ist es auch, bis man an die Ränder denkt: ein Sensor-Ausreißer, ein Pegel der genau auf der Grenze zittert, ein langsam steigender Trend. Dann entscheidet nicht die Schwelle, sondern *wie* man sie liest.
+Ein Pegel-Surge-System hat eine unscheinbare Kernfrage: Aus einem Fenster von Messwerten muss eine Stufe werden - `normal`, `warning`, `severe`. Klingt nach einer Schwellwert-Abfrage. Ist es auch, bis man an die Ränder denkt: ein Sensor-Ausreißer, ein Pegel der genau auf der Grenze zittert, ein langsam steigender Trend. Dann entscheidet nicht die Schwelle, sondern *wie* man sie liest.
 
 <Fragment set:html={stufen} />
 
-Das ADR hält sechs Entscheidungen fest. Sie sehen einzeln klein aus, aber sie ziehen alle in dieselbe Richtung — Zuverlässigkeit, jede an einer anderen Stelle. Hier die Kurzfassung.
+Das ADR hält sechs Entscheidungen fest. Sie sehen einzeln klein aus, aber sie ziehen alle in dieselbe Richtung - Zuverlässigkeit, jede an einer anderen Stelle. Hier die Kurzfassung.
 
-## D1 — Welcher Wert bestimmt die Stufe?
+## D1 - Welcher Wert bestimmt die Stufe?
 
-Die naheliegende Antwort ist: der letzte Messwert. Der ist aktuell und einfach. Das Problem zeigt sich am Rand — ein einzelner Ausreißer, eine Welle gegen den Sensor, ein Glitch, und die Stufe springt, obwohl der Pegel real gar nicht dort ist. Eine Stufe löst einen Alarm aus. Ein Fehlalarm pro Glitch ist zu viel.
+Die naheliegende Antwort ist: der letzte Messwert. Der ist aktuell und einfach. Das Problem zeigt sich am Rand - ein einzelner Ausreißer, eine Welle gegen den Sensor, ein Glitch, und die Stufe springt, obwohl der Pegel real gar nicht dort ist. Eine Stufe löst einen Alarm aus. Ein Fehlalarm pro Glitch ist zu viel.
 
-Also der Median der letzten fünf Werte. Ein einzelner Spike landet am Rand der sortierten Reihe, nicht in der Mitte — er kann das Ergebnis nicht bewegen. Der Mittelwert wäre die Alternative gewesen, aber der glättet nicht, er verdünnt nur: ein großer Ausreißer zieht ihn trotzdem über die Grenze. Der Median verschiebt sich erst, wenn drei der fünf Werte in dieselbe Richtung zeigen — und drei gleichgerichtete Werte sind kein Ausreißer mehr, sondern ein Trend. Genau dann *soll* sich die Stufe bewegen.
+Also der Median der letzten fünf Werte. Ein einzelner Spike landet am Rand der sortierten Reihe, nicht in der Mitte - er kann das Ergebnis nicht bewegen. Der Mittelwert wäre die Alternative gewesen, aber der glättet nicht, er verdünnt nur: ein großer Ausreißer zieht ihn trotzdem über die Grenze. Der Median verschiebt sich erst, wenn drei der fünf Werte in dieselbe Richtung zeigen - und drei gleichgerichtete Werte sind kein Ausreißer mehr, sondern ein Trend. Genau dann *soll* sich die Stufe bewegen.
 
 Facette: Robustheit gegen Ausreißer.
 
-## D2 — Wie viele Werte?
+## D2 - Wie viele Werte?
 
-Wenn es der Median der letzten fünf ist — warum fünf, und nicht einfach das ganze Fenster? Das Fenster umfasst 30 Minuten. Wie viele Messwerte darin liegen, hängt davon ab, wie oft der Sensor sendet. Nimmt man den Median über alles, was im Fenster liegt, koppelt man das Verhalten an die Senderate: Bei dichtem Takt mitteln sich hunderte Werte, die Stufe reagiert träge. Bei dünnem Takt bleiben drei, und der Median ist kaum robuster als die letzte Messung.
+Wenn es der Median der letzten fünf ist - warum fünf, und nicht einfach das ganze Fenster? Das Fenster umfasst 30 Minuten. Wie viele Messwerte darin liegen, hängt davon ab, wie oft der Sensor sendet. Nimmt man den Median über alles, was im Fenster liegt, koppelt man das Verhalten an die Senderate: Bei dichtem Takt mitteln sich hunderte Werte, die Stufe reagiert träge. Bei dünnem Takt bleiben drei, und der Median ist kaum robuster als die letzte Messung.
 
-Eine feste Zahl — fünf — entkoppelt das. Derselbe Pegelverlauf ergibt dieselbe Stufe, egal wie schnell der Sensor tickt. Man könnte die Zahl konfigurierbar machen, aber das bringt einen Stellknopf und seine Validierung für eine Flexibilität, die bisher niemand braucht. Eine benannte Konstante ist die kleinere Fläche; sie lässt sich später jederzeit zur Option hochziehen, wenn ein echter Bedarf auftaucht.
+Eine feste Zahl - fünf - entkoppelt das. Derselbe Pegelverlauf ergibt dieselbe Stufe, egal wie schnell der Sensor tickt. Man könnte die Zahl konfigurierbar machen, aber das bringt einen Stellknopf und seine Validierung für eine Flexibilität, die bisher niemand braucht. Eine benannte Konstante ist die kleinere Fläche; sie lässt sich später jederzeit zur Option hochziehen, wenn ein echter Bedarf auftaucht.
 
 Facette: Unabhängigkeit von der Senderate.
 
-## D3 — Wie verhindert man Flattern an der Grenze?
+## D3 - Wie verhindert man Flattern an der Grenze?
 
-Der Median glättet Spikes. Was er nicht glättet, ist ein Pegel, der genau auf einer Schwelle liegt und auf normalem Messrauschen darum pendelt. Sitzt der echte Pegel bei 4.50, liegt auch der Median bei 4.50 — und die Stufe kippt bei jeder Messung zwischen `normal` und `warning`. Mit ihr der Alarm.
+Der Median glättet Spikes. Was er nicht glättet, ist ein Pegel, der genau auf einer Schwelle liegt und auf normalem Messrauschen darum pendelt. Sitzt der echte Pegel bei 4.50, liegt auch der Median bei 4.50 - und die Stufe kippt bei jeder Messung zwischen `normal` und `warning`. Mit ihr der Alarm.
 
-Die Lösung ist eine Hysterese, und sie ist bewusst asymmetrisch. Hoch geht es sofort: Ein steigender Pegel darf nie aufgehalten werden. Runter erst, wenn der Pegel die Schwelle um einen festen Abstand unterschreitet. Sicherheit nach oben, Ruhe nach unten — die richtige Richtung für Hochwasser, wo eine späte Eskalation eine verpasste Warnung ist, eine späte Deeskalation aber nur eine Stufe, die eine Messung länger steht.
+Die Lösung ist eine Hysterese, und sie ist bewusst asymmetrisch. Hoch geht es sofort: Ein steigender Pegel darf nie aufgehalten werden. Runter erst, wenn der Pegel die Schwelle um einen festen Abstand unterschreitet. Sicherheit nach oben, Ruhe nach unten - die richtige Richtung für Hochwasser, wo eine späte Eskalation eine verpasste Warnung ist, eine späte Deeskalation aber nur eine Stufe, die eine Messung länger steht.
 
 <Fragment set:html={hysterese} />
 
-Ein Sustain-Zähler — erst nach M gleichen Messungen umschalten — hätte das auch gelöst, misst seine Verzögerung aber in Messungen und hängt damit wieder an der Senderate, die D2 gerade losgeworden ist.
+Ein Sustain-Zähler - erst nach M gleichen Messungen umschalten - hätte das auch gelöst, misst seine Verzögerung aber in Messungen und hängt damit wieder an der Senderate, die D2 gerade losgeworden ist.
 
 Facette: Stabilität an der Grenze.
 
-## D4 — Wie ruft der Rest des Systems den Evaluator auf?
+## D4 - Wie ruft der Rest des Systems den Evaluator auf?
 
-Diese Frage betrifft mehr den Code als das Wasser — wer mit der Architektur nichts anfangen kann, springt gefahrlos zu D5.
+Diese Frage betrifft mehr den Code als das Wasser - wer mit der Architektur nichts anfangen kann, springt gefahrlos zu D5.
 
-Die Hysterese muss wissen, in welcher Stufe der Pegel gerade steht — „halte die aktuelle Stufe" hat sonst keinen Sinn. Diese Information muss den Evaluator erreichen. Der einfache Weg wäre, ihm direkten Zugriff auf den laufenden Zustand zu geben. Der sauberere ist, die aktuelle Stufe als Parameter zu übergeben. Dann bleibt der Evaluator eine Funktion, die allein von ihren Eingaben abhängt — gleiche Eingabe, gleiches Ergebnis, ohne verstecktes Drumherum. Genau das macht ihn prüfbar: Jeder Fall — die Grenzwerte, das Zittern, die Schwelle für den Abstieg — lässt sich testen, indem man Werte hineingibt und das Ergebnis prüft. Kein Zustand, den man dafür erst aufbauen müsste.
+Die Hysterese muss wissen, in welcher Stufe der Pegel gerade steht - „halte die aktuelle Stufe" hat sonst keinen Sinn. Diese Information muss den Evaluator erreichen. Der einfache Weg wäre, ihm direkten Zugriff auf den laufenden Zustand zu geben. Der sauberere ist, die aktuelle Stufe als Parameter zu übergeben. Dann bleibt der Evaluator eine Funktion, die allein von ihren Eingaben abhängt - gleiche Eingabe, gleiches Ergebnis, ohne verstecktes Drumherum. Genau das macht ihn prüfbar: Jeder Fall - die Grenzwerte, das Zittern, die Schwelle für den Abstieg - lässt sich testen, indem man Werte hineingibt und das Ergebnis prüft. Kein Zustand, den man dafür erst aufbauen müsste.
 
 Facette: Prüfbarkeit.
 
-## D5 — Wie fließt der Trend ein?
+## D5 - Wie fließt der Trend ein?
 
-Bis hierher schaut das System auf den Ist-Wert. Aber ein Pegel, der zügig auf eine Schwelle zusteigt, ist eine andere Lage als einer, der ruhig darunter liegt — auch wenn beide im selben Moment denselben Wert zeigen. Das Issue formuliert die Grenze selbst: kein Vorhersagemodell, gerade genug, um früh genug dran zu sein.
+Bis hierher schaut das System auf den Ist-Wert. Aber ein Pegel, der zügig auf eine Schwelle zusteigt, ist eine andere Lage als einer, der ruhig darunter liegt - auch wenn beide im selben Moment denselben Wert zeigen. Das Issue formuliert die Grenze selbst: kein Vorhersagemodell, gerade genug, um früh genug dran zu sein.
 
-Also die einfachste Form, die das leistet: Steigt der Pegel und ist er nah genug unter der nächsten Schwelle, wird eine Stufe vorgezogen. Zwei Bedingungen, beide aus Daten, die ohnehin da sind. „Steigend" wird dabei auf derselben robusten Basis gemessen wie die Stufe — Median gegen Median, nicht Einzelwert gegen Einzelwert. Sonst hinge das Trend-Signal an genau den Ausreißern, die D1 herausfiltert. Eine lineare Projektion wäre genauer, aber das wäre eine Vorhersage in allem außer dem Namen — und jede zusätzliche Annahme darin ist ein weiterer Weg, danebenzuliegen.
+Also die einfachste Form, die das leistet: Steigt der Pegel und ist er nah genug unter der nächsten Schwelle, wird eine Stufe vorgezogen. Zwei Bedingungen, beide aus Daten, die ohnehin da sind. „Steigend" wird dabei auf derselben robusten Basis gemessen wie die Stufe - Median gegen Median, nicht Einzelwert gegen Einzelwert. Sonst hinge das Trend-Signal an genau den Ausreißern, die D1 herausfiltert. Eine lineare Projektion wäre genauer, aber das wäre eine Vorhersage in allem außer dem Namen - und jede zusätzliche Annahme darin ist ein weiterer Weg, danebenzuliegen.
 
-Eine Sache verbindet D5 mit D3: Das Hysterese-Band muss mindestens so breit sein wie der Trend-Korridor. Ist es schmaler, öffnet sich dazwischen eine Lücke — und ein Pegel, der darin zittert, wird vom Trend hochgezogen und von der Hysterese wieder fallengelassen, Messung für Messung. Genau das Flattern, das D3 verhindern soll, käme durch die Hintertür zurück.
+Eine Sache verbindet D5 mit D3: Das Hysterese-Band muss mindestens so breit sein wie der Trend-Korridor. Ist es schmaler, öffnet sich dazwischen eine Lücke - und ein Pegel, der darin zittert, wird vom Trend hochgezogen und von der Hysterese wieder fallengelassen, Messung für Messung. Genau das Flattern, das D3 verhindern soll, käme durch die Hintertür zurück.
 
 <Fragment set:html={flatter} />
 
-Setzt man beide gleich, schließt sich die Lücke exakt: Der Trend hört auf vorzuziehen, und die Hysterese hört auf zu halten, am selben Punkt. Das ist keine Geschmacksfrage, sondern die engste Einstellung, die sicher ist — diesen Fall hatte ich beim Durchrechnen zuerst übersehen, er kam erst beim Prüfen der echten Logik heraus.
+Setzt man beide gleich, schließt sich die Lücke exakt: Der Trend hört auf vorzuziehen, und die Hysterese hört auf zu halten, am selben Punkt. Das ist keine Geschmacksfrage, sondern die engste Einstellung, die sicher ist - diesen Fall hatte ich beim Durchrechnen zuerst übersehen, er kam erst beim Prüfen der echten Logik heraus.
 
 Facette: minimale Annahmen.
 
-## D6 — Wo leben die Stellschrauben?
+## D6 - Wo leben die Stellschrauben?
 
 Drei Werte könnte das System nach außen geben: die Stichprobengröße und die beiden Margen. Jeder davon, einmal zur Konfiguration erhoben, ist ein Pfad, der falsch gesetzt werden kann, eine Validierungsregel mehr, ein Default, der gepflegt werden will. Solange es einen Konsumenten und einen Satz Schwellen gibt, zahlt sich das nicht aus.
 
-Als benannte Konstanten bleiben die drei an einer Stelle einsehbar und änderbar, ohne diese Fläche. Die Kopplung aus D5 macht den Punkt sogar schärfer: Die beiden Margen sind keine unabhängigen Knöpfe, sondern ein Paar — wer sie konfigurierbar macht, müsste ihre Beziehung beim Start mitvalidieren. Das ist echte Komplexität, auf Vorrat angeschafft. Der Weg dorthin bleibt offen: Wenn ein echter Bedarf kommt, wandern die Konstanten in die Konfiguration und die Regel mit ihnen. Konstanten jetzt verbauen nichts — sie verschieben die Kosten auf den Moment, in dem sie sich lohnen.
+Als benannte Konstanten bleiben die drei an einer Stelle einsehbar und änderbar, ohne diese Fläche. Die Kopplung aus D5 macht den Punkt sogar schärfer: Die beiden Margen sind keine unabhängigen Knöpfe, sondern ein Paar - wer sie konfigurierbar macht, müsste ihre Beziehung beim Start mitvalidieren. Das ist echte Komplexität, auf Vorrat angeschafft. Der Weg dorthin bleibt offen: Wenn ein echter Bedarf kommt, wandern die Konstanten in die Konfiguration und die Regel mit ihnen. Konstanten jetzt verbauen nichts - sie verschieben die Kosten auf den Moment, in dem sie sich lohnen.
 
 Facette: kleine Angriffsfläche.
 

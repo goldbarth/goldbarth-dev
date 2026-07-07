@@ -4,14 +4,14 @@ import Base from '../layouts/Base.astro';
 import EntryRow from '../components/EntryRow.astro';
 import ProjectRow from '../components/ProjectRow.astro';
 
-// Curated featured projects — kept manual, since these are the recruiter layer.
+// Curated featured projects - kept manual, since these are the recruiter layer.
 // Move to a content collection once the list grows.
 const featuredProjects = [
   {
     title: 'Ingestor',
     slug: 'ingestor',
     status: 'live' as const,
-    description: 'A .NET 10 import pipeline built around reliability: outbox pattern, strict domain state machine, idempotent processing, and a config-switchable dispatch strategy — every design decision focused on correctness and auditability.',
+    description: 'A .NET 10 import pipeline built around reliability: outbox pattern, strict domain state machine, idempotent processing, and a config-switchable dispatch strategy - every design decision focused on correctness and auditability.',
     stack: ['.NET 10', 'OpenTelemetry', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
     links: [
       { label: 'github.com/goldbarth/ingestor', href: 'https://github.com/goldbarth/Ingestor' },
@@ -21,7 +21,7 @@ const featuredProjects = [
     title: 'ServiceDeskLite',
     slug: 'service-desk-lite',
     status: 'live' as const,
-    description: 'A .NET 10 backend reference built around strict layering: compiler-enforced boundaries, two interchangeable persistence adapters, and result-based error handling — every architectural decision documented and justified. The AI intake assistant combines tool calling, SSE streaming and RAG in one agentic loop: a Claude model checks for duplicates via semantic search (Voyage embeddings + pgvector) before creating tickets — built as an edge adapter that acts exclusively through the existing command handlers, the domain knows no LLM.',
+    description: 'A .NET 10 backend reference built around strict layering: compiler-enforced boundaries, two interchangeable persistence adapters, and result-based error handling - every architectural decision documented and justified. The AI intake assistant combines tool calling, SSE streaming and RAG in one agentic loop: a Claude model checks for duplicates via semantic search (Voyage embeddings + pgvector) before creating tickets - built as an edge adapter that acts exclusively through the existing command handlers, the domain knows no LLM.',
     stack: ['.NET 10', 'Postgres', 'pgvector', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API', 'Voyage AI'],
     links: [
       { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
@@ -46,16 +46,16 @@ const writings = (
 
     <section class="intro">
       <p>
-        Felix Wahl — .NET Backend Engineer focused on distributed
-        systems — reliability, consistency, and the stuff nobody talks about until it breaks.
+        Felix Wahl - .NET Backend Engineer focused on distributed
+        systems - reliability, consistency, and the stuff nobody talks about until it breaks.
       </p>
       <p>
         Notes from the work: reasoning behind technical decisions,
         half-baked thoughts, and what I'm currently building.
-        Unpolished, mostly for my future self — public in case it helps someone.
+        Unpolished, mostly for my future self - public in case it helps someone.
       </p>
       <div class="intro__now">
-        <span>servicedesklite: semantic ticket search (rag) — voyage + pgvector · metric gate v2 in progress · reading project hail mary — andy weir</span>
+        <span>servicedesklite: semantic ticket search (rag) - voyage + pgvector · metric gate v2 in progress · reading project hail mary - andy weir</span>
       </div>
     </section>
 

@@ -1,6 +1,6 @@
 ---
 title: "Outbox vs. Message Broker"
-description: "Warum Ingestor mit einem database-backed Outbox statt RabbitMQ startet — und was das umschaltbare Dispatcher-Pattern später ermöglicht."
+description: "Warum Ingestor mit einem database-backed Outbox statt RabbitMQ startet - und was das umschaltbare Dispatcher-Pattern später ermöglicht."
 date: "2026-05-02"
 readMin: 4
 draft: false
@@ -8,7 +8,7 @@ draft: false
 
 Die Frage, die den gesamten Dispatch Layer prägt: Wenn ein Job erstellt wird, wie erfährt der Worker davon?
 
-Die offensichtliche Antwort ist ein Message Broker. Message publizieren, Worker subscribt, fertig. Aber diese Antwort kommt mit einer versteckten Annahme: Der Database-Write und das Broker-Publish passieren in zwei getrennten Operationen. Wenn die Database committed und das Broker-Publish fehlschlägt — oder schlimmer, der Prozess zwischen den beiden abstürzt — ist das Signal verloren. Der Job existiert in der Datenbank im `Received`-Status, aber nichts wird ihn je aufnehmen.
+Die offensichtliche Antwort ist ein Message Broker. Message publizieren, Worker subscribt, fertig. Aber diese Antwort kommt mit einer versteckten Annahme: Der Database-Write und das Broker-Publish passieren in zwei getrennten Operationen. Wenn die Database committed und das Broker-Publish fehlschlägt - oder schlimmer, der Prozess zwischen den beiden abstürzt - ist das Signal verloren. Der Job existiert in der Datenbank im `Received`-Status, aber nichts wird ihn je aufnehmen.
 
 ## Das Problem mit "Publish Then Commit"
 
@@ -40,9 +40,9 @@ LIMIT 1;
 
 ## Die Trade-offs
 
-Der Outbox kostet etwas. Polling fügt Database-Last hinzu — jede Worker-Instanz führt einen Query nach Plan aus, auch wenn nichts zu verarbeiten ist. Für Ingestors Workload (Delivery-Advice-Imports, keine sub-millisekunden Event-Streams) ist das in Ordnung. Für ein System, das tausende Events pro Sekunde verarbeitet, nicht.
+Der Outbox kostet etwas. Polling fügt Database-Last hinzu - jede Worker-Instanz führt einen Query nach Plan aus, auch wenn nichts zu verarbeiten ist. Für Ingestors Workload (Delivery-Advice-Imports, keine sub-millisekunden Event-Streams) ist das in Ordnung. Für ein System, das tausende Events pro Sekunde verarbeitet, nicht.
 
-Das Latency-Profil ist auch anders. Ein Broker liefert nahezu sofort. Ein Outbox-Poll-Intervall führt eine Verzögerung ein — Ingestor pollt alle zwei Sekunden. Für eine Import-Pipeline ist eine zwei-sekündige Pickup-Verzögerung unsichtbar. Für ein nutzerseitiges Benachrichtigungssystem wäre sie spürbar.
+Das Latency-Profil ist auch anders. Ein Broker liefert nahezu sofort. Ein Outbox-Poll-Intervall führt eine Verzögerung ein - Ingestor pollt alle zwei Sekunden. Für eine Import-Pipeline ist eine zwei-sekündige Pickup-Verzögerung unsichtbar. Für ein nutzerseitiges Benachrichtigungssystem wäre sie spürbar.
 
 ## Umschaltbar machen
 
@@ -63,10 +63,10 @@ Zwei Implementierungen: `OutboxJobDispatcher` (schreibt in die Outbox-Tabelle) u
 
 Zu `RabbitMQ` zu wechseln erfordert keine Code-Änderungen, nur einen Config-Wert und den laufenden Broker.
 
-Der RabbitMQ Dispatcher fügt eine zusätzliche Komplikation hinzu: *vor* dem Database-Commit zu publizieren erzeugt dieselbe Race Condition, die wir vermeiden wollten. Die Lösung ist ein Post-Commit-Callback — der Dispatcher registriert eine Publish-Aktion, die nach dem Abschluss von `SaveChangesAsync()` feuert, nicht davor. Die Message kann nicht konsumiert werden, bevor der Job in der Datenbank sichtbar ist.
+Der RabbitMQ Dispatcher fügt eine zusätzliche Komplikation hinzu: *vor* dem Database-Commit zu publizieren erzeugt dieselbe Race Condition, die wir vermeiden wollten. Die Lösung ist ein Post-Commit-Callback - der Dispatcher registriert eine Publish-Aktion, die nach dem Abschluss von `SaveChangesAsync()` feuert, nicht davor. Die Message kann nicht konsumiert werden, bevor der Job in der Datenbank sichtbar ist.
 
 ## Was ich ändern würde
 
-Der Outbox funktioniert gut als Ausgangspunkt. Würde ich für höheren Throughput bauen, würde ich wahrscheinlich einen dedizierten Outbox-Relay-Prozess hinzufügen — etwas, das die Datenbank tailed und Einträge an einen Broker weiterleitet, statt Workers direkt pollen zu lassen. Aber für ein Portfolio-Projekt, das das Pattern demonstriert, ist direktes Polling einfacher und transparenter.
+Der Outbox funktioniert gut als Ausgangspunkt. Würde ich für höheren Throughput bauen, würde ich wahrscheinlich einen dedizierten Outbox-Relay-Prozess hinzufügen - etwas, das die Datenbank tailed und Einträge an einen Broker weiterleitet, statt Workers direkt pollen zu lassen. Aber für ein Portfolio-Projekt, das das Pattern demonstriert, ist direktes Polling einfacher und transparenter.
 
-Die `IJobDispatcher`-Abstraktion war den Aufwand wert. „Das System funktioniert ohne einen Broker — füge einen hinzu, wenn du Skalierung brauchst" erklären zu können ist eine bessere Geschichte als „benötigt RabbitMQ, um überhaupt zu laufen."
+Die `IJobDispatcher`-Abstraktion war den Aufwand wert. „Das System funktioniert ohne einen Broker - füge einen hinzu, wenn du Skalierung brauchst" erklären zu können ist eine bessere Geschichte als „benötigt RabbitMQ, um überhaupt zu laufen."
