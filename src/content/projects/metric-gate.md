@@ -72,7 +72,7 @@ Der nicht-triviale Fall ist die Hierarchie-Kaskade: ein einzelnes `TenantHierarc
 | Tenant Admin          | OIDC (Keycloak) → JWT mit Refresh                 |
 | Service-to-Service    | Internes JWT (Enforcement → Plans auf Cache Miss) |
 
-**Kein Mediator:** Application Services werden direkt injiziert - kein MediatR-Overhead, kein Magic. ([ADR-005](https://github.com/goldbarth/MetricGate/blob/main/docs/adrs/005-mediator-abstraction.md))
+**Kein Mediator:** Application Services werden direkt injiziert. Ein Endpoint zeigt, welchen Service er aufruft, ohne Dispatch-Indirektion dazwischen. ([ADR-005](https://github.com/goldbarth/MetricGate/blob/main/docs/adrs/005-mediator-abstraction.md))
 
 Alle Architekturentscheidungen sind als ADRs dokumentiert: [`docs/adrs/`](https://github.com/goldbarth/MetricGate/tree/main/docs/adrs).
 

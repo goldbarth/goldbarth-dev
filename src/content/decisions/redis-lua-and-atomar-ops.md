@@ -1,6 +1,6 @@
 ---
 title: "Redis Lua & atomare Ops"
-description: "Warum MetricGate Token-Bucket-Updates als Lua-Script ausführt statt als naiven GET-SET-Zyklus - was ohne Lua schiefgeht, wie atomare Ausführung das löst und was Lua kostet."
+description: "Warum MetricGate Token-Bucket-Updates als Lua-Script ausführt statt als einfachen GET-SET-Zyklus - was ohne Lua schiefgeht, wie atomare Ausführung das löst und was Lua kostet."
 date: "2026-05-28T12:00:00"
 readMin: 3
 draft: false

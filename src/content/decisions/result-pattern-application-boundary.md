@@ -6,7 +6,9 @@ readMin: 4
 draft: false
 ---
 
-Das Standard-Error-Handling-Modell in C# sind Exceptions. Eine Methode gibt bei Erfolg einen Wert zurück und wirft bei Misserfolg. Das Problem ist, dass „Misserfolg" viel abdeckt. Ein nicht gefundenes Ticket ist Misserfolg. Ein fehlendes Titel-Feld ist Misserfolg. Eine ungültige Status-Transition ist Misserfolg. Eine abgebrochene Datenbankverbindung auch.
+„Fehlgeschlagen" ist ein Wort für sehr verschiedene Dinge. Ein nicht gefundenes Ticket ist ein Fehlschlag. Ein fehlendes Titel-Feld ist einer. Eine ungültige Status-Transition ist einer. Eine abgebrochene Datenbankverbindung auch.
+
+In C# landen alle vier im selben Mechanismus: die Methode gibt bei Erfolg einen Wert zurück und wirft bei Misserfolg eine Exception.
 
 Diese vier Fälle verlangen vier unterschiedliche HTTP-Status-Codes. Sie repräsentieren fundamental unterschiedliche Arten von Problemen. Aber von der Call-Site aus sehen sie alle gleich aus - eine geworfene Exception, die der Aufrufer entweder spezifisch fängt oder propagieren lässt.
 

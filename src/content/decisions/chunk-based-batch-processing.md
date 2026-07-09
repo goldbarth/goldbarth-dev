@@ -8,7 +8,7 @@ draft: false
 
 Eine Delivery-Advice-Datei kann groß sein. Zehntausend Zeilen sind nicht unrealistisch. Zehntausend Zeilen in einer einzigen Database-Transaction zu verarbeiten hat ein spezifisches Failure-Profil: Wenn Zeile 9.847 fehlschlägt, geht alles verloren. Die Transaction rollt zurück, null Items werden importiert, und der Job muss von vorne beginnen.
 
-Das ist ein schlechter Trade-off für eine Import-Pipeline. Chunk-basierte Verarbeitung tauscht Atomarität gegen begrenzten Blast Radius.
+Für eine Import-Pipeline ist das der falsche Trade-off. Chunk-basierte Verarbeitung tauscht Atomarität gegen einen begrenzten Blast Radius.
 
 ## Wie es funktioniert
 
@@ -75,4 +75,4 @@ Sie kostet:
 - **Requeue-Komplexität** - Reprocessing muss auf Zeilen-Ebene idempotent sein, nicht nur auf Job-Ebene
 - **Late-Stage Design-Änderungen** - `PartiallySucceeded` erzwang simultane Änderungen an State Machine, Requeue-Handler und Dead-Letter-Schema
 
-Ob der Trade-off richtig ist, hängt davon ab, ob Partial Success in der Domain bedeutsam ist. Für Delivery Advice - wo ein Operator wissen will, welche Items angekommen sind - sind 9.500 von 10.000 erfolgreich importierten Zeilen genuinely besser als 0 von 10.000. Für einen Payment-Batch würde man ganz andere Semantik wollen.
+Ob der Trade-off richtig ist, hängt davon ab, ob Partial Success in der Domain bedeutsam ist. Für Delivery Advice, wo ein Operator wissen will, welche Items angekommen sind, sind 9.500 von 10.000 erfolgreich importierten Zeilen deutlich besser als 0 von 10.000. Für einen Payment-Batch würde man eine ganz andere Semantik wollen.

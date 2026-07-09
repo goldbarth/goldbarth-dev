@@ -6,11 +6,11 @@ readMin: 4
 draft: false
 ---
 
-Die verbreitetste Version von Clean Architecture, die mir begegnet ist, verwendet Naming Conventions und Code Reviews, um die Dependency-Regeln durchzusetzen. Domain-Typen referenzieren keine Infrastructure-Typen - per Konvention. Der Application Layer importiert keine HTTP-Concerns - per Absprache. Die Struktur lebt in der Dokumentation und im Gedächtnis des Reviewers.
+Clean Architecture ist im Kern eine Regel darüber, wer wen kennen darf. Der innere Kern der Anwendung weiß nichts von Datenbanken und nichts von HTTP. Die Frage ist, wer diese Regel eigentlich durchsetzt.
 
-Das ist eine schwache Garantie. Der Compiler setzt nichts durch. Ein Entwickler unter Zeitdruck fügt eine Referenz ein, die Tests bleiben grün, und die Boundary ist weg. Drei Monate später hat die Codebase irgendwo im Domain einen `HttpContext`.
+Eine Möglichkeit ist die Konvention: Domain-Typen referenzieren keine Infrastructure-Typen, weil man sich darauf geeinigt hat. Die Struktur lebt dann in der Dokumentation und im Code Review. Das ist eine tragfähige Antwort, und sie verlangt fortlaufend Aufmerksamkeit von allen Beteiligten.
 
-ServiceDeskLite geht anders vor. Die Dependency-Regeln werden durch Project-References durchgesetzt - der Compiler ist der Türsteher, nicht der Reviewer.
+Die andere Möglichkeit ist, die Regel dorthin zu legen, wo sie niemand mehr im Kopf halten muss. In ServiceDeskLite setzen Project-References die Dependency-Regeln durch. Ob eine Abhängigkeit erlaubt ist, entscheidet der Build.
 
 ## Der Durchsetzungsmechanismus
 
@@ -32,7 +32,7 @@ Api → Contracts
 
 Repository- und Unit-of-Work-Interfaces leben in `Application`, nicht in `Infrastructure`. `ITicketRepository` und `IUnitOfWork` sind Application-Layer-Typen - die konkreten EF Core-Implementierungen und die selbst geschriebenen InMemory-Implementierungen sind Adapter, die diese Interfaces implementieren. Den Persistence Stack zu tauschen erfordert, andere Adapter im Composition Root zu registrieren - nichts weiter. Die Handler müssen es nie wissen.
 
-Die HTTP-Boundary wird ähnlich durchgesetzt. API-Endpoints leben im `Api`-Projekt. `Application` hat keine Referenz auf `Api`. Ein Handler kann versehentlich kein `IResult` zurückgeben, keinen `HttpContext` referenzieren, nichts aus `Microsoft.AspNetCore` importieren. Das Domain Model ist sauber, nicht weil Entwickler daran denken, es sauber zu halten, sondern weil der Project-Graph es strukturell unmöglich macht, es zu verschmutzen.
+Die HTTP-Boundary wird ähnlich durchgesetzt. API-Endpoints leben im `Api`-Projekt. `Application` hat keine Referenz auf `Api`. Ein Handler kann versehentlich kein `IResult` zurückgeben, keinen `HttpContext` referenzieren, nichts aus `Microsoft.AspNetCore` importieren. Das Domain Model bleibt sauber, weil der Project-Graph es strukturell gar nicht anders zulässt. Es hängt nicht daran, dass jemand daran denkt.
 
 ## Der Preis
 

@@ -6,14 +6,14 @@ readMin: 3
 draft: false
 ---
 
-MetricGate V1 ist fertig. Ein Backend, das in Echtzeit entscheidet, ob ein API-Call erlaubt ist - mit Tenant-Hierarchien, Cache-Invalidierungskaskaden, Event-Driven-Persistence. Das, was ich in einem früheren Post als nächste Baustelle identifiziert hatte: echtes Auth, Caching, das seinen Platz verdient, verteilte Systeme-Patterns ohne Abstraktions-Schicht darunter. Es ist genau das geworden.
+MetricGate V1 ist fertig. Ein Backend, das in Echtzeit entscheidet, ob ein API-Call erlaubt ist, mit Tenant-Hierarchien, Cache-Invalidierungskaskaden und Event-Driven-Persistence. In einem früheren Post hatte ich aufgeschrieben, was mir fehlt: echtes Auth, Caching, das seinen Platz verdient, verteilte Systeme-Patterns ohne Abstraktions-Schicht darunter. Genau das ist es geworden.
 
-Was ich nicht erwartet hatte: wo die schwierige Arbeit tatsächlich saß. Ich hatte angenommen, es wäre das Implementieren - das Tippen, das Verdrahten, das Debuggen. Das war es nicht. Die schwierige Arbeit war das Entscheiden. Service-Grenzen ziehen, bevor man weiß, ob sie halten. Wählen, wann synchron und wann asynchron - nicht weil ein Pattern schön klingt, sondern weil eine falsche Wahl unter Last Konsequenzen hat, die man erst später sieht.
+Was ich nicht erwartet hatte, ist, wo die schwierige Arbeit tatsächlich saß. Ich war davon ausgegangen, dass es das Implementieren ist, also das Tippen, das Verdrahten, das Debuggen. War es nicht. Die schwierige Arbeit war das Entscheiden. Service-Grenzen ziehen, bevor man weiß, ob sie halten. Wählen, wann synchron und wann asynchron, wohl wissend, dass eine falsche Wahl unter Last Konsequenzen hat, die man erst spät zu sehen bekommt.
 
-**Das ist die Kategorie von Lernen, für die ich das Projekt gebaut habe.** Nicht "ich kann das jetzt tippen", sondern "ich verstehe, warum das hier so und nicht anders sein muss."
+Für diese Art von Lernen hatte ich das Projekt gebaut. Nicht „ich kann das jetzt tippen", sondern „ich verstehe, warum es hier so und nicht anders sein muss."
 
-Das Projekt entstand mit Claude Code als Implementierungshilfe. Der Aufwand verschiebt sich dabei nach oben, nicht weg - weniger Tippen, mehr Beurteilen. Was ich gemerkt habe: wenn das Tippen wegfällt, bleibt das Denken übrig. Und das Schreiben der Architekturentscheidungen ist kein Overhead - es ist der Beweis, dass man die Entscheidung tatsächlich besitzt und nicht nur durchgewunken hat.
+Entstanden ist es mit Claude Code als Implementierungshilfe. Der Aufwand verschiebt sich dabei nach oben, weniger Tippen, mehr Beurteilen. Wenn das Tippen wegfällt, bleibt das Denken übrig. Und das Schreiben der Architekturentscheidungen ist für mich kein Overhead, sondern die Probe darauf, ob ich eine Entscheidung wirklich verstanden oder nur abgenickt habe.
 
-Was mich überrascht hat, war das Tempo. Phasen, die ich als Zwei-Wochen-Blöcke geplant hatte, kollabierten in einzelne Sessions. Das sagt etwas darüber, wie ich Projekte in Zukunft plane - und wie wenig Kalenderzeit mit tatsächlichem Aufwand zu tun hat, wenn man fokussiert arbeitet.
+Überrascht hat mich das Tempo. Phasen, die ich als Zwei-Wochen-Blöcke geplant hatte, kollabierten in einzelne Sessions. Das ändert etwas daran, wie ich Projekte künftig plane, und es hat mir gezeigt, wie wenig Kalenderzeit mit tatsächlichem Aufwand zu tun hat, wenn man konzentriert arbeitet.
 
-V2 ist das Frontend dazu: Angular, TypeScript. Bevor ich da anfange, erst mal einen Moment stehen lassen, was fertig ist.
+V2 ist das Frontend dazu: Angular, TypeScript. Bevor ich da anfange, lasse ich einen Moment stehen, was fertig ist.

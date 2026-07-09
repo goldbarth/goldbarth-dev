@@ -8,7 +8,7 @@ draft: false
 
 Ein Import-Job lebt eine Weile. Er wird erstellt, von einem Worker aufgenommen, geparst, validiert, Chunk für Chunk verarbeitet und landet schließlich in einem von mehreren Terminal States. Unterwegs können Dinge auf unterschiedliche Weise schiefgehen - Validation kann fehlschlagen, Processing kann fehlschlagen, der Worker kann abstürzen und den Job gestrandet hinterlassen.
 
-Der naive Ansatz ist ein `Status`-Enum und verstreute `if`-Checks. Das funktioniert, bis jemand einen neuen Status hinzufügt, oder ein Bug `Succeeded` von `Received` setzt, ohne Processing zu durchlaufen, oder ein Requeue-Pfad `Validating` versehentlich überspringt. Der State wird implizit, über Handler verteilt.
+Der einfachste Ansatz ist ein `Status`-Enum und ein paar `if`-Checks an den Stellen, wo der Status wechselt. Das trägt eine Weile. Es hört auf zu tragen, sobald ein neuer Status dazukommt, ein Bug `Succeeded` direkt aus `Received` setzt, ohne Processing zu durchlaufen, oder ein Requeue-Pfad `Validating` überspringt. Der State ist dann implizit und über die Handler verteilt.
 
 ## Neun States, aufgezählte Transitions
 
@@ -79,14 +79,14 @@ Processing → PartiallySucceeded
 
 Und neue Fragen: Ist ein partially succeeded Job retryable? Wenn er requeued wird, verarbeiten wir nur die fehlgeschlagenen Chunks neu? (Nein - das aktuelle Design verarbeitet alles neu und verlässt sich auf `DeliveryItem`-Idempotency.) Kann ein partially succeeded Job dead-lettered werden? (Ja, wenn er oft genug fehlschlägt.)
 
-Die Lektion: Terminal- und Near-Terminal-States von Anfang an explizit modellieren. Sie später hinzuzufügen zwingt dazu, die Transition-Tabelle, das Dead-Letter-Schema, die Requeue-Logik und die UI-Filter gleichzeitig zu überarbeiten.
+Beim nächsten Mal modelliere ich Terminal- und Near-Terminal-States von Anfang an explizit. Sie später hinzuzufügen zwang mich dazu, die Transition-Tabelle, das Dead-Letter-Schema, die Requeue-Logik und die UI-Filter gleichzeitig zu überarbeiten.
 
 ## Was das bringt
 
-Die explizite State Machine hat zwei Dinge dramatisch einfacher gemacht:
+Zwei Dinge sind durch die explizite State Machine deutlich einfacher geworden.
 
-**Recovery-Logik ist offensichtlich.** Als ich die Stale-Lock-Recovery schrieb - Outbox-Einträge von abgestürzten Workers zurückfordern - hat mir die State Machine genau gesagt, welche Job-States für Reclaim berechtigt sind. Ich musste nicht darüber nachdenken.
+Die Recovery-Logik ergab sich von selbst. Als ich die Stale-Lock-Recovery schrieb, also das Zurückfordern von Outbox-Einträgen abgestürzter Workers, konnte ich in der Transition-Tabelle nachsehen, welche Job-States für einen Reclaim in Frage kommen. Ich musste es nicht neu herleiten.
 
-**Testing ist mechanisch.** Jede Transition ist eine einzelne Assertion. Der Happy Path, der Sad Path und die ungültigen Transitions sind allesamt nur Tabellen-Lookups. Die Domain-Tests lesen sich wie eine Spezifikation.
+Das Testen wurde mechanisch. Jede Transition ist eine einzelne Assertion. Happy Path, Sad Path und die ungültigen Transitions sind alle nur Tabellen-Lookups. Die Domain-Tests lesen sich wie eine Spezifikation.
 
 Der Preis ist Ausführlichkeit. Neun States und ~23 Transitions sind viel zum Aufzählen. Für eine einfachere Pipeline mit drei States wäre das Overkill. Für ein System, in dem Korrektheit und Nachvollziehbarkeit mehr zählen als Kürze, ist es jede Zeile wert.

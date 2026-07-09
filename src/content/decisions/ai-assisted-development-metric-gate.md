@@ -62,7 +62,7 @@ Die Arbeit passiert in **dichten Bursts an einzelnen Tagen**, nicht über Kalend
 
 ## Der Trade-off
 
-**Die Beschleunigung ist reine Build-Zeit, nicht Lernzeit.** Das ist der zentrale Vorbehalt.
+Die Beschleunigung betrifft die Build-Zeit und nicht die Lernzeit. Das ist der zentrale Vorbehalt dieser Rechnung.
 
 - **Kosten - weniger Low-Level-Wiederholung.** Wiring-Implementierungen schnell generieren zu lassen heißt weniger Reps der tastatur-nahen technischen Tiefe - das Muskelgedächtnis, das beim Tippen von Boilerplate, beim Kampf mit dem Compiler und beim Debuggen eigener Fehler entsteht. Diese praktische Tiefe ist dünner, als sie nach 300 h manueller Arbeit wäre.
 

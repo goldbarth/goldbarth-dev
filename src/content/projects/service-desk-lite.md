@@ -18,9 +18,9 @@ Vollständige Dokumentation und alle 25 ADRs: [goldbarth.github.io/ServiceDeskLi
 
 ## Problem / Motivation
 
-Ich habe Codebases gesehen, wo Clean Architecture der erklärte Ansatz war, die Dependency-Regeln aber nur in Diagrammen und Code Reviews existierten. Irgendetwas ist immer durchgesickert. Infrastructure-Typen, die in Domain-Methoden auftauchen. HTTP-Belange, die sich in Use Cases einschleichen. Nicht durch Unachtsamkeit - sondern weil Naming Conventions und Reviewer-Aufmerksamkeit schwache Enforcement-Mechanismen sind. Der Compiler erzwingt nichts.
+Clean Architecture beschreibt eine Regel: Abhängigkeiten zeigen nach innen. Was die Regel nicht mitliefert, ist der Mechanismus, der sie durchsetzt. Diagramme und Code Reviews sind eine Möglichkeit, und sie können das tragen. Mich hat interessiert, wie es aussieht, wenn stattdessen der Build die Regel übernimmt.
 
-Ich wollte etwas bauen, wo die Dependency-Richtung durch Project-References erzwungen wird, nicht durch Vertrauen. Wo die Antwort auf „Kann der Domain Layer die Datenbank sehen?" lautet: „Er hat keine Reference auf das Projekt" - nicht: „Er sollte es nicht, und wir prüfen das im Code Review."
+Also habe ich etwas gebaut, wo die Dependency-Richtung durch Project-References erzwungen wird. Wo die Antwort auf „Kann der Domain Layer die Datenbank sehen?" lautet: „Er hat keine Reference auf das Projekt."
 
 ServiceDeskLite ist dieses Experiment. Klein genug, um es vollständig im Kopf zu behalten, strikt genug strukturiert, dass die Architecture in den `.csproj`-Dateien lesbar ist.
 
@@ -44,7 +44,7 @@ Sechs Projekte. Strikter Dependency-Flow nach innen.
 
 Die Domain kennt nichts außer sich selbst. Der Application Layer kennt die Domain und definiert Port-Interfaces für Persistence. Infrastructure implementiert diese Ports. Die API verdrahtet alles über Minimal API Endpoints, die Handler direkt aus DI injizieren - kein Mediator, kein Dispatch Layer.
 
-Zwei Persistence-Implementierungen leben hinter denselben `ITicketRepository`- und `IUnitOfWork`-Ports: eine EF Core-gestützte PostgreSQL-Implementierung, ein selbst geschriebener `ConcurrentDictionary` Store. Beide halten dieselbe Unit-of-Work Commit-Boundary ein. Wechseln ist ein Config-Wert. Der Swap beweist, dass die Port-Boundaries halten - nicht in Prosa, in laufenden Tests.
+Zwei Persistence-Implementierungen leben hinter denselben `ITicketRepository`- und `IUnitOfWork`-Ports: eine EF Core-gestützte PostgreSQL-Implementierung, ein selbst geschriebener `ConcurrentDictionary` Store. Beide halten dieselbe Unit-of-Work Commit-Boundary ein. Wechseln ist ein Config-Wert. Der Swap zeigt in laufenden Tests, dass die Port-Boundaries halten.
 
 Jeder Handler gibt `Result<T>` zurück - wirft nie für erwartete Fehler. Der API Layer mappt Error-Typen an einer Stelle auf HTTP-Statuscodes. RFC 9457 `ProblemDetails` ist der Error-Contract über die gesamte API-Oberfläche.
 
@@ -75,6 +75,6 @@ Der andere anhaltende Reibungspunkt war das `Contracts`-Projekt. Versionierte Re
 
 Die Architecture rechtfertigt ihren Aufwand sofort im Testing. Handler laufen unter `xUnit` - kein Web-Host, kein Middleware, keine Datenbank. Handler injizieren, `HandleAsync` aufrufen, Ergebnis prüfen. Der Result-Typ macht Assertions sauber - keine try/catch-Blöcke, keine Exception-Inspektion. Die Integration-Suite führt beide Persistence-Provider durch dieselben Test-Cases, per `[ProviderMatrix]` Attribute.
 
-Der Persistence-Swap war die klarste Validierung. `PERSISTENCE__PROVIDER=InMemory` in Development, `Postgres` in CI. Derselbe Handler-Code, dieselben Test-Cases, beide grün. Das ist Architecture, die funktioniert. Nicht beschrieben als funktionierend - demonstriert.
+Der Persistence-Swap war die klarste Validierung. `PERSISTENCE__PROVIDER=InMemory` in Development, `Postgres` in CI. Derselbe Handler-Code, dieselben Test-Cases, beide grün. Damit ist die Aussage der Architecture überprüft und nicht nur aufgeschrieben.
 
 Würde ich es nochmal bauen, würde ich das `Contracts`-Projekt früher einführen und härter darüber nachdenken, was Version-Stabilität für ein Referenz-Projekt bedeutet. Das Versioning-Zeremoniell (`V1` Namespace, explizites Mapping) ist korrekte Praxis, aber es erzeugt Rauschen, wenn die API-Oberfläche sich nicht tatsächlich weiterentwickelt. Für einen zweiten Milestone, der Breaking API Changes einführt, wird es sich vollständig rechtfertigen.

@@ -6,9 +6,9 @@ readMin: 3
 draft: false
 ---
 
-Exceptions sind ein Control-Flow-Mechanismus, den C# für Fehler verwendet. Sie sind auch in Method-Signaturen unsichtbar. Eine Methode, die `ImportJob` zurückgibt, könnte `ValidationException`, `NotFoundException`, `ConflictException` werfen oder gar nichts - man kann es der Signatur nicht ansehen. Man erfährt es zur Laufzeit, beim Lesen der Implementierung oder beim Anschauen der Tests, falls sie existieren.
+Wenn eine Methode fehlschlagen kann, sieht man ihr das nicht an. Eine Signatur, die `ImportJob` zurückgibt, sagt nichts darüber, ob unterwegs eine `ValidationException`, eine `NotFoundException` oder ein `Conflict` auftaucht. Man erfährt es zur Laufzeit, beim Lesen der Implementierung oder beim Durchgehen der Tests.
 
-Für eine Pipeline, wo jeder Handler auf mehrere unterschiedliche Arten fehlschlagen kann, fühlte sich das wie der falsche Trade-off an.
+In C# ist das der Normalfall, weil Exceptions der übliche Weg für Fehler sind. Für eine Pipeline, in der jeder Handler auf mehrere unterschiedliche Arten fehlschlagen kann, fühlte sich dieser Trade-off falsch an. Ich wollte die Fehlerfälle dort haben, wo man sie sieht, ohne den Code zu öffnen.
 
 ## Was Result\<T\> macht
 
@@ -68,7 +68,7 @@ Der andere Preis: `Result<T>` ist für erwartete Failure-Modes - die Error-Cases
 
 Der Infrastructure Layer wirft. `NpgsqlException` bei Verbindungsfehlern, `TimeoutException` bei Query-Timeouts - diese propagieren als Exceptions und werden vom Retry-Orchestrator des Workers gefangen. Der `IExceptionClassifier`-Service klassifiziert sie dann als `Transient` oder `Permanent`, was bestimmt, ob retried oder dead-lettered wird.
 
-Das ist die richtige Aufteilung. Infrastructure-Fehler sind tatsächlich exceptional - unerwartet, nicht Teil des Business-Logic-Contracts. Der Application Layer muss sie nicht behandeln; die Worker-Orchestrierung tut es. Sie in `Result<T>` einzumischen würde jeden Handler mit Infrastructure-Awareness verschmutzen.
+Diese Aufteilung trägt bisher gut. Infrastructure-Fehler sind tatsächlich exceptional, also unerwartet und kein Teil des Business-Logic-Contracts. Der Application Layer muss sie nicht behandeln, die Worker-Orchestrierung tut es. Sie in `Result<T>` einzumischen würde jeden Handler mit Infrastructure-Awareness belasten.
 
 ## Der Nettoeffekt
 
@@ -81,4 +81,4 @@ Task<Result<ImportJobResponse>> Handle(CreateImportJobCommand command, Cancellat
 
 Der API Layer macht eine Sache: Error-Typen auf HTTP-Codes mappen. Keine Exception-Filter, kein `catch (SpecificException)` in Controllern, keine Überraschungen durch Exception-Hierarchy-Mismatches.
 
-Ob es das wert ist, hängt vom Team-Kontext ab. Für ein Solo-Portfolio-Projekt ist die Explizitheit ihre eigene Belohnung - sie hat mich gezwungen, jeden Failure-Mode durchzudenken, bevor ich die Implementierung schrieb.
+Ob es das wert ist, hängt vom Team-Kontext ab. In diesem Projekt hat sich die Explizitheit für mich ausgezahlt, weil sie mich gezwungen hat, jeden Failure-Mode durchzudenken, bevor ich die Implementierung schrieb.

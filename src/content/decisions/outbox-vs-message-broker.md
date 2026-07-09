@@ -12,7 +12,7 @@ Die offensichtliche Antwort ist ein Message Broker. Message publizieren, Worker 
 
 ## Das Problem mit "Publish Then Commit"
 
-Es gibt ein Pattern, das vernünftig klingt: optimistisch an den Broker publizieren, und wenn der Broker fehlschlägt, die Database-Transaction zurückrollen. Das Problem ist, dass auch Rollback nicht garantiert ist. Wenn das Broker-Publish erfolgreich ist, aber der Database-Commit fehlschlägt, empfängt der Worker eine Message für einen Job, der nicht existiert. Man hat jetzt Phantom-Arbeit publiziert.
+Ein naheliegender Ausweg: optimistisch an den Broker publizieren, und wenn der Broker fehlschlägt, die Database-Transaction zurückrollen. Das hilft nur, solange der Rollback selbst garantiert ist, und das ist er nicht. Wenn das Broker-Publish erfolgreich ist, aber der Database-Commit fehlschlägt, empfängt der Worker eine Message für einen Job, der nicht existiert. Man hat jetzt Phantom-Arbeit publiziert.
 
 Das Dual-Write-Problem hat keine saubere Lösung, ohne entweder Eventual Consistency zu akzeptieren oder einen Koordinationsmechanismus hinzuzufügen. Für eine Pipeline, in der jeder Job genau einmal verarbeitet werden muss, ist beides nicht akzeptabel.
 
