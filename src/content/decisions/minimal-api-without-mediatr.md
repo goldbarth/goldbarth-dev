@@ -6,17 +6,17 @@ readMin: 3
 draft: false
 ---
 
-Zwei Fragen prägen den API Host in den meisten .NET-Projekten: welches Routing-Modell und ob eine Mediator-Library verwendet werden soll. ServiceDeskLite beantwortet beide bewusst: Minimal API, und kein Mediator.
+Wenn ein Request ankommt, muss irgendetwas den Code aufrufen, der die Arbeit erledigt. Man kann diesen Aufruf direkt hinschreiben. Oder man legt eine Vermittlungsschicht dazwischen, die selbst herausfindet, welcher Code zuständig ist. In .NET heißt diese Schicht meistens MediatR.
 
-Beides ist in vielen Architekturen nicht die Standardwahl. MediatR im Besonderen ist zu einer Art Konvention geworden - früh hinzugefügt, überall verwendet, unabhängig davon, ob die Pipeline, die es ermöglicht, tatsächlich benötigt wird. Die Frage, mit der ich angefangen habe: Was fehlt, wenn ich es nicht hinzufüge?
+Für ServiceDeskLite habe ich den direkten Weg gewählt: Minimal API, und kein Mediator. Die Frage, mit der ich angefangen habe, war nicht, ob MediatR gut ist, sondern was mir fehlt, wenn ich es weglasse.
 
 ## Was MediatR hinzufügen würde
 
-MediatRs Kernwert ist `IPipelineBehavior<,>`. Cross-cutting Concerns - jeden Handler-Aufruf loggen, Validation vor jedem Command ausführen, Authentication durchsetzen - können einmal als Behaviour ausgedrückt und auf jeden Handler-Aufruf angewendet werden, ohne die Call-Site zu berühren.
+MediatRs Kernwert ist `IPipelineBehavior<,>`. Cross-cutting Concerns, also jeden Handler-Aufruf loggen, Validation vor jedem Command ausführen, Authentication durchsetzen, lassen sich einmal als Behaviour ausdrücken und auf jeden Handler-Aufruf anwenden, ohne die Call-Site zu berühren.
 
-Ohne MediatR leben diese Concerns auf Middleware-Ebene oder werden per Handler behandelt. Für ServiceDeskLites aktuelle Oberfläche - vier Ticket-Endpoints, ein Aggregate - gibt es keine Cross-cutting Handler-Concerns, die eine Pipeline brauchen. Logging wird von Serilog auf Middleware-Ebene behandelt. Validation ist per Handler. Authentication ist nicht im Scope.
+Ohne MediatR leben diese Concerns auf Middleware-Ebene oder werden pro Handler behandelt. Für ServiceDeskLites aktuelle Oberfläche, vier Ticket-Endpoints und ein Aggregate, gibt es keine Cross-cutting Handler-Concerns, die eine Pipeline brauchen. Logging übernimmt Serilog auf Middleware-Ebene. Validation liegt pro Handler. Authentication ist nicht im Scope.
 
-MediatR hinzuzufügen, bevor es etwas gibt, das in die Pipeline kommt, ist Infrastructure-Schuld, kein Kapital. Der Registration Layer, die `ISender`-Abstraktion, das Assembly-Scanning - alles davon ist Overhead für null aktuellen Nutzen.
+Solange nichts existiert, das in die Pipeline gehört, bringt MediatR mir hier nichts ein. Der Registration Layer, die `ISender`-Abstraktion, das Assembly-Scanning: alles Aufwand ohne aktuellen Gegenwert.
 
 ## Wie Handler stattdessen verdrahtet werden
 
@@ -36,16 +36,16 @@ group.MapPost("/", async (
 
 `CreateTicketHandler` ist als scoped Service in DI registriert. Der Endpoint ruft ihn direkt auf. Kein `ISender.Send(command)`, kein Mediator-Lookup, keine Dispatch-Indirektion.
 
-Die Call-Site ist explizit: Man kann einen Endpoint lesen und weiß genau, welchen Handler er aufruft. Es gibt keine Layer von convention-basiertem Dispatch, durch die man sich durcharbeiten muss.
+Die Call-Site ist explizit. Man liest einen Endpoint und weiß genau, welchen Handler er aufruft. Es gibt keine Layer von convention-basiertem Dispatch, durch die man sich durcharbeiten muss.
 
 ## Die CQRS-Frage
 
-ServiceDeskLite trennt Commands und Queries als unterschiedliche Typen mit unterschiedlichen Handlers - `CreateTicketHandler`, `GetTicketByIdHandler`, `UpdateTicketStatusHandler`, `GetTicketsHandler`. Das ist leichtgewichtiges CQRS: separate Read- und Write-Models auf Application-Layer-Ebene, mit expliziten Handler-Typen pro Use Case.
+ServiceDeskLite trennt Commands und Queries als unterschiedliche Typen mit unterschiedlichen Handlers: `CreateTicketHandler`, `GetTicketByIdHandler`, `UpdateTicketStatusHandler`, `GetTicketsHandler`. Das ist leichtgewichtiges CQRS, also separate Read- und Write-Models auf Application-Layer-Ebene, mit expliziten Handler-Typen pro Use Case.
 
-Es ist nicht die schwergewichtigere CQRS-Variante - keine MediatR-Request-Pipeline, keine separate Read-Datenbank, keine Event-Projektion. Die Read/Write-Boundary ist ohne die Infrastructure sichtbar. Leichtgewichtiges CQRS mit direkter Handler-Injektion ist ein anderer Punkt auf der Trade-off-Kurve als „vollständiges CQRS mit MediatR", und es lohnt sich, beides auseinanderzuhalten.
+Es ist nicht die schwergewichtigere Variante mit MediatR-Request-Pipeline, separater Read-Datenbank und Event-Projektion. Die Read/Write-Boundary ist hier auch ohne diese Infrastructure sichtbar. Leichtgewichtiges CQRS mit direkter Handler-Injektion liegt auf derselben Trade-off-Kurve wie „vollständiges CQRS mit MediatR", nur an einem anderen Punkt. Ich halte die beiden gern auseinander.
 
 ## Wann überdenken
 
-Es gibt zwei konkrete Auslöser. Erstens: ein Cross-cutting Concern, der gleichmäßig auf jeden Handler-Aufruf angewendet werden muss - Authentication-Enforcement, Retry-Logik, Distributed-Tracing-Spans. An diesem Punkt verdient `IPipelineBehavior<,>` seine Existenz und MediatR wird die richtige Antwort. Zweitens: die Endpoint-Oberfläche wächst so weit, dass jeder Endpoint mehrere Handler orchestriert, was die Parameter-Liste unhandlich macht. An diesem Punkt beginnen Controller oder ein Dispatcher, das Zeremoniell zu rechtfertigen.
+Es gibt zwei konkrete Auslöser. Erstens ein Cross-cutting Concern, der gleichmäßig auf jeden Handler-Aufruf angewendet werden muss: Authentication-Enforcement, Retry-Logik, Distributed-Tracing-Spans. An diesem Punkt verdient `IPipelineBehavior<,>` seine Existenz und MediatR wird die richtige Antwort. Zweitens eine Endpoint-Oberfläche, die so weit wächst, dass jeder Endpoint mehrere Handler orchestriert und die Parameter-Liste unhandlich wird. Dann rechtfertigt der zusätzliche Aufbau eines Controllers oder Dispatchers sich von selbst.
 
-Keines davon ist bisher passiert. Der Neubewertungspunkt ist explizit benannt, nicht auf unbestimmte Zeit verschoben - das ADR für diese Entscheidung listet die Auslöser auf. Wenn die Komplexität kommt, ist der Migrationspfad klar: Endpoints rufen `ISender.Send(command)` statt `handler.HandleAsync(command, ct)` auf. Die Handler selbst ändern sich nicht.
+Keines davon ist bisher passiert. Der Neubewertungspunkt ist explizit benannt und nicht auf unbestimmte Zeit verschoben, das ADR für diese Entscheidung listet die Auslöser auf. Wenn die Komplexität kommt, ist der Migrationspfad klar: Endpoints rufen `ISender.Send(command)` statt `handler.HandleAsync(command, ct)` auf. Die Handler selbst ändern sich nicht.

@@ -31,7 +31,7 @@ Die ursprüngliche Implementierung verwendete `Guid.NewGuid()`, das zufällige (
 
 `Guid.CreateVersion7()` - verfügbar seit .NET 9 - generiert zeitgeordnete UUIDs. Die höchstwertigen Bits codieren einen Millisekunden-Timestamp, sodass neue IDs immer am Ende des Index angehängt werden, statt an beliebigen Positionen eingefügt zu werden. Für PostgreSQL mit einem UUID Primary Key verbessern zeitgeordnete IDs die Insert-Performance unter Last und machen die Index-Lokalität vorhersehbar.
 
-Die Änderung war eine Zeile in `TicketId.New()`. Keine Consumer haben sich geändert. Das ist der Wert der Kapselung der Erstellungsstrategie.
+Die Änderung war eine Zeile in `TicketId.New()`. Kein Consumer musste angefasst werden. Genau dafür war die Erstellungsstrategie gekapselt.
 
 ## Layer Boundaries für ID-Typen
 

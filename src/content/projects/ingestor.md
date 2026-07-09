@@ -14,7 +14,7 @@ Ingestor ist eine production-grade Import-Pipeline für die fiktive Fleetholm-Lo
 
 Ich wollte ein Projekt, das mich zwingt, distributed systems Probleme in realistischem Maßstab durchzudenken - keine Lehrbuch-Beispiele, sondern etwas mit echten Failure-Modes: concurrent Workers, die um Jobs konkurrieren, Dateien, die zu groß sind, um sie atomar zu verarbeiten, Infrastructure-Fehler, die einen Retry verdienen, versus solche, die sofort fehlschlagen sollten, und die Frage, wie man an einen Message Broker publiziert, ohne eine Race Condition mit der eigenen Datenbank zu erzeugen.
 
-Jedes Production-System, über das ich gelesen habe, fügt irgendwann einen Outbox, eine State Machine und irgendeine Form von Idempotency hinzu. Ich wollte diese Dinge von Grund auf bauen und verstehen, *warum* jedes Pattern existiert - nicht nur, wie man es kopiert.
+Jedes Production-System, über das ich gelesen habe, fügt irgendwann einen Outbox, eine State Machine und irgendeine Form von Idempotency hinzu. Ich wollte diese Dinge von Grund auf bauen, um zu verstehen, *warum* jedes Pattern existiert.
 
 ## Architecture / Wichtige Entscheidungen
 

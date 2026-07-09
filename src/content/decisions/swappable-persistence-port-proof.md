@@ -16,7 +16,7 @@ EF Core liefert einen eingebauten `InMemory` Provider. Die offensichtliche Wahl 
 
 Im `InMemory` Provider von EF Core sind Writes sofort sichtbar, ohne `SaveChanges` aufzurufen. Uncommitted Adds sind vom selben Context und von anderen Operationen im selben Prozess lesbar. Für eine Codebase, in der die Unit-of-Work Commit-Boundary eine explizite architektonische Entscheidung ist - wo `SaveChangesAsync` der einzige Punkt ist, an dem pending Writes dauerhaft werden - macht dieses Verhalten die InMemory- und PostgreSQL-Pfade fundamental unterschiedlich. Ein Test, der gegen den EF Core InMemory Provider besteht, testet nicht dieselbe Commit-Semantik, die PostgreSQL durchsetzt.
 
-Wenn die zwei Provider sich unterschiedlich verhalten, ist der Swap nicht real. Es ist eine andere Applikation mit einem anderen Namen.
+Wenn die zwei Provider sich unterschiedlich verhalten, prüft der Swap nichts. Man betreibt dann zwei Applikationen und nennt sie gleich.
 
 ## Der selbst geschriebene Store
 
@@ -62,4 +62,4 @@ Kein stilles Fallback. Ein falsch konfiguriertes Deployment schlägt sofort mit 
 
 Die End-to-End-Test-Suite führt beide Provider per `[ProviderMatrix]` Attribute aus. Tests, die die Commit-Boundary abdecken - uncommitted Writes sind nicht lesbar, committed Writes sind es - laufen gegen beide Implementierungen und bestehen gegen beide.
 
-Der Swap beweist, dass die Port-Boundary real ist. Nicht in Dokumentation behauptet - in laufenden Tests demonstriert. Das ist der Unterschied zwischen einer Architecture, die hält, und einer, die es nur behauptet.
+Der Swap zeigt, dass die Port-Boundary real ist, und zwar in laufenden Tests statt in einem Absatz im README. Genau dafür habe ich die zweite Implementierung geschrieben.
