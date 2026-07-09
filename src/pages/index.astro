@@ -11,8 +11,8 @@ const featuredProjects = [
     title: 'ServiceDeskLite',
     slug: 'service-desk-lite',
     status: 'live' as const,
-    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling - jede architektonische Entscheidung dokumentiert und begründet. Der AI-Intake-Assistent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: ein Claude-Modell sucht, aktualisiert, schaltet Status und weist Tickets an Agenten aus einem Roster zu - und prüft per semantischer Suche (Voyage-Embeddings + pgvector) auf Duplikate, bevor es neue anlegt - als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM.',
-    stack: ['.NET 10', 'Postgres', 'pgvector', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API', 'Voyage AI'],
+    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling - jede architektonische Entscheidung als ADR dokumentiert. Der AI-Agent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: zwölf Tools, hybrides Retrieval (semantisch + Keyword via RRF), Knowledge-Base-Antworten mit zitierten Quellen und einem Grounding-Check gegen Halluzination. Eine Guard-Pipeline rate-limitet und budgetiert jeden Tool-Aufruf; ein autonomer Ticket-Worker arbeitet ungefragt weiter, legt aber jede folgenreiche Entscheidung einem Menschen vor. Alles als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM.',
+    stack: ['.NET 10', 'Postgres', 'pgvector', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API', 'Voyage AI', 'OpenTelemetry', 'Prometheus'],
     links: [
       { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
     ],
@@ -77,7 +77,7 @@ const writings = (
         für mich selbst auf - und für jeden, dem es weiterhilft.
       </p>
       <div class="intro__now">
-        <span>dometrain-kurs »deep dive: microsoft.extensions.ai in .net« · servicedesklite v1.2.0: assistant-werkzeugkasten + agenten-roster, semantische ticket-suche (rag)  · project hail mary von andy weirs gelesen</span>
+        <span>dometrain-kurs »deep dive: microsoft.extensions.ai in .net« · servicedesklite v1.6.0: autonomer ticket-worker hinter einem human-review-guard, agent-sandbox, observability · project hail mary von andy weirs gelesen</span>
       </div>
     </section>
 

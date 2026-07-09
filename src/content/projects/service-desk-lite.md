@@ -1,8 +1,9 @@
 ---
 title: "ServiceDeskLite"
-description: "Eine .NET 10 Clean Architecture Referenz - strikte Layer-Boundaries, compiler-enforced, zwei austauschbare Persistence-Adapter, ein AI-Intake-Assistent mit Tool Calling, Streaming und RAG als Edge-Adapter und jede Entscheidung als ADR dokumentiert."
+description: "Eine .NET 10 Clean Architecture Referenz - strikte Layer-Boundaries, compiler-enforced, zwei austauschbare Persistence-Adapter, ein AI-Agent mit Tool Calling, RAG, Sandbox und autonomem Ticket-Worker als Edge-Adapter, und jede Entscheidung als ADR dokumentiert."
 date: "2026-05-04"
-readMin: 7
+updated: "2026-07-09"
+readMin: 8
 draft: false
 ---
 
@@ -10,11 +11,13 @@ draft: false
 
 ServiceDeskLite ist ein Ticket-Workflow-Backend, gebaut auf .NET 10. Tickets durchlaufen eine Kanban-ähnliche State Machine - open, in progress, resolved, closed - mit expliziten Transition-Regeln, die auf Domain-Ebene durchgesetzt werden. Drei unabhängig testbare Layer: eine Domain, die nichts über HTTP oder Datenbanken weiß, ein Application Layer, der Use Cases orchestriert, und zwei austauschbare Persistence-Adapter hinter denselben Repository-Interfaces. Ein Blazor Server Frontend konsumiert die API über HTTP.
 
-Seit v1.1.0 gehört ein AI-Intake-Assistent dazu: Nutzer beschreiben ihr Problem in Freitext, ein Claude-Modell legt per Tool Calling das Ticket an - live gestreamt über SSE, ausgeführt ausschließlich durch die bestehenden Command-Handler. Inzwischen reicht sein Werkzeugkasten weiter: Tickets suchen, aktualisieren, im Workflow weiterschalten und an Agenten aus einem gepflegten Roster zuweisen - und vor dem Anlegen per semantischer Suche auf Duplikate prüfen (Retrieval über Voyage-Embeddings und pgvector, RAG im selben Agentic Loop).
+Seit v1.1.0 gehört ein AI-Assistent dazu, und aus dem Intake-Helfer ist inzwischen ein Agent geworden. Nutzer beschreiben ihr Problem in Freitext, ein Claude-Modell entscheidet per Tool Calling, was zu tun ist, und jeder Tool-Aufruf läuft durch dieselben Command-Handler wie die REST-API. Zwölf Tools stehen ihm offen: Tickets anlegen, suchen, aktualisieren, im Workflow weiterschalten, an Agenten aus einem Roster zuweisen, automatisch triagieren, kommentieren, die Knowledge Base durchsuchen, den eigenen Antwortentwurf gegen die zitierten Quellen prüfen, sich Dinge merken und wieder erinnern. Alles live über SSE gestreamt.
 
-Das Ziel ist keine Feature-Breite. Das Ziel ist strukturelle Klarheit - jede Layer-Boundary sichtbar und compiler-enforced, jede Entscheidung dokumentiert, jeder Trade-off begründet.
+Seit v1.6.0 wartet der Agent nicht mehr darauf, angesprochen zu werden. Ein Background-Worker sieht offene Tickets in Intervallen durch, fragt fehlende Informationen nach, parkt das Ticket solange, schlägt Lösungen auf Basis der Knowledge Base vor und legt jede folgenreiche Entscheidung einem Menschen vor. Es ist kein zweiter Agent: der Tool-Calling-Loop wurde aus dem Chat-Endpoint herausgezogen, Worker und Assistent teilen sich Loop, Tools, Guards und Handler.
 
-Vollständige Dokumentation und alle 25 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
+Die Oberfläche ist über die Releases breit geworden. Konstant geblieben ist, was darunter liegt: jede Layer-Boundary sichtbar und compiler-enforced, jede Entscheidung als ADR dokumentiert, jeder Trade-off begründet. Jedes neue Feature musste durch dieselben Grenzen, der Agent zuerst.
+
+Vollständige Dokumentation und alle 37 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
 
 ## Problem / Motivation
 
@@ -50,7 +53,13 @@ Jeder Handler gibt `Result<T>` zurück - wirft nie für erwartete Fehler. Der AP
 
 Der AI-Assistent ist die jüngste Belastungsprobe für diese Boundaries: Ein LLM ist ein externer, nicht-deterministischer Dienst, dessen Tool-Calls Domain-Zustand verändern wollen. Er lebt als Edge-Adapter im API-Projekt - Streaming und SSE-Framing sind Presentation-Concerns - und erreicht die Domain nur über dieselben Command-Handler wie die REST-Endpoints. Tool-Inputs werden wie untrusted Input behandelt: geparst und geprüft, bevor sie einen Handler sehen; abgelehnte Inputs gehen als Fehler-`tool_result` zurück, sodass das Modell sich in einer begrenzten Schleife selbst korrigiert. Domain und Application kompilieren ohne jede Anthropic-Referenz.
 
-Dieselbe Linie setzt die semantische Ticket-Suche fort: Embeddings sind abgeleiteter Infrastruktur-Zustand und leben in einer eigenen pgvector-Tabelle statt am Aggregate; ein Poll-basierter Background-Worker embedded asynchron (Content-Hash für Staleness), sodass der Ticket-Schreibpfad keine Netzwerk-Abhängigkeit bekommt. Das Retrieval selbst ist ein Tool des Modells - es entscheidet, wann gesucht wird, und der Duplikat-Check funktioniert cross-lingual. Ohne Voyage-Key oder auf dem InMemory-Provider meldet das Tool die Suche ehrlich als nicht verfügbar, statt leere Treffer vorzutäuschen.
+Dieselbe Linie setzt die semantische Ticket-Suche fort: Embeddings sind abgeleiteter Infrastruktur-Zustand und leben in einer eigenen pgvector-Tabelle statt am Aggregate; ein Poll-basierter Background-Worker embedded asynchron (Content-Hash für Staleness), sodass der Ticket-Schreibpfad keine Netzwerk-Abhängigkeit bekommt. Das Retrieval selbst ist ein Tool des Modells - es entscheidet, wann gesucht wird, und der Duplikat-Check funktioniert cross-lingual. Ohne Voyage-Key oder auf dem InMemory-Provider meldet das Tool die Suche als nicht verfügbar, statt leere Treffer vorzutäuschen.
+
+Aus dieser einen Suche ist ein Retrieval-System geworden. Die Ticket-Suche fusioniert semantische und Keyword-Treffer per Reciprocal Rank Fusion, weil Embeddings Paraphrasen finden und Substring-Suche Fehlercodes und Hostnamen. Eine zweite Korpus-Pipeline indiziert die Knowledge Base als Section-Chunks, und Antworten darauf streamen ihre Quellen als eigene `citation`-Events mit. Bevor das Modell eine so gebaute Antwort abschickt, lässt der Prompt es den eigenen Entwurf per `check_grounding` gegen genau die Passagen prüfen, die in diesem Turn abgerufen wurden. Ist die Deckung schwach, sucht es erneut, relativiert oder lässt die Behauptung weg.
+
+Der Agent ist eingezäunt. Jeder Tool-Aufruf passiert eine Guard-Pipeline an der einen Stelle, an der aus Modellabsicht Ausführung wird: unbekannte Tool-Namen werden abgelehnt, Argumentgrößen gedeckelt, Schreibzugriffe pro Turn budgetiert, Tool-Calls und Modell-Roundtrips pro Owner rate-limited. Die Guards trennen `Check` von `Commit`, damit kein Rate-Limit-Token für einen Schreibzugriff verbraucht wird, den ein späterer Guard ohnehin ablehnt. Eine Ablehnung ist kein Absturz, sondern kommt als gewöhnliches `is_error`-Tool-Ergebnis zurück, und das Modell erklärt dem Nutzer, was es nicht getan hat. Für den autonomen Worker verengt ein zusätzlicher Review-Guard diese Menge weiter: lesen darf er immer, kommentieren auch, triagieren und parken ebenfalls - alles andere landet bei einem Menschen.
+
+Was der Assistent tut, ist messbar. Ein Prometheus-Endpoint und OpenTelemetry-Traces liefern Tool-Latenzen, Fehlerraten, Token-Verbrauch und Retrieval-Confidence, gespeist aus einem einzigen Decorator über der Metrics-Sink, damit Dashboard und Prometheus nicht auseinanderlaufen können. Eine Kennzahl, die das System nicht messen kann, wird als unbekannt ausgewiesen und nicht als Null: ein System, das niemand benutzt hat, hat keine 0 % Automatisierung erreicht.
 
 → [Architecture, vom Compiler durchgesetzt](/decisions/clean-architecture-enforced-by-compiler)  
 → [Result Pattern an der Application Boundary](/decisions/result-pattern-application-boundary)  

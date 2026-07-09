@@ -2,7 +2,8 @@
 title: "AI-Assistant als Edge-Adapter"
 description: "Ein Claude-Modell legt Tickets an - per Tool Calling, live gestreamt. Die Frage dahinter ist eine Platzierungsfrage: Wo wohnt ein LLM in einer Clean Architecture?"
 date: 2026-07-02T21:30:00
-readMin: 4
+updated: 2026-07-09
+readMin: 5
 draft: false
 ---
 
@@ -55,3 +56,15 @@ Kein Application-Port, solange es keinen zweiten Konsumenten gibt. Keine Konvers
 Drei Auslöser sind im ADR festgehalten. Ein zweiter Konsument des Assistenten - ein Bot, ein Background-Job - wäre der Punkt, an dem der Application-Port seinen Nutzen bekommt. Sollen Gespräche über Sessions hinweg fortgesetzt werden, wandert der Zustand auf den Server, und der Vertrag ändert sich mit. Und wächst die Zahl der Tools über eine Handvoll, beginnt sich der Registry-Mechanismus zu lohnen, der heute nur Aufwand wäre.
 
 Bis dahin bleibt es bei der Linie, auf die alle Teilentscheidungen einzahlen: Das Modell bleibt außerhalb der Architektur. Das macht den Assistenten nicht klüger - aber es sorgt dafür, dass seine Fehler als abgelehnte Anfragen enden und nicht als fehlerhafter Zustand.
+
+## Nachtrag, Juli 2026
+
+Zwei der drei Auslöser sind eingetreten, schneller als ich gedacht hatte.
+
+Der Gesprächszustand liegt nicht mehr im Browser. Ein `IConversationStore` hält ihn server-seitig, der Client schickt nur noch eine `conversationId` mit. Ausgelöst hat das nicht die Session-Frage aus dem Abschnitt oben, sondern ein Langzeitgedächtnis: Fakten, die über Gespräche hinweg gelten, brauchen einen Ort, und sobald es diesen Ort gibt, ist es merkwürdig, das Transkript weiterhin bei jedem Turn durchs Netz zu schicken. Der Absatz „Ein Detail am Rand" beschreibt damit einen Zustand, den es nicht mehr gibt. Was daran richtig bleibt, ist der Teil über die Zeit: Das Modell hat keinen Kalender, und Datum, Wochentag und Zeitzone werden ihm weiterhin pro Anfrage mitgegeben.
+
+Auch der zweite Konsument ist da. Ein autonomer Ticket-Worker arbeitet offene Tickets in Intervallen ab. Er hat keinen zweiten Loop bekommen, sondern denselben: der Tool-Calling-Loop wurde aus dem Chat-Endpoint herausgezogen, der Endpoint ist jetzt nur noch der SSE-Adapter davor. Das ist nicht ganz der Application-Port, den ich erwartet hatte, aber es ist derselbe Gedanke. Hätte ich einen zweiten Loop geschrieben, müsste jede Schranke zweimal gelten und würde beim zweiten Mal irgendwann vergessen.
+
+Bei zwölf Tools bleibt es dagegen bei expliziten Klassen. Die Registry, die ich für den wahrscheinlichsten der drei Auslöser gehalten hatte, ist die einzige, die nicht gekommen ist. Eine Guard-Pipeline vor der Ausführung hat sich als der wichtigere Mechanismus herausgestellt, weil man an ihr nicht vorbeibauen kann - anders als an einer Basisklasse, von der ein neues Tool schlicht nicht erbt.
+
+Die Linie selbst hat gehalten. Domain und Application kompilieren weiterhin ohne eine einzige Anthropic-Referenz.
