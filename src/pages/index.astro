@@ -11,7 +11,7 @@ const featuredProjects = [
     title: 'ServiceDeskLite',
     slug: 'service-desk-lite',
     status: 'live' as const,
-    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling - jede architektonische Entscheidung als ADR dokumentiert. Der AI-Agent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: zwölf Tools, hybrides Retrieval (semantisch + Keyword via RRF), Knowledge-Base-Antworten mit zitierten Quellen und einem Grounding-Check gegen Halluzination. Eine Guard-Pipeline rate-limitet und budgetiert jeden Tool-Aufruf; ein autonomer Ticket-Worker arbeitet ungefragt weiter, legt aber jede folgenreiche Entscheidung einem Menschen vor. Alles als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM.',
+    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling - jede architektonische Entscheidung als ADR dokumentiert. Der AI-Agent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: zwölf Tools, hybrides Retrieval (semantisch + Keyword via RRF), Knowledge-Base-Antworten mit zitierten Quellen und einem Grounding-Check, den der Loop erzwingt statt erbittet - und der Bedeutung bewertet, nicht Wortüberlappung. Eine Guard-Pipeline rate-limitet und budgetiert jeden Tool-Aufruf; ein autonomer Ticket-Worker arbeitet ungefragt weiter, legt aber jede folgenreiche Entscheidung einem Menschen vor. Alles als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM. Aktuell bekommt das Blazor-Frontend ein Redesign: ein Token-System als Single Source für Farben und Skalen, Light- und Dark-Scheme aus einem Emitter, Chips mit Icon statt Farbe allein und ein Chat, der Markdown sanitized rendert.',
     stack: ['.NET 10', 'Postgres', 'pgvector', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API', 'Voyage AI', 'OpenTelemetry', 'Prometheus'],
     links: [
       { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
@@ -70,14 +70,13 @@ const writings = (
         Consistency: solide Grundlagen, auf denen sich bauen lässt.
       </p>
       <p>
-        Gerade wächst daraus etwas Neues. Ich arbeite mich in LLMs und AI Engineering
+        Gerade entsteht daraus etwas Neues. Ich arbeite mich in LLMs und AI Engineering
         ein, aufbauend auf dem Backend. Hier sammle ich, was ich dabei lerne:
         Überlegungen hinter Entscheidungen, offene Fragen und die Projekte, an denen
-        ich das ausprobiere. Vieles davon ist noch unfertig. Ich schreibe es vor allem
-        für mich selbst auf - und für jeden, dem es weiterhilft.
+        ich das ausprobiere.
       </p>
       <div class="intro__now">
-        <span>dometrain-kurs »deep dive: microsoft.extensions.ai in .net« · servicedesklite v1.6.0: autonomer ticket-worker hinter einem human-review-guard, agent-sandbox, observability · project hail mary von andy weirs gelesen</span>
+        <span>servicedesklite v1.8.0: grounding als mechanismus statt prompt-bitte, ehrliche writes · m9 frontend-redesign läuft: design tokens, dark mode, chips mit icons · der astronaut (project hail mary) von andy weirs absolut genossen</span>
       </div>
     </section>
 

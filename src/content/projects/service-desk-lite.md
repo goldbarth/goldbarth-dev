@@ -2,7 +2,7 @@
 title: "ServiceDeskLite"
 description: "Eine .NET 10 Clean Architecture Referenz - strikte Layer-Boundaries, compiler-enforced, zwei austauschbare Persistence-Adapter, ein AI-Agent mit Tool Calling, RAG, Sandbox und autonomem Ticket-Worker als Edge-Adapter, und jede Entscheidung als ADR dokumentiert."
 date: "2026-05-04"
-updated: "2026-07-09"
+updated: "2026-07-13"
 readMin: 8
 draft: false
 ---
@@ -15,9 +15,13 @@ Seit v1.1.0 gehört ein AI-Assistent dazu, und aus dem Intake-Helfer ist inzwisc
 
 Seit v1.6.0 wartet der Agent nicht mehr darauf, angesprochen zu werden. Ein Background-Worker sieht offene Tickets in Intervallen durch, fragt fehlende Informationen nach, parkt das Ticket solange, schlägt Lösungen auf Basis der Knowledge Base vor und legt jede folgenreiche Entscheidung einem Menschen vor. Es ist kein zweiter Agent: der Tool-Calling-Loop wurde aus dem Chat-Endpoint herausgezogen, Worker und Assistent teilen sich Loop, Tools, Guards und Handler.
 
+Mit v1.8.0 wurden die Sicherheitseigenschaften des Agenten von Prompt-Zeilen zu Mechanismen. Der Grounding-Check ist keine Bitte mehr, der das Modell folgen kann oder nicht: Sobald Knowledge-Base-Passagen abgerufen wurden, erzwingt der Loop die Prüfung per `tool_choice`, bevor das erste Token streamt. Und der Check bewertet Bedeutung statt Wortüberlappung - eine korrekte Paraphrase oder eine deutsche Antwort auf eine englische Quelle fällt nicht mehr durch die eigene Verifikation. Dazu eine Write-Honesty-Policy: Das Modell bestätigt keine Änderung mehr, die es nicht per Tool-Aufruf gemacht hat.
+
+Aktuell bekommt das Blazor-Frontend ein Redesign: ein Token-System als Single Source für Farben, Abstände und Radien - guarded durch Tests, die Stylesheets auf Literale scannen -, Light- und Dark-Scheme aus einem Emitter, Status- und Prioritäts-Chips mit Icon statt Farbe allein, und ein Chat, der Markdown rendert, nachdem es sanitized wurde.
+
 Die Oberfläche ist über die Releases breit geworden. Konstant geblieben ist, was darunter liegt: jede Layer-Boundary sichtbar und compiler-enforced, jede Entscheidung als ADR dokumentiert, jeder Trade-off begründet. Jedes neue Feature musste durch dieselben Grenzen, der Agent zuerst.
 
-Vollständige Dokumentation und alle 37 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
+Vollständige Dokumentation und alle 40 ADRs: [goldbarth.github.io/ServiceDeskLite](https://goldbarth.github.io/ServiceDeskLite/)
 
 ## Problem / Motivation
 
@@ -55,7 +59,7 @@ Der AI-Assistent ist die jüngste Belastungsprobe für diese Boundaries: Ein LLM
 
 Dieselbe Linie setzt die semantische Ticket-Suche fort: Embeddings sind abgeleiteter Infrastruktur-Zustand und leben in einer eigenen pgvector-Tabelle statt am Aggregate; ein Poll-basierter Background-Worker embedded asynchron (Content-Hash für Staleness), sodass der Ticket-Schreibpfad keine Netzwerk-Abhängigkeit bekommt. Das Retrieval selbst ist ein Tool des Modells - es entscheidet, wann gesucht wird, und der Duplikat-Check funktioniert cross-lingual. Ohne Voyage-Key oder auf dem InMemory-Provider meldet das Tool die Suche als nicht verfügbar, statt leere Treffer vorzutäuschen.
 
-Aus dieser einen Suche ist ein Retrieval-System geworden. Die Ticket-Suche fusioniert semantische und Keyword-Treffer per Reciprocal Rank Fusion, weil Embeddings Paraphrasen finden und Substring-Suche Fehlercodes und Hostnamen. Eine zweite Korpus-Pipeline indiziert die Knowledge Base als Section-Chunks, und Antworten darauf streamen ihre Quellen als eigene `citation`-Events mit. Bevor das Modell eine so gebaute Antwort abschickt, lässt der Prompt es den eigenen Entwurf per `check_grounding` gegen genau die Passagen prüfen, die in diesem Turn abgerufen wurden. Ist die Deckung schwach, sucht es erneut, relativiert oder lässt die Behauptung weg.
+Aus dieser einen Suche ist ein Retrieval-System geworden. Die Ticket-Suche fusioniert semantische und Keyword-Treffer per Reciprocal Rank Fusion, weil Embeddings Paraphrasen finden und Substring-Suche Fehlercodes und Hostnamen. Eine zweite Korpus-Pipeline indiziert die Knowledge Base als Section-Chunks, und Antworten darauf streamen ihre Quellen als eigene `citation`-Events mit. Bevor eine so gebaute Antwort den Nutzer erreicht, prüft `check_grounding` den Entwurf gegen genau die Passagen, die in diesem Turn abgerufen wurden - erzwungen vom Loop, nicht erbeten vom Prompt: Hat das Modell nach einem Retrieval nicht selbst geprüft, schaltet `tool_choice` den Check zwangsweise dazwischen. Bewertet wird semantisch, per Embedding-Ähnlichkeit statt Wortzählung. Ist die Deckung schwach, sucht das Modell erneut, relativiert oder lässt die Behauptung weg.
 
 Der Agent ist eingezäunt. Jeder Tool-Aufruf passiert eine Guard-Pipeline an der einen Stelle, an der aus Modellabsicht Ausführung wird: unbekannte Tool-Namen werden abgelehnt, Argumentgrößen gedeckelt, Schreibzugriffe pro Turn budgetiert, Tool-Calls und Modell-Roundtrips pro Owner rate-limited. Die Guards trennen `Check` von `Commit`, damit kein Rate-Limit-Token für einen Schreibzugriff verbraucht wird, den ein späterer Guard ohnehin ablehnt. Eine Ablehnung ist kein Absturz, sondern kommt als gewöhnliches `is_error`-Tool-Ergebnis zurück, und das Modell erklärt dem Nutzer, was es nicht getan hat. Für den autonomen Worker verengt ein zusätzlicher Review-Guard diese Menge weiter: lesen darf er immer, kommentieren auch, triagieren und parken ebenfalls - alles andere landet bei einem Menschen.
 
@@ -69,6 +73,14 @@ Was der Assistent tut, ist messbar. Ein Prometheus-Endpoint und OpenTelemetry-Tr
 → [Stark typisierte Domain-IDs](/decisions/strongly-typed-domain-ids)  
 → [AI-Assistant als Edge-Adapter](/decisions/ai-assistant-edge-adapter)  
 → [Semantische Ticket-Suche - RAG als Werkzeug des Modells](/decisions/semantic-ticket-search-rag)  
+
+## Testergebnisse, Probleme und Lösungen
+
+→ [Das übersprungene Tool - eine Beschreibung, die das Wann verschweigt](/decisions/when-to-call-tool-descriptions)  
+→ [Markdown rendern heißt: fremden Text ausführen lassen](/decisions/assistant-markdown-untrusted-input)  
+→ [Markdown im Stream - rendern, wenn der Satz zu Ende ist](/decisions/streaming-markdown-half-open-dom)  
+→ [Der Prompt sagt verschweigen, die UI zeigt es an](/decisions/grounding-score-out-of-chat)  
+→ [Drei Chips, drei Wahrheiten - und ein Mapping, das sie wieder eint](/decisions/ticket-signals-one-mapping)
 
 ## Herausforderungen
 
