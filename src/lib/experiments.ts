@@ -21,6 +21,11 @@ export function entriesOf(slug: string, entries: Entry[]): Entry[] {
     .sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
 }
 
+/** The date the experiment opened, for the one-line summary on a card. */
+export function startedAt(exp: Experiment): Date | null {
+  return exp.data.log.find((l) => l.state === 'started')?.date ?? null;
+}
+
 /** Maps a status to the dot/block modifier suffix used across the styles. */
 export function statusClass(status: Status): 'running' | 'partial' | 'concluded' {
   return status === 'partial answer' ? 'partial' : status;
@@ -37,6 +42,13 @@ export function fullLog(exp: Experiment): { label: string; date: Date | null }[]
     { label: 'partial answer', date: at('partial answer') },
     { label: 'concluded', date: at('concluded') },
   ];
+}
+
+/** Minutes at 200 words, rounded up, never zero. Read off the raw body, so
+ *  fences and front matter markers count as the words they are. */
+export function readingTime(body: string): number {
+  const words = body.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
 }
 
 /** yyyy-mm-dd, the one date format used everywhere. */
