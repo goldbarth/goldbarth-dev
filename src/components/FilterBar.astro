@@ -17,7 +17,7 @@ const states = ['running', 'partial answer', 'concluded'];
     <button class="filter__btn" type="button" data-kind="status" data-filter={state}>{state}</button>
   ))}
 
-  <span class="sep" aria-hidden="true">|</span>
+  {tags.length > 0 && <span class="sep" aria-hidden="true">|</span>}
   {tags.map((tag) => (
     <button class="filter__btn" type="button" data-kind="tag" data-filter={tag}>{tag}</button>
   ))}
