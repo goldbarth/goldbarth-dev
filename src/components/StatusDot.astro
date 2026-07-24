@@ -10,7 +10,7 @@ interface Props {
 const { status, label = false } = Astro.props;
 ---
 
-<span class="status">
+<span class={`status status--${statusClass(status)}`}>
   <span class={`dot dot--${statusClass(status)}`} aria-hidden="true"></span>
   {label && <span class="status__label">{status}</span>}
   {!label && <span class="sr-only">{status}</span>}
@@ -23,11 +23,17 @@ const { status, label = false } = Astro.props;
     gap: var(--sp-2);
   }
 
+  /* The word takes the colour of its dot. Written out, the state is the
+     brightest thing on the line it sits on, and that is the point. */
   .status__label {
     font-family: var(--font-mono);
     font-size: var(--fs-meta);
-    color: var(--meta);
+    white-space: nowrap;
   }
+
+  .status--running   .status__label { color: var(--st-running); }
+  .status--partial   .status__label { color: var(--st-partial); }
+  .status--concluded .status__label { color: var(--st-concluded); }
 
   .sr-only {
     position: absolute;

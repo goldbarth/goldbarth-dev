@@ -1,6 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Prompt from '../../components/Prompt.astro';
 import StatusDot from '../../components/StatusDot.astro';
 import StatusLog from '../../components/StatusLog.astro';
 import TagList from '../../components/TagList.astro';
@@ -32,24 +33,28 @@ const latestSlug = thread.at(-1)?.slug;
   <div class="page">
 
     <header class="head">
-      <h1 class="head__title">
-        <span class="dot dot--identity" aria-hidden="true"></span>
-        {title}
-      </h1>
+      <Prompt path={`experiments/${experiment.slug}`} />
 
-      <p class="head__status kicker">
-        <StatusDot status={status} />
-        {status}
-      </p>
+      <div class="head__top">
+        <h1 class="head__title">
+          <span
+            class={`dot ${status === 'running' ? 'dot--identity' : ''}`}
+            aria-hidden="true"></span>
+          {title}
+        </h1>
+        <StatusDot status={status} label />
+      </div>
 
-      <p class="head__frame measure">{frame}</p>
+      <p class="head__frame">{frame}</p>
 
       <TagList tags={tags} />
       <StatusLog experiment={experiment} />
     </header>
 
     <section class="thread">
-      <h2 class="thread__head kicker">entries</h2>
+      <h2 class="thread__head kicker">
+        entries <span class="sep">·</span> {thread.length}
+      </h2>
 
       {thread.length === 0 ? (
         <p class="thread__empty dim">Nothing written down yet.</p>
@@ -61,14 +66,14 @@ const latestSlug = thread.at(-1)?.slug;
               {entry.slug === latestSlug && (
                 <>
                   <span class="sep">·</span>
-                  <span class="item__badge">latest</span>
+                  <span>latest</span>
                 </>
               )}
             </p>
             <h3 class="item__title">
               <a href={`/log/${entry.slug}`}>{entry.data.title}</a>
             </h3>
-            <p class="item__teaser measure">{entry.data.teaser}</p>
+            <p class="item__teaser measure-frame">{entry.data.teaser}</p>
           </article>
         ))
       )}
@@ -79,10 +84,20 @@ const latestSlug = thread.at(-1)?.slug;
 
 <style>
   .head {
-    padding-top: var(--sp-6);
+    padding-top: var(--sp-4);
     display: flex;
     flex-direction: column;
     gap: var(--sp-3);
+  }
+
+  /* Question and state on one line, the way the card on the landing page
+     shows it. The page is the same object, one level closer. */
+  .head__top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    margin-top: var(--sp-2);
   }
 
   .head__title {
@@ -95,19 +110,17 @@ const latestSlug = thread.at(-1)?.slug;
     gap: var(--sp-3);
   }
 
-  .head__status {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-  }
-
   .head__frame {
     font-size: var(--fs-frame);
+    line-height: 1.85;
     color: var(--body);
+    max-width: var(--w-frame);
   }
 
-  .thread { margin-top: var(--sp-6); }
-  .thread__head { margin-bottom: var(--sp-3); }
+  .head :global(.log) { margin-top: var(--sp-2); }
+
+  .thread { margin-top: var(--sp-5); }
+  .thread__head { margin-bottom: var(--sp-1); }
   .thread__empty { font-size: var(--fs-teaser); }
 
   .item {
@@ -119,8 +132,9 @@ const latestSlug = thread.at(-1)?.slug;
   }
 
   /* The one teal line on the page: the current state of the story. */
-  .item--latest { border-top: 1px solid var(--st-concluded); }
-  .item__badge { color: var(--st-partial); }
+  .item--latest { border-top-color: var(--st-concluded); }
+  .item--latest .item__meta { color: var(--st-running); }
+  .item--latest .item__meta .sep { color: var(--st-concluded); }
 
   .item__meta {
     display: flex;
@@ -141,5 +155,13 @@ const latestSlug = thread.at(-1)?.slug;
   .item__teaser {
     font-size: var(--fs-teaser);
     color: var(--body);
+  }
+
+  @container page (max-width: 620px) {
+    .head__top {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--sp-2);
+    }
   }
 </style>

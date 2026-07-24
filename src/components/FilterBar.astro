@@ -13,14 +13,13 @@ const states = ['running', 'partial answer', 'concluded'];
 <div class="filter" role="group" aria-label="filter entries">
   <button class="filter__btn is-active" type="button" data-kind="" data-filter="">all</button>
 
-  <span class="sep">·</span>
-  {tags.map((tag) => (
-    <button class="filter__btn" type="button" data-kind="tag" data-filter={tag}>{tag}</button>
-  ))}
-
-  <span class="sep">·</span>
   {states.map((state) => (
     <button class="filter__btn" type="button" data-kind="status" data-filter={state}>{state}</button>
+  ))}
+
+  <span class="sep" aria-hidden="true">|</span>
+  {tags.map((tag) => (
+    <button class="filter__btn" type="button" data-kind="tag" data-filter={tag}>{tag}</button>
   ))}
 </div>
 
@@ -32,8 +31,6 @@ const states = ['running', 'partial answer', 'concluded'];
     gap: var(--sp-2) var(--sp-3);
     font-family: var(--font-mono);
     font-size: var(--fs-meta);
-    padding-bottom: var(--sp-3);
-    border-bottom: 1px solid var(--hairline);
   }
 
   .filter__btn {
