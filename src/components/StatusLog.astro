@@ -8,37 +8,59 @@ interface Props {
 
 const { experiment } = Astro.props;
 const entries = fullLog(experiment);
+
+// The state the experiment stands on right now: the last one it reached.
+// Everything before it is history, everything after it is open.
+const currentIndex = entries.reduce((last, item, i) => (item.date ? i : last), -1);
+const tone = (i: number, date: Date | null) =>
+  !date ? 'open' : i === currentIndex ? 'now' : 'past';
 ---
 
-<!-- The whole protocol on one line: reached states with their date, unreached
-     ones dimmed with `open`. Open is a state, not an empty field. -->
-<p class="log">
+<!-- The whole protocol as three fixed positions: reached states with their
+     date, unreached ones dimmed with `open`. Open is a state, not a gap. -->
+<div class="log">
   {entries.map((item, i) => (
-    <>
-      {i > 0 && <span class="sep">·</span>}
-      <span class={item.date ? 'log__item' : 'log__item log__item--open'}>
-        {item.label} <span class="log__date">{item.date ? iso(item.date) : 'open'}</span>
-      </span>
-    </>
+    <div class={`log__step log__step--${tone(i, item.date)}`}>
+      <p class="log__label">
+        <span class="dot" aria-hidden="true"></span>
+        {item.label}
+      </p>
+      <p class="log__date">{item.date ? iso(item.date) : 'open'}</p>
+    </div>
   ))}
-</p>
+</div>
 
 <style>
   .log {
-    font-family: var(--font-mono);
-    font-size: var(--fs-meta);
-    color: var(--meta);
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    gap: var(--sp-2) var(--sp-4);
+    border: 1px solid var(--hairline-soft);
+    border-radius: var(--radius);
+    padding: var(--sp-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    --dot-gap: var(--bg);
+  }
+
+  .log__label {
+    display: flex;
+    align-items: center;
     gap: var(--sp-2);
+    color: var(--st-concluded);
   }
 
-  .log__item--open,
-  .log__item--open .log__date {
-    color: var(--dim-text);
+  /* The date lines up under the label text, not under the dot: the dot
+     belongs to the state, the date to the word. */
+  .log__date {
+    padding-left: 15px;
+    color: var(--read);
   }
 
-  .log__date { color: var(--body); }
-  .log__item--open { color: var(--dim-text); }
+  .log__step--now .log__label { color: var(--st-partial); }
+  .log__step--now .dot { background: var(--st-partial); }
+  .log__step--past .dot { background: var(--st-concluded); }
+
+  .log__step--open .log__label,
+  .log__step--open .log__date { color: var(--dim-text); }
 </style>

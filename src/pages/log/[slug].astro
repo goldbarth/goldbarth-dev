@@ -2,8 +2,9 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import EntryNav from '../../components/EntryNav.astro';
+import Prompt from '../../components/Prompt.astro';
 import StatusDot from '../../components/StatusDot.astro';
-import { entriesOf, iso, type Status } from '../../lib/experiments';
+import { entriesOf, iso, readingTime, type Status } from '../../lib/experiments';
 
 type Link = { title: string; slug: string };
 type Origin = { title: string; slug: string; status: Status };
@@ -51,13 +52,18 @@ interface Props {
 
 const { entry, experiment, prev, next, position, total } = Astro.props;
 const { Content } = await entry.render();
+const minutes = readingTime(entry.body);
+const path = experiment ? `experiments/${experiment.slug}/${entry.slug}` : `log/${entry.slug}`;
 ---
 
 <Base title={entry.data.title} description={entry.data.teaser}>
   <article class="page entry">
 
-    <!-- The kicker is the way back; there is no breadcrumb (spec §4d). -->
-    <p class="entry__kicker kicker">
+    <Prompt path={path} />
+
+    <!-- The kicker is the way back, and the prompt line above it is the path
+         that got here. Neither is a breadcrumb trail. -->
+    <p class="entry__kicker kicker kicker--long">
       {experiment ? (
         <>
           <StatusDot status={experiment.status} />
@@ -72,10 +78,12 @@ const { Content } = await entry.render();
 
     <p class="entry__meta mono">
       {iso(entry.data.date)}
+      <span class="sep">·</span>
+      <span>{minutes} min</span>
       {position && total && (
         <>
           <span class="sep">·</span>
-          <span>{position} of {total}</span>
+          <span>entry {position} of {total}</span>
         </>
       )}
     </p>
@@ -101,12 +109,13 @@ const { Content } = await entry.render();
 </Base>
 
 <style>
-  .entry { padding-top: var(--sp-6); }
+  .entry { padding-top: var(--sp-4); }
 
   .entry__kicker {
     display: flex;
     align-items: center;
     gap: var(--sp-2);
+    margin-top: var(--sp-3);
   }
 
   .entry__kicker a { transition: color 0.15s; }
@@ -128,15 +137,19 @@ const { Content } = await entry.render();
     margin-top: var(--sp-2);
   }
 
-  .prose { margin-top: var(--sp-5); }
+  .prose { margin-top: var(--sp-3); }
 
+  /* The way out is written like the way in: a shell line, in the same amber. */
   .entry__back {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--sp-2);
-    margin-top: var(--sp-4);
+    margin-top: var(--sp-3);
+    color: var(--prompt);
   }
+
+  .entry__back .sep { color: var(--prompt); }
 
   .entry__back a { transition: color 0.15s; }
   .entry__back a:hover { color: var(--identity); }

@@ -15,6 +15,17 @@ const running = experiments
   .filter((e) => e.data.status === 'running')
   .sort((a, b) => lastChange(b).getTime() - lastChange(a).getTime());
 
+// A card counts its own thread, so the count and the last date on it stay
+// true without anyone maintaining them.
+const cards = running.map((experiment) => {
+  const thread = entries.filter((e) => e.data.experiment === experiment.slug);
+  const lastEntry = thread.reduce<Date | null>(
+    (max, e) => (!max || e.data.date > max ? e.data.date : max),
+    null,
+  );
+  return { experiment, entryCount: thread.length, lastEntry };
+});
+
 // Layer 3: the line, newest first. Each row resolves its experiment once here
 // so the row component stays free of collection lookups.
 const bySlug = new Map(experiments.map((e) => [e.slug, e]));
@@ -43,26 +54,32 @@ const tags = [...new Set(experiments.flatMap((e) => e.data.tags))].sort();
 
     <section class="head">
       <p class="head__prompt">~/goldbarth $ whoami</p>
-      <p class="head__text measure">
-        Felix Wahl, backend engineer in Hamburg, working toward AI engineering in .NET and Python.
-        Posts go up while the experiment is still running. They carry a status, and they change when the result does.
-      </p>
+      <div class="head__text measure-frame">
+        <p>Felix Wahl, backend engineer in Hamburg, working toward AI engineering in .NET and Python.</p>
+        <p>Posts go up while the experiment is still running. They carry a status, and they change when the result does.</p>
+      </div>
     </section>
 
     <section class="layer">
-      <h2 class="layer__head kicker">running experiments</h2>
-      {running.map((experiment) => <ExperimentCard experiment={experiment} />)}
+      <h2 class="layer__head kicker">running</h2>
+      {cards.map((card) => (
+        <ExperimentCard
+          experiment={card.experiment}
+          entryCount={card.entryCount}
+          lastEntry={card.lastEntry}
+        />
+      ))}
     </section>
 
+    <!-- The line has no heading: the filter row above it says what it is,
+         and a second label would only repeat the list below. -->
     <section class="layer">
-      <h2 class="layer__head kicker">the line</h2>
       <FilterBar tags={tags} />
       {line.map(({ entry, origin }) => (
         <LogRow
           title={entry.data.title}
           slug={entry.slug}
           date={entry.data.date}
-          teaser={entry.data.teaser}
           experiment={origin}
         />
       ))}
@@ -73,10 +90,10 @@ const tags = [...new Set(experiments.flatMap((e) => e.data.tags))].sort();
 
 <style>
   .head {
-    padding-top: var(--sp-6);
+    padding-top: var(--sp-4);
     display: flex;
     flex-direction: column;
-    gap: var(--sp-3);
+    gap: 12px;
   }
 
   .head__prompt {
@@ -85,11 +102,13 @@ const tags = [...new Set(experiments.flatMap((e) => e.data.tags))].sort();
     color: var(--prompt);
   }
 
+  /* Two sentences, two lines of their own. The break is the point: who I am,
+     then how the posting works. No gap between them, they are one block. */
   .head__text {
     font-size: var(--fs-head);
     color: var(--body);
   }
 
-  .layer { margin-top: var(--sp-6); }
-  .layer__head { margin-bottom: var(--sp-3); }
+  .layer { margin-top: var(--sp-4); }
+  .layer__head { margin-bottom: var(--sp-2); }
 </style>

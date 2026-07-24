@@ -14,24 +14,24 @@ const { prev, next } = Astro.props;
 <nav class="nav" aria-label="entries in this experiment">
   {prev ? (
     <a class="nav__field" href={`/log/${prev.slug}`}>
-      <span class="nav__label kicker">previous</span>
+      <span class="nav__label kicker kicker--quiet kicker--long">← previous in this experiment</span>
       <span class="nav__title">{prev.title}</span>
     </a>
   ) : (
     <div class="nav__field nav__field--empty">
-      <span class="nav__label kicker">previous</span>
+      <span class="nav__label kicker kicker--quiet kicker--long">← previous in this experiment</span>
       <span class="nav__title">nothing before this</span>
     </div>
   )}
 
   {next ? (
-    <a class="nav__field nav__field--next" href={`/log/${next.slug}`}>
-      <span class="nav__label kicker">next</span>
+    <a class="nav__field" href={`/log/${next.slug}`}>
+      <span class="nav__label kicker kicker--quiet kicker--long">next →</span>
       <span class="nav__title">{next.title}</span>
     </a>
   ) : (
-    <div class="nav__field nav__field--next nav__field--empty">
-      <span class="nav__label kicker">next</span>
+    <div class="nav__field nav__field--empty">
+      <span class="nav__label kicker kicker--quiet kicker--long">next →</span>
       <span class="nav__title">not written yet</span>
     </div>
   )}
@@ -41,22 +41,23 @@ const { prev, next } = Astro.props;
   .nav {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--sp-3);
-    margin-top: var(--sp-6);
+    gap: 12px;
+    margin-top: var(--sp-5);
   }
 
+  /* Both fields read left to right. Mirroring the second one would make the
+     arrow the loudest thing in the field. */
   .nav__field {
     border: 1px solid var(--hairline-soft);
-    padding: var(--sp-3);
+    border-radius: var(--radius);
+    padding: 12px var(--sp-3);
     display: flex;
     flex-direction: column;
-    gap: var(--sp-2);
+    gap: var(--sp-1);
     transition: border-color 0.15s;
   }
 
   a.nav__field:hover { border-color: var(--identity); }
-
-  .nav__field--next { text-align: right; }
 
   .nav__field--empty {
     border-style: dashed;
@@ -73,6 +74,5 @@ const { prev, next } = Astro.props;
 
   @container page (max-width: 620px) {
     .nav { grid-template-columns: 1fr; }
-    .nav__field--next { text-align: left; }
   }
 </style>

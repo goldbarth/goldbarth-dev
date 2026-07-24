@@ -29,6 +29,10 @@
   --tag-fill:       #0A2724;
   --tag-border:     #0E4B45;
 
+  /* Section labels carry the same teal as the state ramp: a kicker names
+     a layer of the site, and every layer is a state of some experiment. */
+  --kicker-text:    #2DD4BF;
+
   /* The dot carries state twice: colour plus this effect.
      Dark glows, light rings. Same geometry, different material. */
   --dot-gap:        var(--bg);
@@ -59,9 +63,17 @@
   --lh-numbers: 1.9;
   --ls-kicker:  0.2em;
 
-  /* ── Measure ── */
-  --w-page: 560px;
+  /* ── Measure ──
+     Three widths: the page frame, the reading measure for serif body text,
+     and a wider one for sans framing text, which reads faster. */
+  --w-page: 688px;
   --w-read: 520px;
+  --w-frame: 600px;
+
+  /* Frames are soft: cards, the state box and the nav fields share one
+     radius, tags a smaller one. */
+  --radius:    8px;
+  --radius-sm: 3px;
 
   --sp-1: 4px;
   --sp-2: 8px;
@@ -103,6 +115,8 @@
     --tag-text:      #0E5F5A;
     --tag-fill:      #E8F4F2;
     --tag-border:    #B9DEDA;
+
+    --kicker-text:   #0E5F5A;
 
     /* Ring, not glow. A blur on a light ground reads as a grey
        smudge instead of light. Gap takes the colour of whatever
@@ -160,6 +174,9 @@ h1, h2, h3, h4, strong, b { font-weight: 500; }
    the entry body. Comfort outranks a fast overview. */
 .measure { max-width: var(--w-read); }
 
+/* Framing text is sans and shorter, so it takes the wider measure. */
+.measure-frame { max-width: var(--w-frame); }
+
 /* ── Shared type roles ─────────────────────────────────── */
 .mono {
   font-family: var(--font-mono);
@@ -173,9 +190,16 @@ h1, h2, h3, h4, strong, b { font-weight: 500; }
   font-size: var(--fs-kicker);
   letter-spacing: var(--ls-kicker);
   text-transform: uppercase;
-  color: var(--meta);
+  color: var(--kicker-text);
   font-weight: 400;
 }
+
+/* A label inside a frame names a field, not a layer, so it stays quiet. */
+.kicker--quiet { color: var(--meta); }
+
+/* Tracking is for one or two words. A whole title set in a kicker keeps
+   the mono grid it already has. */
+.kicker--long { letter-spacing: 0.02em; }
 
 .sep { color: var(--sep); }
 .dim { color: var(--dim-text); }
@@ -258,6 +282,7 @@ h1, h2, h3, h4, strong, b { font-weight: 500; }
   padding: var(--sp-3);
   overflow-x: auto;
   border: 1px solid var(--hairline-soft);
+  border-radius: var(--radius);
   background: var(--surface-run);
 }
 .prose pre code { font-size: inherit; color: inherit; }

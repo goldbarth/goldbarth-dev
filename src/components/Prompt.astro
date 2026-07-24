@@ -1,0 +1,21 @@
+---
+interface Props {
+  /** what the shell is standing in, relative to the site root */
+  path: string;
+}
+
+const { path } = Astro.props;
+---
+
+<!-- The one line of chrome on a page below the landing page: where you are,
+     written the way you would have got here. -->
+<p class="prompt">~/goldbarth $ cd {path}</p>
+
+<style>
+  .prompt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-prompt);
+    color: var(--prompt);
+    overflow-wrap: anywhere;
+  }
+</style>
