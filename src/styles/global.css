@@ -204,6 +204,22 @@ h1, h2, h3, h4, strong, b { font-weight: 500; }
 .sep { color: var(--sep); }
 .dim { color: var(--dim-text); }
 
+/* The step one level back, at the foot of every page that sits below the
+   landing page. Same amber as the wordmark above it: both are the way out. */
+.back {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  color: var(--prompt);
+}
+
+.back .sep { color: var(--prompt); }
+.back a { transition: color 0.15s; }
+.back a:hover { color: var(--identity); }
+
 /* ── Status dot ────────────────────────────────────────── */
 .dot {
   display: inline-block;

@@ -1,7 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import Prompt from '../../components/Prompt.astro';
+import Wordmark from '../../components/Wordmark.astro';
 import StatusDot from '../../components/StatusDot.astro';
 import StatusLog from '../../components/StatusLog.astro';
 import TagList from '../../components/TagList.astro';
@@ -33,7 +33,7 @@ const latestSlug = thread.at(-1)?.slug;
   <div class="page">
 
     <header class="head">
-      <Prompt path={`experiments/${experiment.slug}`} />
+      <Wordmark />
 
       <div class="head__top">
         <h1 class="head__title">
@@ -79,6 +79,12 @@ const latestSlug = thread.at(-1)?.slug;
       )}
     </section>
 
+    <!-- The same step back the entry page ends on, one level up: an entry
+         returns to its experiment, an experiment returns to the log. -->
+    <p class="back thread__back">
+      <a href="/">← back to the log</a>
+    </p>
+
   </div>
 </Base>
 
@@ -122,6 +128,7 @@ const latestSlug = thread.at(-1)?.slug;
   .thread { margin-top: var(--sp-5); }
   .thread__head { margin-bottom: var(--sp-1); }
   .thread__empty { font-size: var(--fs-teaser); }
+  .thread__back { margin-top: var(--sp-4); }
 
   .item {
     padding: var(--sp-4) 0;
