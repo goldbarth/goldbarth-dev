@@ -1,31 +1,25 @@
 ---
 import '../styles/global.css';
-import PathHeader from '../components/PathHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 
 interface Props {
   title: string;
   description?: string;
-  /** active path segment, e.g. "decisions" — undefined on landing */
-  active?: string;
-  /** override the trailing command in the path header */
-  cmd?: string;
 }
 
 const {
   title,
-  description = 'Felix Wahl · .NET Backend Engineer · architecture, decisions, system design.',
-  active,
-  cmd,
+  description = 'Field notes on LLM systems in .NET and Python. Experiments, partial answers, open questions.',
 } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -33,7 +27,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Serif:wght@400&family=IBM+Plex+Mono:wght@400&display=swap"
       rel="stylesheet"
     />
 
@@ -41,14 +35,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   </head>
 
   <body>
-    <PathHeader active={active} cmd={cmd} />
     <main>
       <slot />
     </main>
     <SiteFooter />
   </body>
 </html>
-
-<style>
-  main { flex: 1; }
-</style>

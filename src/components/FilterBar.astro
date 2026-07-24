@@ -1,0 +1,78 @@
+---
+interface Props {
+  /** stack tags across all experiments, already deduplicated */
+  tags: string[];
+}
+
+const { tags } = Astro.props;
+const states = ['running', 'partial answer', 'concluded'];
+---
+
+<!-- Two axes, no categories: stack and state. Client-side by decision
+     (spec §12); without JS the full list simply stays visible. -->
+<div class="filter" role="group" aria-label="filter entries">
+  <button class="filter__btn is-active" type="button" data-kind="" data-filter="">all</button>
+
+  <span class="sep">·</span>
+  {tags.map((tag) => (
+    <button class="filter__btn" type="button" data-kind="tag" data-filter={tag}>{tag}</button>
+  ))}
+
+  <span class="sep">·</span>
+  {states.map((state) => (
+    <button class="filter__btn" type="button" data-kind="status" data-filter={state}>{state}</button>
+  ))}
+</div>
+
+<style>
+  .filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-2) var(--sp-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    padding-bottom: var(--sp-3);
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .filter__btn {
+    font: inherit;
+    color: var(--meta);
+    background: none;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    padding: 0 0 2px;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .filter__btn:hover { color: var(--title-rest); }
+
+  .filter__btn.is-active {
+    color: var(--identity);
+    border-bottom-color: var(--identity);
+  }
+</style>
+
+<script>
+  const buttons = document.querySelectorAll('.filter__btn');
+  const rows = document.querySelectorAll('.row');
+  function apply(kind, value) {
+    rows.forEach((row) => {
+      let show = true;
+      if (kind === 'tag') {
+        const tags = (row.getAttribute('data-tags') || '').split(' ').filter(Boolean);
+        show = tags.includes(value);
+      } else if (kind === 'status') {
+        show = row.getAttribute('data-status') === value;
+      }
+      row.hidden = !show;
+    });
+  }
+  buttons.forEach((btn) => btn.addEventListener('click', () => {
+    buttons.forEach((b) => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    apply(btn.dataset.kind, btn.dataset.filter || '');
+  }));
+</script>

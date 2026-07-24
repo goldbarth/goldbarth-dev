@@ -3,28 +3,22 @@ import { getCollection } from 'astro:content';
 import type { APIContext } from 'astro';
 
 export async function GET(context: APIContext) {
-  const [thoughts, decisions, projects] = await Promise.all([
-    getCollection('thoughts', ({ data }) => !data.draft),
-    getCollection('decisions', ({ data }) => !data.draft),
-    getCollection('projects', ({ data }) => !data.draft),
-  ]);
+  // Entries only. A state change without a new entry is a quiet change and
+  // should notify nobody (spec §2).
+  const entries = await getCollection('log', ({ data }) => !data.draft);
 
-  const items = [
-    ...thoughts.map((e) => ({ ...e, prefix: 'thoughts' })),
-    ...decisions.map((e) => ({ ...e, prefix: 'decisions' })),
-    ...projects.map((e) => ({ ...e, prefix: 'projects' })),
-  ]
+  const items = entries
     .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
-    .map((e) => ({
-      title: e.data.title,
-      description: e.data.description,
-      pubDate: e.data.date,
-      link: `/${e.prefix}/${e.slug}/`,
+    .map((entry) => ({
+      title: entry.data.title,
+      description: entry.data.teaser,
+      pubDate: entry.data.date,
+      link: `/log/${entry.slug}/`,
     }));
 
   return rss({
     title: 'goldbarth.dev',
-    description: 'Felix Wahl · .NET Backend Engineer · architecture, decisions, system design.',
+    description: 'Field notes on LLM systems in .NET and Python. Experiments, partial answers, open questions.',
     site: context.site!,
     items,
   });

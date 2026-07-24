@@ -1,0 +1,143 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import EntryNav from '../../components/EntryNav.astro';
+import StatusDot from '../../components/StatusDot.astro';
+import { entriesOf, iso, type Status } from '../../lib/experiments';
+
+type Link = { title: string; slug: string };
+type Origin = { title: string; slug: string; status: Status };
+
+export async function getStaticPaths() {
+  const experiments = await getCollection('experiments');
+  const allEntries = await getCollection('log', ({ data }) => !data.draft);
+  const bySlug = new Map(experiments.map((e) => [e.slug, e]));
+
+  return allEntries.map((entry) => {
+    const exp = entry.data.experiment ? bySlug.get(entry.data.experiment) : undefined;
+    let ctx: {
+      experiment: Origin | null;
+      prev: Link | null;
+      next: Link | null;
+      position: number | null;
+      total: number | null;
+    } = { experiment: null, prev: null, next: null, position: null, total: null };
+
+    if (exp) {
+      const thread = entriesOf(exp.slug, allEntries);              // ascending (old → new)
+      const idx = thread.findIndex((e) => e.slug === entry.slug);
+      const link = (e: CollectionEntry<'log'>) => ({ title: e.data.title, slug: e.slug });
+      ctx = {
+        experiment: { title: exp.data.title, slug: exp.slug, status: exp.data.status },
+        prev: idx > 0 ? link(thread[idx - 1]) : null,              // older entry
+        next: idx < thread.length - 1 ? link(thread[idx + 1]) : null, // newer; null on newest
+        position: idx + 1,
+        total: thread.length,
+      };
+    }
+
+    return { params: { slug: entry.slug }, props: { entry, ...ctx } };
+  });
+}
+
+interface Props {
+  entry: CollectionEntry<'log'>;
+  experiment: Origin | null;
+  prev: Link | null;
+  next: Link | null;
+  position: number | null;
+  total: number | null;
+}
+
+const { entry, experiment, prev, next, position, total } = Astro.props;
+const { Content } = await entry.render();
+---
+
+<Base title={entry.data.title} description={entry.data.teaser}>
+  <article class="page entry">
+
+    <!-- The kicker is the way back; there is no breadcrumb (spec §4d). -->
+    <p class="entry__kicker kicker">
+      {experiment ? (
+        <>
+          <StatusDot status={experiment.status} />
+          <a href={`/experiments/${experiment.slug}`}>{experiment.title}</a>
+        </>
+      ) : (
+        <span class="dim">note</span>
+      )}
+    </p>
+
+    <h1 class="entry__title">{entry.data.title}</h1>
+
+    <p class="entry__meta mono">
+      {iso(entry.data.date)}
+      {position && total && (
+        <>
+          <span class="sep">·</span>
+          <span>{position} of {total}</span>
+        </>
+      )}
+    </p>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    {experiment && (
+      <>
+        <EntryNav prev={prev} next={next} />
+        <p class="entry__back mono">
+          <a href={`/experiments/${experiment.slug}`}>← back to the experiment</a>
+          <span class="sep">·</span>
+          <span>{total} {total === 1 ? 'entry' : 'entries'}</span>
+          <span class="sep">·</span>
+          <span>{experiment.status}</span>
+        </p>
+      </>
+    )}
+
+  </article>
+</Base>
+
+<style>
+  .entry { padding-top: var(--sp-6); }
+
+  .entry__kicker {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .entry__kicker a { transition: color 0.15s; }
+  .entry__kicker a:hover { color: var(--identity); }
+
+  .entry__title {
+    font-size: var(--fs-title-entry);
+    font-weight: 500;
+    color: var(--title);
+    line-height: 1.25;
+    max-width: var(--w-read);
+    margin-top: var(--sp-3);
+  }
+
+  .entry__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-top: var(--sp-2);
+  }
+
+  .prose { margin-top: var(--sp-5); }
+
+  .entry__back {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-top: var(--sp-4);
+  }
+
+  .entry__back a { transition: color 0.15s; }
+  .entry__back a:hover { color: var(--identity); }
+</style>

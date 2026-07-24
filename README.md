@@ -3,16 +3,22 @@
 [![Deploy](https://github.com/goldbarth/goldbarth-dev/actions/workflows/azure-static-web-apps-proud-pond-0cece8c03.yml/badge.svg)](https://goldbarth.dev)
 ![Azure](https://img.shields.io/badge/Azure-0078D4?logo=microsoftazure&logoColor=fff)
 
-**[goldbarth.dev](https://goldbarth.dev)** - where I document what I build and why.
+**[goldbarth.dev](https://goldbarth.dev)** - field notes on LLM systems in .NET and Python.
 
-Projects, architectural decisions (ADR-style), and shorter posts on things I'm working through.
-Less portfolio, more engineering log.
+Posts go up while the experiment is still running. They carry a status, and they change when the result does.
+Projects live on the [GitHub profile](https://github.com/goldbarth), not here.
 
 ## Structure
 
-- **Projects** - write-ups with reasoning, not just outcomes
-- **Decisions** - non-obvious design choices and the tradeoffs behind them
-- **Thoughts** - shorter posts while ideas are still forming
+Two objects, not categories:
+
+- **Experiments** (`/experiments/<slug>`) - the unit of work: a framing question, a state, a dated log
+- **Entries** (`/log/<slug>`) - the publication: a date, a body, its own URL. May belong to an experiment or stand alone as a note
+
+Three states hang on the experiment and never on the entry: `running`, `partial answer`, `concluded`.
+Every change is logged with a date and nothing is overwritten; states not yet reached read `open`.
+
+Writing guide: [`docs/authoring.md`](./docs/authoring.md).
 
 ## License
 

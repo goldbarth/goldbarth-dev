@@ -1,17 +1,8 @@
 {
   "routes": [
-    {
-      "route": "/projekte",
-      "rewrite": "/projekte/index.html"
-    },
-    {
-      "route": "/entscheidungen",
-      "rewrite": "/entscheidungen/index.html"
-    },
-    {
-      "route": "/gedanken",
-      "rewrite": "/gedanken/index.html"
-    }
+    { "route": "/decisions/*", "redirect": "/", "statusCode": 301 },
+    { "route": "/thoughts/*", "redirect": "/", "statusCode": 301 },
+    { "route": "/projects/*", "redirect": "/", "statusCode": 301 }
   ],
   "responseOverrides": {
     "404": {

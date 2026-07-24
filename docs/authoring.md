@@ -1,145 +1,123 @@
 # Authoring
 
-## Overview
+Two objects, not three categories.
 
-Three content collections:
+| Object | Directory | URL | What it is |
+|---|---|---|---|
+| Experiment | `src/content/experiments/` | `/experiments/<slug>` | the unit of work: a state, a dated log, a framing question |
+| Entry | `src/content/log/` | `/log/<slug>` | the publication: a date, a body, its own URL |
 
-| Collection  | URL          | Purpose                              |
-|-------------|--------------|--------------------------------------|
-| `thoughts`  | `/thoughts`  | Short, unfinished thoughts and notes |
-| `decisions` | `/decisions` | Reasoning behind technical decisions |
-| `projects`  | `/projects`  | Project detail pages (content posts) |
+Filename = slug = URL. Kebab-case.
+`retrieval-that-cites.md` becomes `/experiments/retrieval-that-cites`.
 
-**Note:** Projects have two layers - see below.
+The path deliberately does not contain the experiment.
+Moving an entry to another experiment is a frontmatter change and costs no URL.
 
 ---
 
-## Adding Thoughts & Decisions
-
-Create a file at:
-- `src/content/thoughts/my-title.md`
-- `src/content/decisions/my-title.md`
-
-Filename = slug = URL. Use kebab-case. Example: `event-sourcing-trade-offs.md` → `/decisions/event-sourcing-trade-offs`
-
-### Frontmatter
+## Adding an experiment
 
 ```yaml
 ---
-title: "Entry Title"
-description: "Short summary (optional but recommended)"
-date: "2026-05-03"
-updated: "2026-05-10"   # optional
-readMin: 3              # optional, falls back to default
-draft: false            # true = not shown publicly
+title: "Can grounding be a mechanism instead of a request?"
+frame: "Two to three sentences: what this is about and what is still open."
+status: running          # running · partial answer · concluded
+log:
+  - state: started
+    date: 2026-06-10
+tags: [dotnet, grounding, eval]
 ---
 ```
 
-| Field         | Type    | Required | Default | Notes                                      |
-|---------------|---------|----------|---------|--------------------------------------------|
-| `title`       | string  | yes      | -       |                                            |
-| `description` | string  | no       | -       | Shown in list views                        |
-| `date`        | date    | yes      | -       | Format: `"YYYY-MM-DD"` or `"YYYY-MM-DDTHH:MM:SS"` |
-| `updated`     | date    | no       | -       |                                            |
-| `readMin`     | integer | no       | 2–3     | thoughts: 2, decisions: 3                  |
-| `draft`       | boolean | no       | `false` | `true` hides from listings                 |
+The body stays empty.
+An experiment has no long text of its own; that lives in the entries.
 
-**Same-day ordering:** Posts with only `"YYYY-MM-DD"` are treated as midnight - multiple posts on the same day appear in undefined order. Use a datetime to control order explicitly:
+**Only reached states go into `log`.**
+The template renders the missing ones as `open` in a dimmed tone.
+An unreached state is a state, not a gap, and writing `concluded: null` would say the opposite.
 
-```yaml
-date: "2026-05-04T10:00:00"   # appears earlier in the list
-date: "2026-05-04T20:00:00"   # appears at the top (newest first)
-```
+`tags` is the stack axis only: `dotnet`, `python`, `rag`, `pgvector`, `eval`, `grounding` and whatever comes next.
+State is not a tag; it is already in `status`.
 
-Write markdown content below the frontmatter.
-
----
-
-## Projects - Two Layers
-
-Projects work differently from thoughts/decisions. There are **two independent places**:
-
-### 1. Featured Projects (Homepage)
-
-Shown on `/` in the Projects section. Manually maintained in `src/pages/index.astro`.
-
-```typescript
-const featuredProjects = [
-  {
-    title: 'my-project',
-    status: 'live',      // 'live' | 'wip' | 'archived'
-    description: 'What this project does.',
-    stack: ['.NET 9', 'C#', 'Postgres'],
-    links: [
-      { label: 'github.com/goldbarth/my-project', href: 'https://github.com/goldbarth/my-project' },
-    ],
-  },
-];
-```
-
-No markdown. No content file. Just add an entry to the array.
-
-### 2. Content Collection Posts (Detail Pages)
-
-Shown at `/projects` and `/projects/[slug]`. Works identically to thoughts/decisions.
-
-Create file: `src/content/projects/my-project.md`
+## Adding an entry
 
 ```yaml
 ---
-title: "Project"
-description: "Short description."
-date: "2026-05-03"
+title: "Moving the grounding check out of the prompt"
+date: 2026-06-18
+teaser: "One sentence, used in the line and on the experiment page."
+experiment: grounding-as-mechanism   # omit for a free note
 draft: false
 ---
-...
 ```
 
-**Important:** Featured projects (homepage) and content posts are independent. An entry in the `featuredProjects` array does *not* automatically appear under `/projects`. Both must be maintained separately.
+`experiment` must match an experiment filename without `.md`.
+Leaving it out is allowed and intended: an open question belongs to no attempt yet, and the entry then renders as `no experiment · note`.
 
-### Suggested Structure for Project Posts
+There is no `readMin` and no `description`.
+Reading time is a promise nobody can keep, so the meta line carries the date and the position in the thread and nothing else.
 
-Project posts cover the full arc of a project - not a single decision. Sections are suggestions, not required. Rename or skip what doesn't fit.
+### Prose building blocks
 
-```markdown
-## What it is
+The body is Markdown; raw HTML is allowed.
+Three things have fixed styling:
 
-One paragraph. What does it do, who is it for?
+- `##` and `###` for headings inside the text. No `#`, the title already is that.
+- Fenced code blocks, highlighted by Shiki. They stay dark in light mode, which is a known and accepted detail.
+- The number block for measurements, written as raw HTML:
 
-## Problem / Motivation
-
-Why build it? What gap or frustration triggered it?
-
-## Architecture / Key Decisions
-
-Stack choices, structural decisions, notable tradeoffs.
-Link to `/decisions/[slug]` for deeper dives.
-
-## Challenges
-
-What was hard, what broke, what surprised you.
-
-## Takeaways
-
-What you'd do differently. What you'd keep.
+```html
+<div class="numbers">
+recall@5, semantic only &nbsp;&nbsp; 0.71<br>
+recall@5, fused &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.86
+</div>
 ```
 
-**vs. Decision posts:** A decision post zooms into one specific tradeoff. A project post is the overview. One project can reference many decisions.
+Numbers are where the tone gets concrete, so they look the same everywhere.
 
 ---
 
-## Draft Workflow
+## Logging a state change
 
-Set `draft: true` to keep an entry out of public listings while still accessible in the local dev server.  
-Set `draft: false` (or remove the field) to publish.
+A state change is two edits in the experiment file and nothing else:
+
+```yaml
+status: partial answer
+log:
+  - state: started
+    date: 2026-03-14
+  - state: partial answer
+    date: 2026-05-21
+```
+
+No line is ever overwritten, only appended.
+The landing page sorts running experiments by the newest date in `log`, so a revived experiment rises on its own.
+
+A state change produces no RSS item.
+A change without a new entry is a quiet change and should notify nobody.
+
+**Old entries are never rewritten.**
+New insight means a new entry, not a revision.
+That keeps the effort small and the chronology honest.
 
 ---
 
-## Quick Reference
+## The filter
 
-| What                        | Where                                        |
-|-----------------------------|----------------------------------------------|
-| Thought                     | `src/content/thoughts/*.md`                  |
-| Decision                    | `src/content/decisions/*.md`                 |
-| Project detail page         | `src/content/projects/*.md`                  |
-| Featured project (homepage) | `src/pages/index.astro` → `featuredProjects` |
+The filter line above the list is client-side: it toggles `hidden` on the rows based on `data-tags` and `data-status`.
+A filter state cannot be linked or bookmarked, and that is the accepted price.
+
+An entry's state is the state of its experiment.
+Free notes carry no `data-status` and therefore drop out of the state filter, while staying untouched by the tag filter.
+
+**Turn this around** as soon as the filter line carries more than about five stack tags, or the list passes fifteen entries.
+From there the filter is navigation rather than convenience, and navigation belongs in the URL: static routes under `/log/tag/<tag>`.
+The rebuild is cheap because `tags` is already in the frontmatter and only one route has to be added.
+
+---
+
+## Checks before committing
+
+- `npm run build` passes, meaning the frontmatter matches the schema in `src/content/config.ts`.
+- A new `experiment:` value points at a file that exists. The schema does not catch a typo here, the empty experiment page does.
+- The entry reads in both light and dark. Toggle `prefers-color-scheme` in the dev tools.

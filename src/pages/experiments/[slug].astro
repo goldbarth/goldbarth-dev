@@ -1,0 +1,145 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import StatusDot from '../../components/StatusDot.astro';
+import StatusLog from '../../components/StatusLog.astro';
+import TagList from '../../components/TagList.astro';
+import { entriesOf, iso } from '../../lib/experiments';
+
+export async function getStaticPaths() {
+  const experiments = await getCollection('experiments');
+  const allEntries = await getCollection('log', ({ data }) => !data.draft);
+
+  return experiments.map((experiment) => ({
+    params: { slug: experiment.slug },
+    // Ascending: the experiment page is a story, and a story is read from
+    // the front. The newest one is marked instead of moved.
+    props: { experiment, thread: entriesOf(experiment.slug, allEntries) },
+  }));
+}
+
+interface Props {
+  experiment: CollectionEntry<'experiments'>;
+  thread: CollectionEntry<'log'>[];
+}
+
+const { experiment, thread } = Astro.props;
+const { title, frame, status, tags } = experiment.data;
+const latestSlug = thread.at(-1)?.slug;
+---
+
+<Base title={title} description={frame}>
+  <div class="page">
+
+    <header class="head">
+      <h1 class="head__title">
+        <span class="dot dot--identity" aria-hidden="true"></span>
+        {title}
+      </h1>
+
+      <p class="head__status kicker">
+        <StatusDot status={status} />
+        {status}
+      </p>
+
+      <p class="head__frame measure">{frame}</p>
+
+      <TagList tags={tags} />
+      <StatusLog experiment={experiment} />
+    </header>
+
+    <section class="thread">
+      <h2 class="thread__head kicker">entries</h2>
+
+      {thread.length === 0 ? (
+        <p class="thread__empty dim">Nothing written down yet.</p>
+      ) : (
+        thread.map((entry) => (
+          <article class={`item ${entry.slug === latestSlug ? 'item--latest' : ''}`}>
+            <p class="item__meta mono">
+              {iso(entry.data.date)}
+              {entry.slug === latestSlug && (
+                <>
+                  <span class="sep">·</span>
+                  <span class="item__badge">latest</span>
+                </>
+              )}
+            </p>
+            <h3 class="item__title">
+              <a href={`/log/${entry.slug}`}>{entry.data.title}</a>
+            </h3>
+            <p class="item__teaser measure">{entry.data.teaser}</p>
+          </article>
+        ))
+      )}
+    </section>
+
+  </div>
+</Base>
+
+<style>
+  .head {
+    padding-top: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+
+  .head__title {
+    font-size: var(--fs-title-exp);
+    font-weight: 500;
+    color: var(--title);
+    line-height: 1.25;
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-3);
+  }
+
+  .head__status {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .head__frame {
+    font-size: var(--fs-frame);
+    color: var(--body);
+  }
+
+  .thread { margin-top: var(--sp-6); }
+  .thread__head { margin-bottom: var(--sp-3); }
+  .thread__empty { font-size: var(--fs-teaser); }
+
+  .item {
+    padding: var(--sp-4) 0;
+    border-top: 1px solid var(--hairline-soft);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+
+  /* The one teal line on the page: the current state of the story. */
+  .item--latest { border-top: 1px solid var(--st-concluded); }
+  .item__badge { color: var(--st-partial); }
+
+  .item__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .item__title {
+    font-size: var(--fs-entry-list);
+    font-weight: 500;
+    color: var(--title);
+    line-height: 1.4;
+  }
+
+  .item__title a { transition: color 0.15s; }
+  .item__title a:hover { color: var(--identity); }
+
+  .item__teaser {
+    font-size: var(--fs-teaser);
+    color: var(--body);
+  }
+</style>
