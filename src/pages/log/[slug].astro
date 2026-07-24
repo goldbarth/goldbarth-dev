@@ -2,7 +2,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import EntryNav from '../../components/EntryNav.astro';
-import Prompt from '../../components/Prompt.astro';
+import Wordmark from '../../components/Wordmark.astro';
 import StatusDot from '../../components/StatusDot.astro';
 import { entriesOf, iso, readingTime, type Status } from '../../lib/experiments';
 
@@ -53,16 +53,15 @@ interface Props {
 const { entry, experiment, prev, next, position, total } = Astro.props;
 const { Content } = await entry.render();
 const minutes = readingTime(entry.body);
-const path = experiment ? `experiments/${experiment.slug}/${entry.slug}` : `log/${entry.slug}`;
 ---
 
 <Base title={entry.data.title} description={entry.data.teaser}>
   <article class="page entry">
 
-    <Prompt path={path} />
+    <Wordmark />
 
-    <!-- The kicker is the way back, and the prompt line above it is the path
-         that got here. Neither is a breadcrumb trail. -->
+    <!-- The kicker is the way to the experiment this belongs to. The way
+         home is the wordmark above it. -->
     <p class="entry__kicker kicker kicker--long">
       {experiment ? (
         <>
@@ -95,7 +94,7 @@ const path = experiment ? `experiments/${experiment.slug}/${entry.slug}` : `log/
     {experiment && (
       <>
         <EntryNav prev={prev} next={next} />
-        <p class="entry__back mono">
+        <p class="back entry__back">
           <a href={`/experiments/${experiment.slug}`}>← back to the experiment</a>
           <span class="sep">·</span>
           <span>{total} {total === 1 ? 'entry' : 'entries'}</span>
@@ -139,18 +138,5 @@ const path = experiment ? `experiments/${experiment.slug}/${entry.slug}` : `log/
 
   .prose { margin-top: var(--sp-3); }
 
-  /* The way out is written like the way in: a shell line, in the same amber. */
-  .entry__back {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--sp-2);
-    margin-top: var(--sp-3);
-    color: var(--prompt);
-  }
-
-  .entry__back .sep { color: var(--prompt); }
-
-  .entry__back a { transition: color 0.15s; }
-  .entry__back a:hover { color: var(--identity); }
+  .entry__back { margin-top: var(--sp-3); }
 </style>
