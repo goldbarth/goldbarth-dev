@@ -1,32 +1,44 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { statusClass } from '../lib/experiments';
+import { statusClass, iso, startedAt } from '../lib/experiments';
 import StatusDot from './StatusDot.astro';
-import StatusLog from './StatusLog.astro';
 import TagList from './TagList.astro';
 
 interface Props {
   experiment: CollectionEntry<'experiments'>;
+  /** entries published under this experiment */
+  entryCount: number;
+  /** date of the newest entry, null while nothing is written down */
+  lastEntry: Date | null;
 }
 
-const { experiment } = Astro.props;
+const { experiment, entryCount, lastEntry } = Astro.props;
 const { title, frame, status, tags } = experiment.data;
+const started = startedAt(experiment);
 ---
 
 <article class={`card card--${statusClass(status)}`}>
-  <p class="card__kicker kicker">
-    <StatusDot status={status} />
-    {status}
+  <div class="card__top">
+    <h2 class="card__title">
+      <span
+        class={`dot ${status === 'running' ? 'dot--identity' : ''}`}
+        aria-hidden="true"></span>
+      <a href={`/experiments/${experiment.slug}`}>{title}</a>
+    </h2>
+    <StatusDot status={status} label />
+  </div>
+
+  <p class="card__frame">{frame}</p>
+
+  <!-- The card counts instead of narrating: when it started, how much is
+       written, when it last moved. The full protocol lives one click deeper. -->
+  <p class="card__meta mono">
+    {started && <>started <span class="card__date">{iso(started)}</span> <span class="sep">·</span> </>}
+    {entryCount} {entryCount === 1 ? 'entry' : 'entries'}
+    {lastEntry && <> <span class="sep">·</span> last <span class="card__date">{iso(lastEntry)}</span></>}
   </p>
 
-  <h2 class="card__title">
-    <a href={`/experiments/${experiment.slug}`}>{title}</a>
-  </h2>
-
-  <p class="card__frame measure">{frame}</p>
-
   <TagList tags={tags} />
-  <StatusLog experiment={experiment} />
 </article>
 
 <style>
@@ -35,10 +47,11 @@ const { title, frame, status, tags } = experiment.data;
      on, so the block hands its own surface down. */
   .card {
     border: 1px solid var(--hairline-soft);
-    padding: var(--sp-4);
+    border-radius: var(--radius);
+    padding: 12px var(--sp-3);
     display: flex;
     flex-direction: column;
-    gap: var(--sp-3);
+    gap: var(--sp-1);
     --dot-gap: var(--bg);
   }
 
@@ -48,12 +61,15 @@ const { title, frame, status, tags } = experiment.data;
     --dot-gap: var(--surface-run);
   }
 
-  .card + .card { margin-top: var(--sp-3); }
+  .card + .card { margin-top: 12px; }
 
-  .card__kicker {
+  /* Title and state share one line: the question, and how far it got.
+     The state stays right so the left edge of every card reads as a list. */
+  .card__top {
     display: flex;
-    align-items: center;
-    gap: var(--sp-2);
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-4);
   }
 
   .card__title {
@@ -61,6 +77,9 @@ const { title, frame, status, tags } = experiment.data;
     font-weight: 500;
     color: var(--title);
     line-height: 1.35;
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-2);
   }
 
   .card__title a { transition: color 0.15s; }
@@ -69,5 +88,18 @@ const { title, frame, status, tags } = experiment.data;
   .card__frame {
     font-size: var(--fs-frame-home);
     color: var(--body);
+  }
+
+  .card__meta { display: block; }
+  .card__date { color: var(--body); }
+
+  .card :global(.tags) { margin-top: var(--sp-2); }
+
+  @container page (max-width: 620px) {
+    .card__top {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--sp-2);
+    }
   }
 </style>
