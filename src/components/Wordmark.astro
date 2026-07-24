@@ -1,0 +1,19 @@
+---
+// No props: the point of the anchor is that it never changes. A path that
+// moves with the page would only look like navigation, this one is one.
+---
+
+<!-- The wordmark, and the way home from any page below the landing page. -->
+<a class="wordmark" href="/">~/goldbarth</a>
+
+<style>
+  .wordmark {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-prompt);
+    color: var(--prompt);
+    transition: color 0.15s;
+  }
+
+  .wordmark:hover { color: var(--identity); }
+</style>
