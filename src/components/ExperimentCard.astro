@@ -1,0 +1,73 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { statusClass } from '../lib/experiments';
+import StatusDot from './StatusDot.astro';
+import StatusLog from './StatusLog.astro';
+import TagList from './TagList.astro';
+
+interface Props {
+  experiment: CollectionEntry<'experiments'>;
+}
+
+const { experiment } = Astro.props;
+const { title, frame, status, tags } = experiment.data;
+---
+
+<article class={`card card--${statusClass(status)}`}>
+  <p class="card__kicker kicker">
+    <StatusDot status={status} />
+    {status}
+  </p>
+
+  <h2 class="card__title">
+    <a href={`/experiments/${experiment.slug}`}>{title}</a>
+  </h2>
+
+  <p class="card__frame measure">{frame}</p>
+
+  <TagList tags={tags} />
+  <StatusLog experiment={experiment} />
+</article>
+
+<style>
+  /* Running carries its state three ways: fill, border colour and the ring
+     around the dot. The gap colour of that ring has to be the fill it sits
+     on, so the block hands its own surface down. */
+  .card {
+    border: 1px solid var(--hairline-soft);
+    padding: var(--sp-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    --dot-gap: var(--bg);
+  }
+
+  .card--running {
+    border-color: var(--border-run);
+    background: var(--surface-run);
+    --dot-gap: var(--surface-run);
+  }
+
+  .card + .card { margin-top: var(--sp-3); }
+
+  .card__kicker {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .card__title {
+    font-size: var(--fs-title-home);
+    font-weight: 500;
+    color: var(--title);
+    line-height: 1.35;
+  }
+
+  .card__title a { transition: color 0.15s; }
+  .card__title a:hover { color: var(--identity); }
+
+  .card__frame {
+    font-size: var(--fs-frame-home);
+    color: var(--body);
+  }
+</style>

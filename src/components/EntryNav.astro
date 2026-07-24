@@ -1,0 +1,78 @@
+---
+interface Props {
+  /** the older entry in the same thread */
+  prev: { title: string; slug: string } | null;
+  /** the newer one; null on the latest entry of a running experiment */
+  next: { title: string; slug: string } | null;
+}
+
+const { prev, next } = Astro.props;
+---
+
+<!-- Both fields always stand. Dropping the empty one would tip the symmetry
+     and end the page on half a box. -->
+<nav class="nav" aria-label="entries in this experiment">
+  {prev ? (
+    <a class="nav__field" href={`/log/${prev.slug}`}>
+      <span class="nav__label kicker">previous</span>
+      <span class="nav__title">{prev.title}</span>
+    </a>
+  ) : (
+    <div class="nav__field nav__field--empty">
+      <span class="nav__label kicker">previous</span>
+      <span class="nav__title">nothing before this</span>
+    </div>
+  )}
+
+  {next ? (
+    <a class="nav__field nav__field--next" href={`/log/${next.slug}`}>
+      <span class="nav__label kicker">next</span>
+      <span class="nav__title">{next.title}</span>
+    </a>
+  ) : (
+    <div class="nav__field nav__field--next nav__field--empty">
+      <span class="nav__label kicker">next</span>
+      <span class="nav__title">not written yet</span>
+    </div>
+  )}
+</nav>
+
+<style>
+  .nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-3);
+    margin-top: var(--sp-6);
+  }
+
+  .nav__field {
+    border: 1px solid var(--hairline-soft);
+    padding: var(--sp-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    transition: border-color 0.15s;
+  }
+
+  a.nav__field:hover { border-color: var(--identity); }
+
+  .nav__field--next { text-align: right; }
+
+  .nav__field--empty {
+    border-style: dashed;
+    border-color: var(--dim);
+  }
+
+  .nav__field--empty .nav__title { color: var(--dim-text); }
+
+  .nav__title {
+    font-size: var(--fs-teaser);
+    color: var(--title-rest);
+    line-height: 1.45;
+  }
+
+  @container page (max-width: 620px) {
+    .nav { grid-template-columns: 1fr; }
+    .nav__field--next { text-align: left; }
+  }
+</style>

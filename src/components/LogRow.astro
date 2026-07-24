@@ -1,0 +1,80 @@
+---
+import { iso, type Status } from '../lib/experiments';
+import StatusDot from './StatusDot.astro';
+
+interface Props {
+  title: string;
+  slug: string;
+  date: Date;
+  teaser: string;
+  /** null for a free note: an open question belongs to no attempt yet */
+  experiment: { title: string; slug: string; status: Status; tags: string[] } | null;
+}
+
+const { title, slug, date, teaser, experiment } = Astro.props;
+---
+
+<!-- data-* drives the client-side filter. A free note carries no data-status,
+     so it drops out of the state filter instead of matching a made-up state. -->
+<article
+  class="row"
+  data-tags={experiment ? experiment.tags.join(' ') : ''}
+  data-status={experiment?.status}
+>
+  <p class="row__meta mono">{iso(date)}</p>
+
+  <h3 class="row__title">
+    <a href={`/log/${slug}`}>{title}</a>
+  </h3>
+
+  <p class="row__origin mono">
+    {experiment ? (
+      <>
+        <StatusDot status={experiment.status} />
+        <a href={`/experiments/${experiment.slug}`}>{experiment.title}</a>
+      </>
+    ) : (
+      <span class="dim">no experiment · note</span>
+    )}
+  </p>
+
+  <p class="row__teaser measure">{teaser}</p>
+</article>
+
+<style>
+  /* No frame, only a hairline. The list must not read as a continuation of
+     the framed experiment blocks above it. */
+  .row {
+    padding: var(--sp-4) 0;
+    border-bottom: 1px solid var(--hairline-soft);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+
+  .row[hidden] { display: none; }
+
+  .row__title {
+    font-size: var(--fs-entry-list);
+    font-weight: 500;
+    color: var(--title);
+    line-height: 1.4;
+  }
+
+  .row__title a { transition: color 0.15s; }
+  .row__title a:hover { color: var(--identity); }
+
+  .row__origin {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .row__origin a { transition: color 0.15s; }
+  .row__origin a:hover { color: var(--identity); }
+
+  .row__teaser {
+    font-size: var(--fs-teaser);
+    color: var(--body);
+  }
+</style>

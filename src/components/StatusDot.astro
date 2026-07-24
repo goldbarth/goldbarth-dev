@@ -1,0 +1,40 @@
+---
+import { statusClass, type Status } from '../lib/experiments';
+
+interface Props {
+  status: Status;
+  /** show the status word next to the dot */
+  label?: boolean;
+}
+
+const { status, label = false } = Astro.props;
+---
+
+<span class="status">
+  <span class={`dot dot--${statusClass(status)}`} aria-hidden="true"></span>
+  {label && <span class="status__label">{status}</span>}
+  {!label && <span class="sr-only">{status}</span>}
+</span>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .status__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    color: var(--meta);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+</style>

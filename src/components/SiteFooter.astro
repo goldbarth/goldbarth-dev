@@ -3,7 +3,7 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-  <div class="site-footer__inner">
+  <div class="site-footer__inner page">
     <div class="site-footer__group">
       <a href="https://github.com/goldbarth" target="_blank" rel="noopener">github</a>
       <span class="sep">·</span>
@@ -18,3 +18,38 @@ const year = new Date().getFullYear();
     </div>
   </div>
 </footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--sp-7);
+    border-top: 1px solid var(--hairline-soft);
+    padding: var(--sp-4) 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    color: var(--meta);
+  }
+
+  .site-footer__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+
+  .site-footer__group {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .site-footer a { transition: color 0.15s; }
+  .site-footer a:hover { color: var(--identity); }
+
+  @container page (max-width: 620px) {
+    .site-footer__inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--sp-2);
+    }
+  }
+</style>

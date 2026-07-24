@@ -1,0 +1,44 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { fullLog, iso } from '../lib/experiments';
+
+interface Props {
+  experiment: CollectionEntry<'experiments'>;
+}
+
+const { experiment } = Astro.props;
+const entries = fullLog(experiment);
+---
+
+<!-- The whole protocol on one line: reached states with their date, unreached
+     ones dimmed with `open`. Open is a state, not an empty field. -->
+<p class="log">
+  {entries.map((item, i) => (
+    <>
+      {i > 0 && <span class="sep">·</span>}
+      <span class={item.date ? 'log__item' : 'log__item log__item--open'}>
+        {item.label} <span class="log__date">{item.date ? iso(item.date) : 'open'}</span>
+      </span>
+    </>
+  ))}
+</p>
+
+<style>
+  .log {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    color: var(--meta);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-2);
+  }
+
+  .log__item--open,
+  .log__item--open .log__date {
+    color: var(--dim-text);
+  }
+
+  .log__date { color: var(--body); }
+  .log__item--open { color: var(--dim-text); }
+</style>

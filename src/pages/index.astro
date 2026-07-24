@@ -1,126 +1,95 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import EntryRow from '../components/EntryRow.astro';
-import ProjectRow from '../components/ProjectRow.astro';
+import ExperimentCard from '../components/ExperimentCard.astro';
+import FilterBar from '../components/FilterBar.astro';
+import LogRow from '../components/LogRow.astro';
+import { lastChange } from '../lib/experiments';
 
-// Curated featured projects - kept manual, since these are the recruiter layer.
-// Move to a content collection once the list grows.
-const featuredProjects = [
-  {
-    title: 'ServiceDeskLite',
-    slug: 'service-desk-lite',
-    status: 'live' as const,
-    description: 'Eine .NET 10 Backend-Referenz, gebaut um striktes Layering: compiler-enforced Boundaries, zwei austauschbare Persistence-Adapter und result-basiertes Error Handling - jede architektonische Entscheidung als ADR dokumentiert. Der AI-Agent vereint Tool Calling, SSE-Streaming und RAG in einem Agentic Loop: zwölf Tools, hybrides Retrieval (semantisch + Keyword via RRF), Knowledge-Base-Antworten mit zitierten Quellen und einem Grounding-Check, den der Loop erzwingt statt erbittet - und der Bedeutung bewertet, nicht Wortüberlappung. Eine Guard-Pipeline rate-limitet und budgetiert jeden Tool-Aufruf; ein autonomer Ticket-Worker arbeitet ungefragt weiter, legt aber jede folgenreiche Entscheidung einem Menschen vor. Alles als Edge-Adapter ausschließlich durch die bestehenden Command-Handler, die Domain kennt kein LLM. Aktuell bekommt das Blazor-Frontend ein Redesign: ein Token-System als Single Source für Farben und Skalen, Light- und Dark-Scheme aus einem Emitter, Chips mit Icon statt Farbe allein und ein Chat, der Markdown sanitized rendert.',
-    stack: ['.NET 10', 'Postgres', 'pgvector', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API', 'Anthropic API', 'Voyage AI', 'OpenTelemetry', 'Prometheus'],
-    links: [
-      { label: 'github.com/goldbarth/service-desk-lite', href: 'https://github.com/goldbarth/ServiceDeskLite' },
-    ],
-  },
-  {
-    title: 'MetricGate',
-    slug: 'metric-gate',
-    status: 'live' as const,
-    description: 'Tenant-aware Quota- und Rate-Limiting-Backend für SaaS-APIs. Drei unabhängig deploybare .NET 10 Services - Plans, Enforcement, Usage - mit Redis, Redpanda (Kafka API) und Keycloak OIDC. V1 (Backend) released. V2 (Angular Frontend) in Planung.',
-    stack: ['.NET 10', 'Redis', 'Redpanda', 'Keycloak', 'PostgreSQL', 'EF Core 10', 'OpenTelemetry', 'Docker'],
-    links: [
-      { label: 'github.com/goldbarth/metric-gate', href: 'https://github.com/goldbarth/MetricGate' },
-    ],
-  },
-  {
-    title: 'Ingestor',
-    slug: 'ingestor',
-    status: 'live' as const,
-    description: 'Eine .NET 10 Import-Pipeline, gebaut um Reliability: Outbox Pattern, strikte Domain State Machine, idempotente Verarbeitung und eine config-switchable Dispatch-Strategie - jede Design-Entscheidung auf Korrektheit und Nachvollziehbarkeit ausgerichtet.',
-    stack: ['.NET 10', 'OpenTelemetry', 'Postgres', 'EF Core 10', 'Docker', 'ASP.NET Core Minimal API'],
-    links: [
-      { label: 'github.com/goldbarth/ingestor', href: 'https://github.com/goldbarth/Ingestor' },
-    ],
-  },
-  {
-    title: 'port-tidewatch',
-    slug: 'port-tidewatch',
-    status: 'live' as const,
-    description: 'Ingestion-Service für Pegelstand-Telemetrie von Häfen mit threshold-basiertem Sturmflut-Alerting - orientiert an Hamburgs WADI-Warnsystem (gestuft: warning ab 4,50 m, severe ab 5,50 m über NN). Eine Reading-Quelle - wahlweise Simulator (Composite-Level-Modell) oder der echte WSV/PEGELONLINE-Elbe-Feed, per Switch beim Start gewählt - liefert Readings; ein Ingestion-Service konsumiert über RabbitMQ mit Dead-Letter-Handling und gestufter, trend-aware Threshold-Evaluation; ein read-only Angular Dashboard zeigt Pegel, Alarmstufen und Trends als banded Area-Charts. Seit v1.2.0 mit echten Hamburger Elbe-Pegeln (St. Pauli, Bunthaus, Over, Zollenspieker; cm → NHN-Mapping, conditional polling); v1.3.0 (Juni 2026) macht die Frische der Werte ehrlich lesbar - Messwert-Alter statt Poll-Alter, Stale erst wenn der Daten-Zufluss aussetzt. Dazu Alert-Event-Publishing über Fanout-Exchange, OpenTelemetry-Tracing und zwei verifizierte Deployment-Pfade (Kubernetes + Argo CD, Azure Container Apps).',
-    stack: ['.NET 10', 'ASP.NET Core', 'RabbitMQ', 'OpenTelemetry', 'Angular', 'Docker', 'Kubernetes', 'Argo CD', 'Testcontainers'],
-    links: [
-      { label: 'github.com/goldbarth/port-tidewatch', href: 'https://github.com/goldbarth/port-tidewatch' },
-    ],
-  },
-];
+const experiments = await getCollection('experiments');
+const entries = await getCollection('log', ({ data }) => !data.draft);
 
-// Latest 6 across decisions + thoughts (projects have their own block).
-const writings = (
-  await Promise.all([
-    getCollection('decisions', ({ data }) => !data.draft),
-    getCollection('thoughts', ({ data }) => !data.draft),
-  ])
-)
-  .flat()
+// Layer 2: only running, newest change on top. The block maintains itself,
+// because the sort key is the log rather than a hand-kept list.
+const running = experiments
+  .filter((e) => e.data.status === 'running')
+  .sort((a, b) => lastChange(b).getTime() - lastChange(a).getTime());
+
+// Layer 3: the line, newest first. Each row resolves its experiment once here
+// so the row component stays free of collection lookups.
+const bySlug = new Map(experiments.map((e) => [e.slug, e]));
+const line = entries
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
-  .slice(0, 6);
+  .map((entry) => {
+    const exp = entry.data.experiment ? bySlug.get(entry.data.experiment) : undefined;
+    return {
+      entry,
+      origin: exp
+        ? {
+            title: exp.data.title,
+            slug: exp.slug,
+            status: exp.data.status,
+            tags: exp.data.tags,
+          }
+        : null,
+    };
+  });
+
+const tags = [...new Set(experiments.flatMap((e) => e.data.tags))].sort();
 ---
 
-<Base title="Home">
-  <div class="container">
+<Base title="Field notes">
+  <div class="page">
 
-    <section class="intro">
-      <p>
-        Felix Wahl - .NET Backend Engineer. Verteilte Systeme, Reliability,
-        Consistency: solide Grundlagen, auf denen sich bauen lässt.
+    <section class="head">
+      <p class="head__prompt">~/goldbarth $ whoami</p>
+      <p class="head__text measure">
+        Felix Wahl, backend engineer in Hamburg, working toward AI engineering in .NET and Python.
+        Posts go up while the experiment is still running. They carry a status, and they change when the result does.
       </p>
-      <p>
-        Gerade entsteht daraus etwas Neues. Ich arbeite mich in LLMs und AI Engineering
-        ein, aufbauend auf dem Backend. Hier sammle ich, was ich dabei lerne:
-        Überlegungen hinter Entscheidungen, offene Fragen und die Projekte, an denen
-        ich das ausprobiere.
-      </p>
-      <div class="intro__now">
-        <span>servicedesklite v1.8.0: grounding als mechanismus statt prompt-bitte, ehrliche writes · m9 frontend-redesign läuft: design tokens, dark mode, chips mit icons · der astronaut (project hail mary) von andy weirs absolut genossen</span>
-      </div>
     </section>
 
-    <section class="section">
-      <header class="section__head">
-        <h2 class="section__title">Projekte</h2>
-        <a class="section__more" href="/projects">alle Projekte →</a>
-      </header>
-      <div>
-        {featuredProjects.map((p) => (
-          <ProjectRow
-            title={p.title}
-            description={p.description}
-            status={p.status}
-            stack={p.stack}
-            links={p.links}
-            href={p.slug ? `/projects/${p.slug}` : undefined}
-          />
-        ))}
-      </div>
+    <section class="layer">
+      <h2 class="layer__head kicker">running experiments</h2>
+      {running.map((experiment) => <ExperimentCard experiment={experiment} />)}
     </section>
 
-    <section class="section">
-      <header class="section__head">
-        <h2 class="section__title">Artikel</h2>
-        <a class="section__more" href="/writings">alle Artikel →</a>
-      </header>
-      <div class="list">
-        {writings.length === 0 ? (
-          <p class="muted">Noch keine Artikel.</p>
-        ) : (
-          writings.map((post) => (
-            <EntryRow
-              title={post.data.title}
-              description={post.data.description ?? ''}
-              date={post.data.date.toISOString()}
-              readMin={post.data.readMin ?? 3}
-              category={post.collection as 'decisions' | 'thoughts'}
-              slug={post.slug}
-            />
-          ))
-        )}
-      </div>
+    <section class="layer">
+      <h2 class="layer__head kicker">the line</h2>
+      <FilterBar tags={tags} />
+      {line.map(({ entry, origin }) => (
+        <LogRow
+          title={entry.data.title}
+          slug={entry.slug}
+          date={entry.data.date}
+          teaser={entry.data.teaser}
+          experiment={origin}
+        />
+      ))}
     </section>
 
   </div>
 </Base>
+
+<style>
+  .head {
+    padding-top: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+
+  .head__prompt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-prompt);
+    color: var(--prompt);
+  }
+
+  .head__text {
+    font-size: var(--fs-head);
+    color: var(--body);
+  }
+
+  .layer { margin-top: var(--sp-6); }
+  .layer__head { margin-bottom: var(--sp-3); }
+</style>
