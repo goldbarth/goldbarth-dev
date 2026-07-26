@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 import EntryNav from '../../components/EntryNav.astro';
 import Wordmark from '../../components/Wordmark.astro';
 import StatusDot from '../../components/StatusDot.astro';
-import { entriesOf, iso, readingTime, type Status } from '../../lib/experiments';
+import { entriesOf, iso, type Status } from '../../lib/experiments';
 
 type Link = { title: string; slug: string };
 type Origin = { title: string; slug: string; status: Status };
@@ -52,7 +52,6 @@ interface Props {
 
 const { entry, experiment, prev, next, position, total } = Astro.props;
 const { Content } = await entry.render();
-const minutes = readingTime(entry.body);
 ---
 
 <Base title={entry.data.title} description={entry.data.teaser}>
@@ -77,8 +76,6 @@ const minutes = readingTime(entry.body);
 
     <p class="entry__meta mono">
       {iso(entry.data.date)}
-      <span class="sep">·</span>
-      <span>{minutes} min</span>
       {position && total && (
         <>
           <span class="sep">·</span>

@@ -44,13 +44,6 @@ export function fullLog(exp: Experiment): { label: string; date: Date | null }[]
   ];
 }
 
-/** Minutes at 200 words, rounded up, never zero. Read off the raw body, so
- *  fences and front matter markers count as the words they are. */
-export function readingTime(body: string): number {
-  const words = body.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 200));
-}
-
 /** yyyy-mm-dd, the one date format used everywhere. */
 export function iso(date: Date): string {
   return date.toISOString().slice(0, 10);
