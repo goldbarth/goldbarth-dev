@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro';
+import Wordmark from '../components/Wordmark.astro';
+---
+
+<!-- Azure Static Web Apps rewrites unknown paths onto /404.html, which is what
+     Astro builds this page as. The old /projects, /decisions and /thoughts
+     paths never reach here: those are 301s in staticwebapp.config.json. -->
+<Base title="404" description="This path does not exist.">
+  <div class="page notfound">
+
+    <Wordmark />
+
+    <p class="notfound__code kicker">404</p>
+
+    <h1 class="notfound__title">This path does not exist.</h1>
+
+    <!-- No search, no list of suggestions. The log is the whole site, and it
+         is one line down from here. -->
+    <p class="notfound__text measure-frame">
+      Either it never did, or it was an experiment that has since been taken
+      down. Everything that stands is on the log.
+    </p>
+
+    <p class="back notfound__back">
+      <a href="/">← back to the log</a>
+    </p>
+
+  </div>
+</Base>
+
+<style>
+  .notfound {
+    padding-top: var(--sp-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+
+  .notfound__code { margin-top: var(--sp-5); }
+
+  .notfound__title {
+    font-size: var(--fs-title-exp);
+    font-weight: 500;
+    color: var(--title);
+    line-height: 1.25;
+    max-width: var(--w-read);
+  }
+
+  .notfound__text {
+    font-size: var(--fs-frame);
+    line-height: 1.85;
+    color: var(--body);
+  }
+
+  .notfound__back { margin-top: var(--sp-3); }
+</style>
