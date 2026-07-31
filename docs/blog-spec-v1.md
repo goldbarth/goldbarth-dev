@@ -184,6 +184,13 @@ The full log lives one click deeper.
 There is **no** separate Now or About area.
 Both would age; layers 1 and 2 do not.
 
+**Open: experiments have no index.**
+Layer 2 is deliberately a now view and therefore shows `running` only.
+That leaves `partial answer` and `concluded` without a place where an experiment appears as an object.
+They stay reachable, because every row of the line links its experiment, but there is nowhere to browse experiments as a list.
+Layer 3 archives entries; nothing archives experiments.
+Decide when the second experiment concludes, not before: either the experiment is the unit a reader navigates by and needs an index of its own, or the entries carry the archive and the line is enough.
+
 ### 4b. Experiment page
 
 Order: wordmark, title with identity dot and status, framing text, tags, dated log, then the entries, then the way back.
