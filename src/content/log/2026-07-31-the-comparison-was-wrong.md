@@ -3,7 +3,7 @@ title: "The comparison was wrong and the numbers were exact"
 date: 2026-07-31
 teaser: Six runs, every cost confirmed against the invoice, and the first four of them compared nothing.
 experiment: cheap-model-shippable-changelog
-draft: true
+draft: false
 ---
 
 Two weeks ago a day of runs cost me $1.78 and I could not say what for.

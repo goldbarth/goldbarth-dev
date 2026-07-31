@@ -3,7 +3,7 @@ title: "A day's total is not a measurement"
 date: 2026-07-17
 teaser: The first real run against my own release worked, cost money, and left me with a single number I cannot do much with.
 experiment: cheap-model-shippable-changelog
-draft: true
+draft: false
 ---
 
 Chartula writes release notes by having a model rephrase facts that are already established.
