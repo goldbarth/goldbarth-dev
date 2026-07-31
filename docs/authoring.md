@@ -57,6 +57,19 @@ Leaving it out is allowed and intended: an open question belongs to no attempt y
 There is no `readMin` and no `description`.
 Reading time is a promise nobody can keep, so the meta line carries the date and the position in the thread and nothing else.
 
+### Adding a note
+
+```yaml
+title: "Three weeks of Python, from a C# head"
+date: 2026-07-04
+teaser: "What transferred instantly, and the two things that didn't."
+experiment: ""          # empty = free note
+tags: ["python"]
+```
+
+`note` is a free-form text field, intended for a blog-post or single-note.
+It appears as `no experiment · note`.
+
 ### Prose building blocks
 
 The body is Markdown; raw HTML is allowed.
