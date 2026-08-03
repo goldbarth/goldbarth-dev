@@ -9,15 +9,17 @@ import { lastChange } from '../lib/experiments';
 const experiments = await getCollection('experiments');
 const entries = await getCollection('log', ({ data }) => !data.draft);
 
-// Layer 2: only running, newest change on top. The block maintains itself,
-// because the sort key is the log rather than a hand-kept list.
-const running = experiments
-  .filter((e) => e.data.status === 'running')
+// Layer 2: everything not concluded, newest change on top. A partial answer
+// is one answered part and an open rest, so it belongs here and not in an
+// archive. The block maintains itself, because the sort key is the log rather
+// than a hand-kept list.
+const open = experiments
+  .filter((e) => e.data.status !== 'concluded')
   .sort((a, b) => lastChange(b).getTime() - lastChange(a).getTime());
 
 // A card counts its own thread, so the count and the last date on it stay
 // true without anyone maintaining them.
-const cards = running.map((experiment) => {
+const cards = open.map((experiment) => {
   const thread = entries.filter((e) => e.data.experiment === experiment.slug);
   const lastEntry = thread.reduce<Date | null>(
     (max, e) => (!max || e.data.date > max ? e.data.date : max),
