@@ -4,7 +4,7 @@
    so every component below reads role names, never hex values. */
 :root {
   --bg:             #12100E;
-  --surface-run:    #12100E;  /* running block: no fill in dark */
+  --surface-started: #12100E; /* started block: no fill in dark */
   --hairline-soft:  #241E18;
   --hairline:       #332A21;
 
@@ -20,10 +20,10 @@
   --identity:       #E0A34B;
   --prompt:         #B07A2E;
 
-  --st-running:     #5EEAD4;
+  --st-started:     #5EEAD4;
   --st-partial:     #2DD4BF;
   --st-concluded:   #14807A;
-  --border-run:     #14807A;
+  --border-started: #14807A;
 
   --tag-text:       #2DD4BF;
   --tag-fill:       #0A2724;
@@ -85,13 +85,13 @@
 }
 
 /* ── Tokens: Light ─────────────────────────────────────────
-   The ramp runs backwards: running is the darkest tone here,
+   The ramp runs backwards: started is the darkest tone here,
    concluded the lightest. Presence on a light ground is darkness.
    The roles shift two steps, the scale is not inverted. */
 @media (prefers-color-scheme: light) {
   :root {
     --bg:            #FBF8F3;
-    --surface-run:   #F4EEE5;
+    --surface-started: #F4EEE5;
     --hairline-soft: #E2DACE;
     --hairline:      #D6CDBF;
 
@@ -107,10 +107,10 @@
     --identity:      #A86F22;
     --prompt:        #8F5D18;
 
-    --st-running:    #0B4742;
+    --st-started:    #0B4742;
     --st-partial:    #0E5F5A;
     --st-concluded:  #14807A;
-    --border-run:    #0E5F5A;
+    --border-started: #0E5F5A;
 
     --tag-text:      #0E5F5A;
     --tag-fill:      #E8F4F2;
@@ -232,8 +232,8 @@ h1, h2, h3, h4, strong, b { font-weight: 500; }
 .dot--identity     { background: var(--identity); }
 .dot--partial      { background: var(--st-partial); }
 .dot--concluded    { background: var(--st-concluded); }
-.dot--running {
-  background: var(--st-running);
+.dot--started {
+  background: var(--st-started);
   box-shadow: var(--dot-effect);
 }
 
@@ -299,7 +299,7 @@ h1, h2, h3, h4, strong, b { font-weight: 500; }
   overflow-x: auto;
   border: 1px solid var(--hairline-soft);
   border-radius: var(--radius);
-  background: var(--surface-run);
+  background: var(--surface-started);
 }
 .prose pre code { font-size: inherit; color: inherit; }
 

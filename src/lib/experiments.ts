@@ -1,6 +1,6 @@
 import type { CollectionEntry } from 'astro:content';
 
-export type Status = 'running' | 'partial answer' | 'concluded';
+export type Status = 'started' | 'partial answer' | 'concluded';
 type Experiment = CollectionEntry<'experiments'>;
 type Entry = CollectionEntry<'log'>;
 
@@ -27,13 +27,13 @@ export function startedAt(exp: Experiment): Date | null {
 }
 
 /** Maps a status to the dot/block modifier suffix used across the styles. */
-export function statusClass(status: Status): 'running' | 'partial' | 'concluded' {
+export function statusClass(status: Status): 'started' | 'partial' | 'concluded' {
   return status === 'partial answer' ? 'partial' : status;
 }
 
 /** The dated protocol as three fixed positions: started, then the two states
- *  beyond running (started already implies running). Unreached positions carry
- *  a null date, which the template renders as `open` in --dim-text (spec §3). */
+ *  beyond it. Unreached positions carry a null date, which the template
+ *  renders as `open` in --dim-text (spec §3). */
 export function fullLog(exp: Experiment): { label: string; date: Date | null }[] {
   const at = (state: string) =>
     exp.data.log.find((l) => l.state === state)?.date ?? null;

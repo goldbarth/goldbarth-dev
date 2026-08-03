@@ -21,7 +21,7 @@ const started = startedAt(experiment);
   <div class="card__top">
     <h2 class="card__title">
       <span
-        class={`dot ${status === 'running' ? 'dot--identity' : ''}`}
+        class={`dot ${status !== 'concluded' ? 'dot--identity' : ''}`}
         aria-hidden="true"></span>
       <a href={`/experiments/${experiment.slug}`}>{title}</a>
     </h2>
@@ -55,10 +55,11 @@ const started = startedAt(experiment);
     --dot-gap: var(--bg);
   }
 
-  .card--running {
-    border-color: var(--border-run);
-    background: var(--surface-run);
-    --dot-gap: var(--surface-run);
+  .card--started,
+  .card--partial {
+    border-color: var(--border-started);
+    background: var(--surface-started);
+    --dot-gap: var(--surface-started);
   }
 
   .card + .card { margin-top: 12px; }

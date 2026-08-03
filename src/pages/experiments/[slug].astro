@@ -38,7 +38,7 @@ const latestSlug = thread.at(-1)?.slug;
       <div class="head__top">
         <h1 class="head__title">
           <span
-            class={`dot ${status === 'running' ? 'dot--identity' : ''}`}
+            class={`dot ${status !== 'concluded' ? 'dot--identity' : ''}`}
             aria-hidden="true"></span>
           {title}
         </h1>
@@ -140,7 +140,7 @@ const latestSlug = thread.at(-1)?.slug;
 
   /* The one teal line on the page: the current state of the story. */
   .item--latest { border-top-color: var(--st-concluded); }
-  .item--latest .item__meta { color: var(--st-running); }
+  .item--latest .item__meta { color: var(--st-started); }
   .item--latest .item__meta .sep { color: var(--st-concluded); }
 
   .item__meta {

@@ -1,7 +1,7 @@
 import { defineCollection, z } from 'astro:content';
 
 // Three states, they hang on the experiment and never on the entry.
-const status = z.enum(['running', 'partial answer', 'concluded']);
+const status = z.enum(['started', 'partial answer', 'concluded']);
 
 // The experiment is the unit: a state, a dated log, a framing question.
 // No long body text - that lives in the entries.
